@@ -33,7 +33,7 @@ import {
 import { ImageUpload } from '@/components/ui/image-upload';
 
 const TEMPLATE_OPTIONS = ['v1', 'v2', 'v3', 'v4', 'v5', 'v6'];
-const THEME_OPTIONS = ['default', 'black', 'caffeine', 'claude', 'elegant', 'marvel', 'material', 'midnight', 'nature', 'perplexity', 'slack', 'summer', 'sunset', 'valorant', 'supabase', 'amber', 'catppuccin', 'clay', 'cyberpunk', 'darkmatter', 'ocean', 'quantum', 't3', 'tangerine', 'vintage', 'green', 'red', 'rose', 'orange', 'blue', 'yellow', 'violet'];
+const THEME_OPTIONS = ['default', 'emerald', 'black', 'caffeine', 'claude', 'elegant', 'marvel', 'material', 'midnight', 'nature', 'perplexity', 'slack', 'summer', 'sunset', 'valorant', 'supabase', 'amber', 'catppuccin', 'clay', 'cyberpunk', 'darkmatter', 'ocean', 'quantum', 't3', 'tangerine', 'vintage', 'green', 'red', 'rose', 'orange', 'blue', 'yellow', 'violet'];
 
 const TEMPLATE_CONFIG = [
   { id: 'layout', label: 'Primary Layout' },
@@ -317,26 +317,6 @@ export default function SuperConfigPage() {
                   className="w-full h-12 rounded-xl border px-4 focus:ring-2 focus:ring-primary outline-none text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="ga4-id" className="font-bold text-xs uppercase tracking-tight opacity-70">GA4 Measurement ID (G-XXXX)</Label>
-                <input 
-                  id="ga4-id"
-                  value={settings?.googleAnalyticsId || ''} 
-                  onChange={(e) => setSettings({...(settings ?? {}), googleAnalyticsId: e.target.value})}
-                  placeholder="G-XXXXXXXXXX"
-                  className="w-full h-12 rounded-xl border px-4 focus:ring-2 focus:ring-primary outline-none text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ga4-property-id" className="font-bold text-xs uppercase tracking-tight opacity-70">GA4 Property ID (Analytics)</Label>
-                <input 
-                  id="ga4-property-id"
-                  value={settings?.googleAnalyticsPropertyId || ''} 
-                  onChange={(e) => setSettings({...(settings ?? {}), googleAnalyticsPropertyId: e.target.value})}
-                  placeholder="e.g. 534447077"
-                  className="w-full h-12 rounded-xl border px-4 focus:ring-2 focus:ring-primary outline-none text-sm"
-                />
-              </div>
            </CardContent>
         </Card>
 
@@ -365,14 +345,6 @@ export default function SuperConfigPage() {
                   <Label htmlFor="fb-test-code" className="font-bold text-xs">FB Test Event Code</Label>
                   <input id="fb-test-code" value={settings?.facebookTestEventCode || ''} onChange={(e) => setSettings({...settings, facebookTestEventCode: e.target.value})} className="w-full h-12 rounded-xl border px-4 text-sm" />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="sc-api-url" className="font-bold text-xs">Search Console ID / URL (for Analytics)</Label>
-                <input id="sc-api-url" value={settings?.googleSearchConsoleId || ''} onChange={(e) => setSettings({...settings, googleSearchConsoleId: e.target.value})} placeholder="e.g. https://www.example.com/ or sc-domain:example.com" className="w-full h-12 rounded-xl border px-4 text-sm" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="search-console-meta" className="font-bold text-xs">Search Console Meta Tag (for Verification)</Label>
-                <input id="search-console-meta" value={settings?.searchConsoleMeta || ''} onChange={(e) => setSettings({...settings, searchConsoleMeta: e.target.value})} className="w-full h-12 rounded-xl border px-4 text-sm" />
               </div>
            </CardContent>
         </Card>

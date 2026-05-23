@@ -1,275 +1,165 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { Metadata } from 'next';
-import { ArrowRight } from 'lucide-react';
-import connectToDatabase from '@/lib/db';
-import Banner from '@/models/Banner';
-import Category from '@/models/Category';
-import Product from '@/models/Product';
-import Blog from '@/models/Blog';
-import FAQ from '@/models/FAQ';
-import GlobalSettings from '@/models/GlobalSettings';
-import Coupon from '@/models/Coupon';
-import dynamic from 'next/dynamic';
-import { HeroSlider } from '@/components/storefront/HeroSlider';
-import { FreeDeliveryBanner } from '@/components/storefront/FreeDeliveryBanner';
-import {
-  SectionSkeleton,
-  CategoryShowcaseSkeleton,
-  BannerSkeleton,
-  BlogRecentSkeleton,
-  FeaturesSectionSkeleton,
-  FAQSectionSkeleton,
-  TestimonialsSkeleton
-} from '@/components/storefront/Skeletons';
-import { Button } from '@/components/ui/button';
+import React from 'react';
 import Link from 'next/link';
+import { ArrowRight, Sparkles, CheckCircle, ShieldCheck, Heart, UserPlus, PhoneCall } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-import { headers } from 'next/headers';
-import {
-  getCachedBanners,
-  getCachedCategories,
-  getCachedProducts,
-  getTrendingProducts,
-  getCachedBlogs,
-  getCachedFAQs,
-  getCachedSettings,
-  getCachedActiveCoupon
-} from '@/lib/data-fetching';
-import { generateOrganizationSchema } from '@/lib/seo';
-import Script from 'next/script';
-
-const sanitizeForScript = (json: any) => {
-  return JSON.stringify(json).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
-};
-
-export async function generateMetadata(): Promise<Metadata> {
-  const [settings, banners] = await Promise.all([
-    getCachedSettings(),
-    getCachedBanners()
-  ]);
-
-  const brandName = settings?.brandName || 'GO Mart';
-  const metaTitle = settings?.metaTitle || brandName;
-  const description = settings?.metaDescription || settings?.siteDescription || 'Your ultimate destination for quality products.';
-  const ogImage = banners?.[0]?.image || settings?.logoUrl || '';
-  
-  const headersList = await headers();
-  const hostname = headersList.get('host') || 'localhost';
-  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-  const baseUrl = `${protocol}://${hostname}`;
-
-  return {
-    title: {
-      default: metaTitle,
-      template: `%s | ${brandName}`,
-    },
-    description,
-    openGraph: {
-      title: brandName,
-      description,
-      url: baseUrl,
-      siteName: brandName,
-      images: ogImage ? [ogImage] : [],
-      type: 'website',
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: brandName,
-      description,
-      images: ogImage ? [ogImage] : [],
-    },
-    metadataBase: new URL(baseUrl),
-  };
-}
-
-// Lazy load components below the fold
-const CategoryShowcase = dynamic(() => import('@/components/storefront/CategoryShowcase').then(mod => mod.CategoryShowcase), {
-  loading: () => <CategoryShowcaseSkeleton />
-});
-
-const ProductCarouselSection = dynamic(() => import('@/components/storefront/ProductCarouselSection').then(mod => mod.ProductCarouselSection), {
-  loading: () => <SectionSkeleton />
-});
-
-const BlogRecent = dynamic(() => import('@/components/storefront/BlogRecent').then(mod => mod.BlogRecent), {
-  loading: () => <BlogRecentSkeleton />
-});
-
-const FAQSection = dynamic(() => import('@/components/storefront/FAQSection').then(mod => mod.FAQSection), {
-  loading: () => <FAQSectionSkeleton />
-});
-
-const Testimonials = dynamic(() => import('@/components/storefront/Testimonials').then(mod => mod.Testimonials), {
-  loading: () => <TestimonialsSkeleton />
-});
-
-const FeaturesSection = dynamic(() => import('@/components/storefront/FeaturesSection').then(mod => mod.FeaturesSection), {
-  loading: () => <FeaturesSectionSkeleton />
-});
-
-const LoyaltyBanner = dynamic(() => import('@/components/storefront/LoyaltyBanner').then(mod => mod.LoyaltyBanner), {
-  loading: () => <BannerSkeleton />
-});
-
-const ComboOfferBanner = dynamic(() => import('@/components/storefront/ComboOfferBanner').then(mod => mod.ComboOfferBanner), {
-  loading: () => <BannerSkeleton />
-});
-
-const NewsletterV2 = dynamic(() => import('@/components/storefront/NewsletterV2').then(mod => mod.NewsletterV2), {
-  loading: () => <BannerSkeleton />
-});
-
-async function getHomeData() {
-  try {
-    const [
-      banners,
-      categories,
-      featuredProducts,
-      newArrivals,
-      flashSale,
-      trending,
-      blogs,
-      faqs,
-      settings,
-      activeCoupon
-    ] = await Promise.all([
-      getCachedBanners(),
-      getCachedCategories(),
-      getCachedProducts({ isFeatured: true }, 10),
-      getCachedProducts({ isNewArrival: true }, 10),
-      getCachedProducts({ salePrice: { $exists: true, $ne: null } }, 10, { salePrice: 1 }),
-      getTrendingProducts(10),
-      getCachedBlogs(1),
-      getCachedFAQs(),
-      getCachedSettings(),
-      getCachedActiveCoupon()
-    ]);
-
-    return {
-      banners,
-      categories,
-      featuredProducts,
-      newArrivals,
-      flashSale,
-      trending,
-      blogs,
-      faqs: faqs && faqs.length > 0 ? faqs : [],
-      settings,
-      activeCoupon
-    };
-  } catch (error) {
-    console.error("Error fetching home data via cache:", error);
-    return {
-      banners: [],
-      categories: [],
-      featuredProducts: [],
-      newArrivals: [],
-      flashSale: [],
-      trending: [],
-      blogs: [],
-      faqs: []
-    };
-  }
-}
-
-export default async function Home() {
-  const data = await getHomeData();
-  const ui = {
-    hero: data.settings?.uiTemplates?.hero || 'v1',
-    categories: data.settings?.uiTemplates?.categories || 'v1',
-    productCard: data.settings?.uiTemplates?.productCard || 'v1'
-  };
-
-  const orgSchema = data.settings ? await generateOrganizationSchema(data.settings) : null;
-
+export default function ShafaAgroLandingPage() {
   return (
-    <div className="flex flex-col min-h-screen">
-      {orgSchema && (
-        <Script
-          id="organization-schema"
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: sanitizeForScript(orgSchema) }}
-        />
-      )}
-      {/* 0. Free Delivery Announcement Bar */}
-      <FreeDeliveryBanner settings={data.settings} />
+    <div className="flex flex-col min-h-screen font-sans bg-background text-foreground">
+      {/* Dynamic Theme Hero Section */}
+      <section className="relative bg-card text-card-foreground border-b border-border overflow-hidden py-20 lg:py-32">
+        <div className="absolute inset-0 bg-linear-to-b from-primary/10 via-transparent to-background opacity-70"></div>
+        <div className="container mx-auto px-4 relative z-10 grid lg:grid-cols-12 gap-12 items-center">
+          <div className="lg:col-span-7 space-y-6 text-left">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20 backdrop-blur-md">
+              <Sparkles className="h-3.5 w-3.5" /> High-Starch Maize Silage Feed
+            </div>
+            <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-none text-foreground font-heading">
+              Optimize Livestock Milk Yields & Growth
+            </h1>
+            <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-xl">
+              NB Safa Agro produces premium fermented maize silage bags, packed with high-quality starches, natural molasses, and probiotics. The ultimate fodder for healthy dairy cows and bulls.
+            </p>
 
-      {/* 1. Hero Section */}
-      <HeroSlider banners={data.banners} style={ui.hero} />
+            <div className="flex flex-wrap gap-4 pt-2">
+              <Button asChild size="lg" className="bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-sm px-6 transition-all">
+                <Link href="/login" className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" /> Dealer Registration <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="border-border hover:bg-muted text-foreground font-semibold transition-all">
+                <Link href="/login">Office Staff Login</Link>
+              </Button>
+            </div>
+          </div>
 
-      {/* 4. Categories Showcase */}
-      <CategoryShowcase categories={data.categories} style={ui.categories} />
+          <div className="lg:col-span-5 relative flex justify-center">
+            {/* Silage Mockup Card */}
+            <div className="w-full max-w-sm bg-card backdrop-blur-md rounded-2xl p-6 border border-border shadow-xl space-y-6 text-card-foreground">
+              <div className="border-b border-border pb-4 text-center">
+                <h3 className="text-xl font-bold tracking-wider text-foreground font-logo">Premium Silage Bag</h3>
+                <span className="text-xs font-semibold text-primary">Standard Net Wt. 40 KG</span>
+              </div>
 
-      {/* 8. Featured Products */}
-      {data.featuredProducts.length > 0 && (
-        <ProductCarouselSection
-          title="Featured Collections"
-          description="Explore our best-selling and most popular products hand-picked just for you."
-          products={data.featuredProducts}
-          viewAllLink="/shop?filter=featured"
-          bgColor="bg-background"
-          cardStyle={ui.productCard}
-        />
-      )}
+              <div className="space-y-3.5 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Dry Matter (DM)</span>
+                  <span className="font-bold text-foreground">65% - 70%</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Starch Content</span>
+                  <span className="font-bold text-foreground">30% - 35%</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Crude Protein (CP)</span>
+                  <span className="font-bold text-foreground">8.5% - 9.2%</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">pH Fermentation Level</span>
+                  <span className="font-bold text-foreground">3.8 - 4.2</span>
+                </div>
+              </div>
 
-      {/* 8. Loyalty Promotion */}
-      <LoyaltyBanner settings={data.settings} />
+              <div className="pt-2">
+                <div className="p-3 bg-primary/5 rounded-lg border border-primary/20 text-xs text-center text-muted-foreground font-medium">
+                  * 100% natural, containing maize grain, premium molasses, and lactic acid bacteria.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      {/* 3. Flash Sale (Timed) */}
-      {data.flashSale.length > 0 && (
-        <ProductCarouselSection
-          title="Flash Sale"
-          products={data.flashSale}
-          viewAllLink="/shop?filter=sale"
-          isFlashSale={true}
-          bgColor="bg-primary/5"
-          cardStyle={ui.productCard}
-        />
-      )}
+      {/* Why Choose Section */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4 text-center max-w-4xl space-y-12">
+          <div className="space-y-3">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-foreground font-heading">Why NB Safa Agro Maize Silage?</h2>
+            <p className="text-muted-foreground text-sm max-w-xl mx-auto">
+              Our silage undergoes strict anaerobic fermentation to ensure preservation and boost cattle digestive health.
+            </p>
+          </div>
 
-      {/* 7. Combo Discount Promotion */}
-      <ComboOfferBanner activeCoupon={data.activeCoupon} settings={data.settings} />
+          <div className="grid md:grid-cols-3 gap-6 text-left">
+            <div className="p-6 bg-card rounded-xl space-y-3 border border-border shadow-sm">
+              <CheckCircle className="h-8 w-8 text-primary" />
+              <h3 className="font-bold text-lg text-foreground font-heading">Nutrient Dense</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Contains high-starch whole maize plants harvested at optimum milk line stage for maximized energy levels.
+              </p>
+            </div>
 
-      {/* 6. Trending Products */}
-      {data.trending.length > 0 && (
-        <ProductCarouselSection
-          title="Trending Now"
-          description="The most popular items according to our community ratings and reviews."
-          products={data.trending}
-          viewAllLink="/shop?filter=trending"
-          bgColor="bg-muted/20"
-          cardStyle={ui.productCard}
-        />
-      )}
+            <div className="p-6 bg-card rounded-xl space-y-3 border border-border shadow-sm">
+              <ShieldCheck className="h-8 w-8 text-primary" />
+              <h3 className="font-bold text-lg text-foreground font-heading">Preserved Integrity</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Packed in heavy duty UV-resistant silage bags to prevent oxygen infiltration, mold formation, and spoilage.
+              </p>
+            </div>
 
-      {/* 9. Recent Blogs section */}
-      <BlogRecent blogs={data.blogs} />
+            <div className="p-6 bg-card rounded-xl space-y-3 border border-border shadow-sm">
+              <Heart className="h-8 w-8 text-primary" />
+              <h3 className="font-bold text-lg text-foreground font-heading">Boosts Dairy Yields</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Increases cow daily milk production yields and enhances rapid rumen digestability.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      {/* 5. New Arrivals */}
-      {data.newArrivals.length > 0 && (
-        <ProductCarouselSection
-          title="New Arrivals"
-          description="Discover the latest additions to our collection. Stay ahead of the curve."
-          products={data.newArrivals}
-          viewAllLink="/shop?filter=new"
-          bgColor="bg-background"
-          cardStyle={ui.productCard}
-        />
-      )}
+      {/* Dealer Partnership Highlight */}
+      <section className="py-20 bg-card border-y border-border">
+        <div className="container mx-auto px-4 grid md:grid-cols-2 gap-12 items-center">
+          <div className="space-y-6 text-left">
+            <h2 className="text-3xl font-extrabold text-foreground font-heading leading-tight">Become a Regional Distributor Partner</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              NB Safa Agro operates a premium distribution channel across Bangladesh. Registered dealers enjoy competitive commissions, credit extensions, automated digital invoices, and marketing assets.
+            </p>
 
-      {/* 2. Our Features (Trust Badges) */}
-      <FeaturesSection />
+            <div className="space-y-3">
+              <div className="flex gap-2 items-center text-xs font-semibold text-foreground">
+                <span className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">1</span>
+                <span>Submit Trade License & Shop Details</span>
+              </div>
+              <div className="flex gap-2 items-center text-xs font-semibold text-foreground">
+                <span className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">2</span>
+                <span>Receive Office Approval & Assigned Credit limit</span>
+              </div>
+              <div className="flex gap-2 items-center text-xs font-semibold text-foreground">
+                <span className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">3</span>
+                <span>Order Silage & Earn Commissions on the fly</span>
+              </div>
+            </div>
 
-      {/* 8. Testimonials Section */}
-      <Testimonials />
+            <div className="pt-2">
+              <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold transition-all">
+                <Link href="/login">Apply for Dealer Portal</Link>
+              </Button>
+            </div>
+          </div>
 
-      {/* 11. Newsletter V2 Integration */}
-      <NewsletterV2 />
-
-      {/* 10. FAQ Accordion Section */}
-      <FAQSection faqs={data.faqs} />
-
+          <div className="bg-card text-card-foreground p-8 rounded-2xl border border-border shadow-lg space-y-6 relative overflow-hidden">
+            <div className="absolute right-0 bottom-0 opacity-[0.03]">
+              <Sparkles className="h-60 w-60 text-primary" />
+            </div>
+            <h3 className="text-xl font-bold text-foreground font-heading">Direct Order & Inquiries</h3>
+            <p className="text-xs text-muted-foreground font-medium">
+              Are you a bulk dairy farm owner? Connect directly with our distribution officers to get bulk shipment rates.
+            </p>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                <PhoneCall className="h-4 w-4 text-primary" />
+                <span>Call Center: +880 1700-000000</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span>Office: Bogura Sadar, Bogura, Bangladesh</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
-

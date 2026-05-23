@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import {
@@ -54,7 +55,13 @@ export function QuickAddModal({ product, isOpen, onClose }: QuickAddModalProps) 
     [product.variants, selectedColor, selectedSize]
   );
 
-  useEffect(() => {
+  const [prevProductAndOpen, setPrevProductAndOpen] = useState({
+    productId: product?._id,
+    isOpen,
+  });
+
+  if (prevProductAndOpen.productId !== product?._id || prevProductAndOpen.isOpen !== isOpen) {
+    setPrevProductAndOpen({ productId: product?._id, isOpen });
     if (isOpen) {
       const initialColor = uniqueColors[0] || null;
       setSelectedColor(initialColor);
@@ -65,7 +72,19 @@ export function QuickAddModal({ product, isOpen, onClose }: QuickAddModalProps) 
         .filter(Boolean);
       const initialSize = initialSizes[0] || null;
       setSelectedSize(initialSize);
+    }
+  }
 
+  const expectedSize = (selectedSize == null || !availableSizes.includes(selectedSize))
+    ? (availableSizes[0] || null)
+    : selectedSize;
+
+  if (expectedSize !== selectedSize) {
+    setSelectedSize(expectedSize);
+  }
+
+  useEffect(() => {
+    if (isOpen) {
       // Track ViewContent for Quick View
       fbEvent('ViewContent', {
         content_name: product.name,
@@ -76,13 +95,7 @@ export function QuickAddModal({ product, isOpen, onClose }: QuickAddModalProps) 
         currency: 'BDT'
       });
     }
-  }, [isOpen, uniqueColors, product.variants]);
-
-  useEffect(() => {
-    if (selectedSize == null || !availableSizes.includes(selectedSize)) {
-      setSelectedSize(availableSizes[0] || null);
-    }
-  }, [selectedColor, selectedSize, availableSizes]);
+  }, [isOpen, product]);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();

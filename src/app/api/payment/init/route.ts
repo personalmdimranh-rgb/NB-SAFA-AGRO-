@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       cancel_url: `${baseUrl}/api/payment/cancel?id=${orderId}`,
       ipn_url: `${baseUrl}/api/payment/ipn`,
       shipping_method: 'Courier',
-      product_name: 'GO Mart Order',
+      product_name: 'NB SAFA AGRO Order',
       product_category: 'E-commerce',
       product_profile: 'general',
       cus_name: shippingAddress.fullName,

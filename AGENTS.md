@@ -11,6 +11,7 @@ This guide establishes the rules, architectural patterns, and database standards
 - **Framework:** Next.js (App Router with React Server Components & Server Actions).
 - **Database:** MongoDB via Mongoose.
 - **Styling:** Tailwind CSS. Dynamic themes must utilize CSS variables in `src/app/theme.css` representing organic/farm-themed brand colors (curated greens and earth tones).
+- **Strict Dynamic Theming & Typography:** No hardcoded static color classes (e.g., `bg-emerald-950`, `text-emerald-400`) or hardcoded fonts may be used in layout templates or component screens. All custom components and pages must reference theme-relative classes or variables (e.g. `bg-primary`, `text-primary-foreground`, `font-body`) tied to `src/app/theme.css` so that the theme palette and body/logo typography can be changed dynamically by the super_admin from the System Design configuration panel.
 - **Component System:** shadcn/ui.
 - **Alerts & Dialogs:**
   - Use **SweetAlert2** for all administrative confirmations (e.g., deleting records, approving dealer registrations, confirming dividend releases, and confirming payroll).

@@ -22,10 +22,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 
 const marketingSchema = z.object({
   googleTagManagerId: z.string().optional(),
-  googleAnalyticsId: z.string().optional(),
-  googleAnalyticsPropertyId: z.string().optional(),
-  googleSearchConsoleId: z.string().optional(),
-  searchConsoleMeta: z.string().optional(),
   metaPixelId: z.string().optional(),
   facebookAccessToken: z.string().optional(),
   facebookDomainVerification: z.string().optional(),
@@ -46,10 +42,6 @@ export function MarketingForm() {
     resolver: zodResolver(marketingSchema),
     defaultValues: {
       googleTagManagerId: '',
-      googleAnalyticsId: '',
-      googleAnalyticsPropertyId: '',
-      googleSearchConsoleId: '',
-      searchConsoleMeta: '',
       metaPixelId: '',
       facebookAccessToken: '',
       facebookDomainVerification: '',
@@ -75,10 +67,6 @@ export function MarketingForm() {
         if (isMounted) {
           form.reset({
             googleTagManagerId: data.googleTagManagerId || '',
-            googleAnalyticsId: data.googleAnalyticsId || '',
-            googleAnalyticsPropertyId: data.googleAnalyticsPropertyId || '',
-            googleSearchConsoleId: data.googleSearchConsoleId || '',
-            searchConsoleMeta: data.searchConsoleMeta || '',
             metaPixelId: data.metaPixelId || '',
             facebookAccessToken: data.facebookAccessToken || '',
             facebookDomainVerification: data.facebookDomainVerification || '',
@@ -173,77 +161,7 @@ export function MarketingForm() {
                     </FormItem>
                   )}
                 />
-
-                <FormField
-                  control={form.control}
-                  name="googleAnalyticsId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>GA4 Measurement ID (Tracking)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="G-XXXXXXXXXX" {...field} disabled={isSubmitting} />
-                      </FormControl>
-                      <FormDescription>
-                        Required for tracking visitors (format: G-XXXXXXXXXX).
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="googleAnalyticsPropertyId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>GA4 Property ID (Analytics)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. 537309127" {...field} disabled={isSubmitting} />
-                      </FormControl>
-                      <FormDescription>
-                        Required for live traffic widget (format: sudhu sonkhya).
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="googleSearchConsoleId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Search Console ID / URL</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. https://www.example.com/" {...field} disabled={isSubmitting} />
-                      </FormControl>
-                      <FormDescription>
-                        Used for backend analytics reports.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="searchConsoleMeta"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Search Console Meta Tag (for Verification)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. j1X9r..._Xo" {...field} disabled={isSubmitting} />
-                    </FormControl>
-                    <FormDescription>
-                      Content string from Google meta tag verification.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField

@@ -4,8 +4,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, ShoppingBag, User, Heart, Menu, X, LogOut, LayoutDashboard, Settings, Truck, Package } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Search, ShoppingBag, User, Heart, LogOut, LayoutDashboard, Settings, Truck, Package } from 'lucide-react';
+import Image from 'next/image';
 import { useAppSelector } from '@/store/hooks';
 import { useSession, signOut } from 'next-auth/react';
 import { toast } from 'sonner';
@@ -27,8 +27,7 @@ import { MobileNavbar } from '@/components/layout/MobileNavbar';
 export default function NavbarV5() {
   const router = useRouter();
   const settings = useSettings();
-  const { data: session } = useSession();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { data: session, status } = useSession();
   const [categories, setCategories] = useState<any[]>([]);
   const [profile, setProfile] = useState<any>(null);
   const cartItemsCount = useAppSelector((state) => state.cart.items.reduce((total, item) => total + item.quantity, 0));
@@ -42,14 +41,16 @@ export default function NavbarV5() {
   }, []);
 
   useEffect(() => {
+    let isMounted = true;
     if (session) {
       fetch('/api/user/profile')
         .then(res => res.json())
-        .then(data => setProfile(data))
+        .then(data => { if (isMounted) setProfile(data); })
         .catch(err => console.error('Failed to fetch profile', err));
     } else {
-      setProfile(null);
+      Promise.resolve().then(() => { if (isMounted) setProfile(null); });
     }
+    return () => { isMounted = false; };
   }, [session]);
 
 
@@ -141,7 +142,7 @@ export default function NavbarV5() {
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center gap-3 px-2 py-1 rounded-[1.5rem] bg-transparent hover:bg-transparent hover:scale-110 transition-all cursor-pointer outline-none group">
                     <div className="h-10 w-10 rounded-[1.2rem] border-2 border-primary/20 overflow-hidden group-hover:scale-110 transition-transform">
-                      <img src={session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || '')}`} alt="Identity" className="h-full w-full object-cover" />
+                      <Image src={session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || '')}`} alt="Identity" className="h-full w-full object-cover" width={40} height={40} unoptimized />
                     </div>
                     <span className="hidden sm:block text-[10px] font-black uppercase tracking-widest pr-2">
                       {session.user?.name?.split(' ')[0]}
@@ -165,7 +166,7 @@ export default function NavbarV5() {
                     <DropdownMenuSeparator />
 
                     {/* Role Based Navigation */}
-                    {(session.user as any)?.role === 'super_admin' && (
+                    {(session.user as { role?: string })?.role === 'super_admin' && (
                       <>
                         <DropdownMenuItem asChild>
                           <Link href="/admin/dashboard" className="cursor-pointer">
@@ -180,7 +181,7 @@ export default function NavbarV5() {
                       </>
                     )}
 
-                    {(session.user as any)?.role === 'admin' && (
+                    {(session.user as { role?: string })?.role === 'admin' && (
                       <>
                         <DropdownMenuItem asChild>
                           <Link href="/admin/dashboard" className="cursor-pointer">
@@ -195,7 +196,7 @@ export default function NavbarV5() {
                       </>
                     )}
 
-                    {(session.user as any)?.role === 'user' && (
+                    {(session.user as { role?: string })?.role === 'user' && (
                       <>
                         <DropdownMenuItem asChild>
                           <Link href="/dashboard" className="cursor-pointer">

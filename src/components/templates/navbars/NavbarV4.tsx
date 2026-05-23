@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Search, ShoppingCart, User, Menu, X, Heart, LayoutDashboard, Settings, LogOut, MapPin, Phone, HelpCircle, Truck, Package } from 'lucide-react';
+import { Search, ShoppingCart, User, Heart, LayoutDashboard, Settings, LogOut, MapPin, Phone, HelpCircle, Truck, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAppSelector } from '@/store/hooks';
@@ -27,8 +27,7 @@ import { useEffect } from 'react';
 
 export default function NavbarV4() {
   const router = useRouter();
-  const { data: session } = useSession();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { data: session, status } = useSession();
   const [categories, setCategories] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [profile, setProfile] = useState<any>(null);
@@ -44,14 +43,16 @@ export default function NavbarV4() {
   }, []);
 
   useEffect(() => {
+    let isMounted = true;
     if (session) {
       fetch('/api/user/profile')
         .then(res => res.json())
-        .then(data => setProfile(data))
+        .then(data => { if (isMounted) setProfile(data); })
         .catch(err => console.error('Failed to fetch profile', err));
     } else {
-      setProfile(null);
+      Promise.resolve().then(() => { if (isMounted) setProfile(null); });
     }
+    return () => { isMounted = false; };
   }, [session]);
 
 
@@ -59,7 +60,6 @@ export default function NavbarV4() {
     e.preventDefault();
     if (searchQuery.trim()) {
       router.push(`/shop?q=${encodeURIComponent(searchQuery.trim())}`);
-      setMobileMenuOpen(false);
     }
   };
 
@@ -101,7 +101,7 @@ export default function NavbarV4() {
 
         {/* Branding */}
         <Link href="/" className="text-2xl md:text-3xl font-black text-white shrink-0 tracking-tighter flex items-center gap-1">
-          GO Mart<span className="text-primary italic">SHOP</span>
+          NB SAFA AGRO<span className="text-primary italic">SHOP</span>
         </Link>
 
         {/* Professional Search System */}
@@ -177,7 +177,7 @@ export default function NavbarV4() {
                     <DropdownMenuSeparator />
 
                     {/* Role Based Navigation */}
-                    {(session.user as any)?.role === 'super_admin' && (
+                    {(session.user as { role?: string })?.role === 'super_admin' && (
                       <>
                         <DropdownMenuItem asChild>
                           <Link href="/admin/dashboard" className="cursor-pointer">
@@ -192,7 +192,7 @@ export default function NavbarV4() {
                       </>
                     )}
 
-                    {(session.user as any)?.role === 'admin' && (
+                    {(session.user as { role?: string })?.role === 'admin' && (
                       <>
                         <DropdownMenuItem asChild>
                           <Link href="/admin/dashboard" className="cursor-pointer">
@@ -207,7 +207,7 @@ export default function NavbarV4() {
                       </>
                     )}
 
-                    {(session.user as any)?.role === 'user' && (
+                    {(session.user as { role?: string })?.role === 'user' && (
                       <>
                         <DropdownMenuItem asChild>
                           <Link href="/dashboard" className="cursor-pointer">

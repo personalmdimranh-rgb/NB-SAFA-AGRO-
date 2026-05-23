@@ -51,6 +51,7 @@ export default function ProductDetailsV4Client({ product }: ProductDetailsV4Clie
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [prevProductId, setPrevProductId] = useState<string | null>(null);
 
   const uniqueColors = useMemo(() =>
     Array.from(new Set((product.variants || []).map((v: any) => v.color))).filter(Boolean) as string[],
@@ -83,22 +84,29 @@ export default function ProductDetailsV4Client({ product }: ProductDetailsV4Clie
   const displaySalePrice = activeVariant?.salePrice || product.salePrice;
   const displayStock = activeVariant?.stock ?? product.stock;
 
-  useEffect(() => {
-    if (!product) return;
+  // Sync state from props during rendering to avoid effect-based cascading renders
+  if (product?._id !== prevProductId) {
+    setPrevProductId(product?._id || null);
     setSelectedColor(uniqueColors[0] || null);
-  }, [product?._id, uniqueColors]);
+    setSelectedSize(null);
+    setQuantity(1);
+  }
 
-  useEffect(() => {
-    if (selectedSize == null || !availableSizes.includes(selectedSize)) {
-      setSelectedSize(availableSizes[0] || null);
+  // Adjust selected size during render if not available for the selected color
+  if (selectedSize === null || !availableSizes.includes(selectedSize)) {
+    const firstAvailable = availableSizes[0] || null;
+    if (selectedSize !== firstAvailable) {
+      setSelectedSize(firstAvailable);
     }
-  }, [selectedColor, availableSizes, selectedSize]);
+  }
 
-  useEffect(() => {
-    if (quantity > displayStock) {
-      setQuantity(Math.max(1, displayStock));
+  // Adjust quantity during render if it exceeds available stock
+  if (quantity > displayStock) {
+    const adjustedQuantity = Math.max(1, displayStock);
+    if (quantity !== adjustedQuantity) {
+      setQuantity(adjustedQuantity);
     }
-  }, [displayStock, quantity]);
+  }
 
   const handleAddToCart = () => {
     if (displayStock <= 0) {

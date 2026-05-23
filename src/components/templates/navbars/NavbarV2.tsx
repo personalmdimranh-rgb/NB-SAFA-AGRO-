@@ -8,9 +8,6 @@ import { useRouter, usePathname } from 'next/navigation';
 import {
   Search,
   ShoppingCart,
-  User,
-  Menu,
-  X,
   Heart,
   LogOut,
   LayoutDashboard,
@@ -23,7 +20,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { useAppSelector } from '@/store/hooks';
 import { useSession, signOut } from 'next-auth/react';
-import { toast } from 'sonner';
 import { CartDrawer } from '@/components/layout/CartDrawer';
 import { ModeToggle } from '@/components/mode-toggle';
 import { AIChatbot } from '@/components/layout/AIChatbot';
@@ -41,12 +37,6 @@ import {
 import Swal from 'sweetalert2';
 
 import { CategoryNav } from '@/components/layout/CategoryNav';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { MobileMenu } from '@/components/layout/MobileMenu';
 
 const navItems = [
@@ -162,8 +152,8 @@ export default function NavbarV2() {
             />
 
             <Link href="/" className={`text-2xl md:text-3xl font-black tracking-tighter hover:scale-105 transition-all flex items-center gap-2 group ${!isHomePage || isScrolled ? 'text-foreground' : 'text-white'}`}>
-              <Image src="/logo.webp" width={40} height={40} alt="GO Mart Logo" className="object-contain" />
-              {settings?.brandName || 'GO Mart'}
+              <Image src="/logo.webp" width={40} height={40} alt="NB SAFA AGRO Logo" className="object-contain" />
+              {settings?.brandName || 'NB SAFA AGRO'}
             </Link>
           </div>
 
@@ -255,10 +245,13 @@ export default function NavbarV2() {
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-2 group cursor-pointer outline-none">
                       <div className="h-9 w-9 rounded-full border-2 border-primary/50 overflow-hidden group-hover:scale-110 transition-transform">
-                        <img
+                        <Image
                           src={session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || '')}`}
                           alt={session.user?.name || 'User'}
                           className="h-full w-full object-cover"
+                          width={36}
+                          height={36}
+                          unoptimized
                         />
                       </div>
                     </button>
@@ -280,7 +273,7 @@ export default function NavbarV2() {
                       <DropdownMenuSeparator />
 
                       {/* Role Based Navigation */}
-                      {(session.user as any)?.role === 'super_admin' && (
+                      {(session.user as { role?: string })?.role === 'super_admin' && (
                         <>
                           <DropdownMenuItem asChild>
                             <Link href="/admin/dashboard" className="cursor-pointer">
@@ -295,7 +288,7 @@ export default function NavbarV2() {
                         </>
                       )}
 
-                      {(session.user as any)?.role === 'admin' && (
+                      {(session.user as { role?: string })?.role === 'admin' && (
                         <>
                           <DropdownMenuItem asChild>
                             <Link href="/admin/dashboard" className="cursor-pointer">
@@ -310,7 +303,7 @@ export default function NavbarV2() {
                         </>
                       )}
 
-                      {(session.user as any)?.role === 'user' && (
+                      {(session.user as { role?: string })?.role === 'user' && (
                         <>
                           <DropdownMenuItem asChild>
                             <Link href="/dashboard" className="cursor-pointer">

@@ -98,12 +98,23 @@ function Carousel({
 
   React.useEffect(() => {
     if (!api || !setApi) return
-    setApi(api)
+    Promise.resolve().then(() => {
+      if (setApi) {
+        setApi(api)
+      }
+    })
   }, [api, setApi])
 
   React.useEffect(() => {
     if (!api) return
-    onSelect(api)
+
+    // Defer the initial state update to a microtask to prevent synchronous cascading renders
+    Promise.resolve().then(() => {
+      if (api) {
+        onSelect(api)
+      }
+    })
+
     api.on("reInit", onSelect)
     api.on("select", onSelect)
 

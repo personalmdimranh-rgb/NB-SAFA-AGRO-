@@ -33,7 +33,7 @@ export default function FooterV3() {
           <div className="space-y-8">
              <div className="flex items-center gap-3 text-primary">
                 <Cpu className="h-6 w-6" />
-                <span className="font-black text-sm sm:text-base md:text-xl tracking-tighter break-words max-w-[200px] md:max-w-none">GO Mart</span>
+                <span className="font-black text-sm sm:text-base md:text-xl tracking-tighter break-words max-w-[200px] md:max-w-none">NB SAFA AGRO</span>
              </div>
              <p className="text-[10px] text-neutral-500 uppercase tracking-widest leading-relaxed">
                 Systematic commerce architecture. High-precision retail logistics. Distributed from DHAKA_HQ.

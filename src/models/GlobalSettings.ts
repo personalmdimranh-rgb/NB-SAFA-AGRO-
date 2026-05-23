@@ -21,6 +21,7 @@ export interface IGlobalSettings extends Document {
   freeDeliveryThreshold?: number;
   deliveryChargeInsideDhaka?: number;
   deliveryChargeOutsideDhaka?: number;
+  lowStockThreshold?: number;
   metaTitle?: string;
   metaDescription?: string;
   googleTagManagerId?: string;
@@ -116,6 +117,7 @@ const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
     freeDeliveryThreshold: { type: Number, default: 0 },
     deliveryChargeInsideDhaka: { type: Number, default: 60 },
     deliveryChargeOutsideDhaka: { type: Number, default: 120 },
+    lowStockThreshold: { type: Number, default: 5000 },
     metaTitle: { type: String, default: '' },
     metaDescription: { type: String, default: '' },
     googleTagManagerId: { type: String },

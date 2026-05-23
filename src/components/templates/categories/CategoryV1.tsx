@@ -48,8 +48,10 @@ export default function CategoryV1({ categories }: CategoryShowcaseProps) {
 
   useEffect(() => {
     if (!emblaApi) return;
-    onSelect();
-    setScrollSnaps(emblaApi.scrollSnapList());
+    Promise.resolve().then(() => {
+      onSelect();
+      setScrollSnaps(emblaApi.scrollSnapList());
+    });
     emblaApi.on('select', onSelect);
     emblaApi.on('reInit', onSelect);
 

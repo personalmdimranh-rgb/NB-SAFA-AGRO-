@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose, { Document, Model, Schema } from 'mongoose';
 
 export interface ILandingPage extends Document {

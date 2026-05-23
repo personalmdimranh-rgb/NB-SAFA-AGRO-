@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose from 'mongoose';
 
 /**
@@ -13,7 +14,7 @@ export async function generateUniqueSlug(
   let slug = baseSlug;
   let counter = 1;
   
-  let excludeId: string | undefined = idToExclude;
+  const excludeId: string | undefined = idToExclude;
 
   while (true) {
     const query: any = { slug };

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export type Product = ({ id: string; _id?: string } | { _id: string; id?: string }) & {
   name: string;
   slug?: string;

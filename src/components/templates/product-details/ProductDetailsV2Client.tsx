@@ -83,23 +83,28 @@ export default function ProductDetailsV2Client({ product }: ProductDetailsV2Clie
   const displaySalePrice = activeVariant?.salePrice || product.salePrice;
   const displayStock = activeVariant?.stock ?? product.stock;
 
-  useEffect(() => {
-    if (!product) return;
+  // Keep track of the current product ID for render-phase reset
+  const [prevProductId, setPrevProductId] = useState<string | null>(null);
+
+  if (product?._id !== prevProductId) {
+    setPrevProductId(product?._id);
     setSelectedColor(uniqueColors[0] || null);
     setQuantity(1);
-  }, [product?._id, uniqueColors]);
+  }
 
-  useEffect(() => {
-    if (selectedSize == null || !availableSizes.includes(selectedSize)) {
-      setSelectedSize(availableSizes[0] || null);
-    }
-  }, [selectedColor, availableSizes, selectedSize]);
+  // Adjust selection if dependencies change and current choice is unavailable
+  const expectedSize = (selectedSize == null || !availableSizes.includes(selectedSize))
+    ? (availableSizes[0] || null)
+    : selectedSize;
 
-  useEffect(() => {
-    if (quantity > displayStock) {
-      setQuantity(Math.max(1, displayStock));
-    }
-  }, [displayStock, quantity]);
+  if (expectedSize !== selectedSize) {
+    setSelectedSize(expectedSize);
+  }
+
+  // Adjust quantity if it exceeds displayStock
+  if (quantity > displayStock) {
+    setQuantity(Math.max(1, displayStock));
+  }
 
   const handleAddToCart = () => {
     if (uniqueColors.length > 0 && !selectedColor) return toast.error('Select color');

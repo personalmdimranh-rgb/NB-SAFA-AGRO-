@@ -48,7 +48,7 @@ export default function HeroV1({ banners }: HeroSliderProps) {
 
   useEffect(() => {
     if (!emblaApi) return;
-    onSelect();
+    Promise.resolve().then(() => onSelect());
     emblaApi.on('select', onSelect);
     emblaApi.on('reInit', onSelect);
 

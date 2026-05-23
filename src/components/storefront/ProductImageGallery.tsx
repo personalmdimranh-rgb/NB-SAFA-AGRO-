@@ -9,10 +9,12 @@ interface ProductImageGalleryProps {
 
 export function ProductImageGallery({ images }: ProductImageGalleryProps) {
   const [activeImage, setActiveImage] = useState(images?.[0] || '/placeholder.png');
-  
-  useEffect(() => {
+  const [prevImages, setPrevImages] = useState(images);
+
+  if (images !== prevImages) {
+    setPrevImages(images);
     setActiveImage(images?.[0] || '/placeholder.png');
-  }, [images]);
+  }
 
   if (!images || images.length === 0) {
     return (

@@ -15,12 +15,12 @@ const PrintableInvoice: React.FC<InvoiceProps> = ({ order }) => {
       {/* Header */}
       <div className="flex justify-between items-start border-b pb-8 mb-8">
         <div>
-          <h1 className="text-4xl font-black tracking-tighter text-primary mb-2">GO Mart <span className="text-orange-500">SHOP</span></h1>
+          <h1 className="text-4xl font-black tracking-tighter text-emerald-700 mb-2">NB SAFA AGRO</h1>
           <div className="text-sm text-gray-500 space-y-1">
-            <p>House: 12, Road: 05, Sector: 10</p>
-            <p>Uttara, Dhaka-1230, Bangladesh</p>
-            <p>Phone: +880 1234 567890</p>
-            <p>Email: support@gomart.com</p>
+            <p>Bogura Sadar, Bogura</p>
+            <p>Bangladesh</p>
+            <p>Phone: +880 1700-000000</p>
+            <p>Email: support@nbsafaagro.com</p>
           </div>
         </div>
         <div className="text-right">
@@ -107,7 +107,7 @@ const PrintableInvoice: React.FC<InvoiceProps> = ({ order }) => {
       <div className="mt-24 border-t pt-8 text-center text-xs text-gray-400">
         <p className="mb-2 font-bold text-gray-600">THANK YOU FOR YOUR BUSINESS!</p>
         <p>This is a computer generated invoice and does not require a signature.</p>
-        <p>Visit us at: www.gomart.com</p>
+        <p>Visit us at: www.nbsafaagro.com</p>
       </div>
       
       {/* Page break for bulk printing */}

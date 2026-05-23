@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface SteadfastOrderPayload {
   invoice: string;
   recipient_name: string;

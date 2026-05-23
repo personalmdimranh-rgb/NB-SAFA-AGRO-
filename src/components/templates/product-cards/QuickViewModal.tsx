@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import {
@@ -59,7 +60,13 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
     [product.variants, selectedColor, selectedSize]
   );
 
-  useEffect(() => {
+  const [prevProductAndOpen, setPrevProductAndOpen] = useState({
+    productId: product?._id,
+    isOpen,
+  });
+
+  if (prevProductAndOpen.productId !== product?._id || prevProductAndOpen.isOpen !== isOpen) {
+    setPrevProductAndOpen({ productId: product?._id, isOpen });
     if (isOpen) {
       const initialColor = uniqueColors[0] || null;
       setSelectedColor(initialColor);
@@ -72,7 +79,23 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
       setSelectedSize(initialSize);
       setQuantity(1);
       setActiveImage(product.images?.[0] || '/placeholder.jpg');
+    }
+  }
 
+  const expectedSize = (selectedSize == null || !availableSizes.includes(selectedSize))
+    ? (availableSizes[0] || null)
+    : selectedSize;
+
+  if (expectedSize !== selectedSize) {
+    setSelectedSize(expectedSize);
+  }
+
+  if (activeVariant?.image && activeVariant.image !== activeImage) {
+    setActiveImage(activeVariant.image);
+  }
+
+  useEffect(() => {
+    if (isOpen) {
       // Track ViewContent for Quick View
       fbEvent('ViewContent', {
         content_name: product.name,
@@ -83,23 +106,11 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
         currency: 'BDT'
       }, {
         em: session?.user?.email || undefined,
-        ph: (session?.user as any)?.phone || undefined,
+        ph: (session?.user as { phone?: string })?.phone || undefined,
         fn: session?.user?.name || undefined
       });
     }
-  }, [isOpen, uniqueColors, product.variants, product.images, session]);
-
-  useEffect(() => {
-    if (selectedSize == null || !availableSizes.includes(selectedSize)) {
-      setSelectedSize(availableSizes[0] || null);
-    }
-  }, [selectedColor, availableSizes]);
-
-  useEffect(() => {
-    if (activeVariant?.image) {
-      setActiveImage(activeVariant.image);
-    }
-  }, [activeVariant]);
+  }, [isOpen, product, session]);
 
   const displayPrice = activeVariant?.price || product.price;
   const displaySalePrice = activeVariant?.salePrice || product.salePrice;

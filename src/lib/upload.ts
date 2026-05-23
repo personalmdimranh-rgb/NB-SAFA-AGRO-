@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Utility for uploading images to imgBB.
  * Requires NEXT_PUBLIC_IMGBB_API_KEY in .env.local

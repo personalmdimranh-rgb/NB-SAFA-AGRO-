@@ -5,8 +5,8 @@ import { Separator } from '@/components/ui/separator';
 import { FileText, ShoppingBag, Truck, UserCheck, Scale, HelpCircle } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Terms & Conditions | GO Mart',
-  description: 'Understand the terms and conditions for shopping at GO Mart.',
+  title: 'Terms & Conditions | NB SAFA AGRO',
+  description: 'Understand the terms and conditions for shopping at NB SAFA AGRO.',
 };
 
 async function getSettings() {
@@ -15,7 +15,7 @@ async function getSettings() {
     const settings = await GlobalSettings.findOne().lean();
     if (!settings) {
       return {
-        brandName: "GO Mart",
+        brandName: "NB SAFA AGRO",
         contact: {
           email: "support@bddukan.shop",
           phone: "+8801234567890"
@@ -26,7 +26,7 @@ async function getSettings() {
   } catch (error) {
     console.error('Error fetching settings for terms page:', error);
     return {
-      brandName: "GO Mart",
+      brandName: "NB SAFA AGRO",
       contact: {
         email: "support@bddukan.shop",
         phone: "+8801234567890"

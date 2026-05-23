@@ -35,9 +35,7 @@ export default function BlogDetailsV3({ blog, readingTime }: BlogDetailsV3Props)
   const [email, setEmail] = useState('');
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setCurrentUrl(window.location.href);
-    }
+    Promise.resolve().then(() => setCurrentUrl(window.location.href));
   }, []);
 
   const handleSubscribe = () => {
@@ -136,7 +134,7 @@ export default function BlogDetailsV3({ blog, readingTime }: BlogDetailsV3Props)
                       )}
                    </div>
                    <div>
-                      <h4 className="font-black text-xl uppercase tracking-tighter leading-none">{blog.author?.name || 'GO Mart Intelligence'}</h4>
+                      <h4 className="font-black text-xl uppercase tracking-tighter leading-none">{blog.author?.name || 'NB SAFA AGRO Intelligence'}</h4>
                       <p className="text-[10px] font-mono font-black text-primary uppercase tracking-widest mt-2">Logistics Analyst</p>
                    </div>
                 </div>

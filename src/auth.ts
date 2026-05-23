@@ -66,6 +66,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             if (dbUser) {
               token.id = dbUser._id.toString();
               token.role = dbUser.role ?? 'user';
+              token.status = dbUser.status ?? 'active';
               token.phone = dbUser.phone;
               token.image = dbUser.image || user.image || token.picture;
             }
@@ -102,6 +103,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               $setOnInsert: {
                 role: 'user',
                 status: 'active',
+                phone: 'N/A',
               }
             },
             { upsert: true, new: true }

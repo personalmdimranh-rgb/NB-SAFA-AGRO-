@@ -226,9 +226,6 @@ export default function LandingPagesPage() {
                       <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => window.open(`/lp/${page.slug}`, '_blank')}>
                         <Eye className="h-4 w-4 text-emerald-500" /> View Live
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer gap-2">
-                        <BarChart2 className="h-4 w-4 text-purple-500" /> Analytics
-                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem 
                         className="cursor-pointer gap-2 text-red-500 focus:text-red-500"

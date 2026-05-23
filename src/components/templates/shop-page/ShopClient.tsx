@@ -55,17 +55,81 @@ interface ShopProduct {
   numReviews?: number;
   images: string[];
   stock: number;
-  categories?: any[];
+  categories?: ShopCategory[];
 }
 
 interface ShopClientProps {
   initialProducts: ShopProduct[];
   initialCategories: ShopCategory[];
-  searchParams?: any;
+  searchParams?: Record<string, string | string[] | undefined>;
   cardStyle?: string;
 }
 
-export default function ShopClient({ initialProducts, initialCategories, searchParams: initialSearchParams, cardStyle }: ShopClientProps) {
+interface ShopSidebarProps {
+  categories: ShopCategory[];
+  selectedCategories: string[];
+  toggleCategory: (slug: string) => void;
+  priceRange: number[];
+  setPriceRange: (range: number[]) => void;
+  clearFilters: () => void;
+}
+
+function ShopSidebar({
+  categories,
+  selectedCategories,
+  toggleCategory,
+  priceRange,
+  setPriceRange,
+  clearFilters,
+}: ShopSidebarProps) {
+  return (
+    <div className="space-y-8">
+      <div>
+        <h3 className="text-sm font-bold uppercase tracking-wider mb-4">Categories</h3>
+        <div className="space-y-3">
+          {categories.map((cat) => (
+            <div key={cat._id} className="flex items-center space-x-2">
+              <Checkbox
+                id={cat._id}
+                checked={selectedCategories.includes(cat.slug)}
+                onCheckedChange={() => toggleCategory(cat.slug)}
+              />
+              <Label
+                htmlFor={cat._id}
+                className="text-sm font-medium leading-none cursor-pointer hover:text-primary transition-colors"
+              >
+                {cat.name}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-bold uppercase tracking-wider mb-6">Price Range</h3>
+        <Slider
+          value={priceRange}
+          max={50000}
+          step={500}
+          onValueChange={(val) => {
+            if (Array.isArray(val)) setPriceRange([...val]);
+          }}
+          className="mb-4"
+        />
+        <div className="flex items-center justify-between text-sm font-medium">
+          <span>৳{priceRange[0]}</span>
+          <span>৳{priceRange[1]}+</span>
+        </div>
+      </div>
+
+      <Button variant="outline" className="w-full" onClick={clearFilters}>
+        Reset All Filters
+      </Button>
+    </div>
+  );
+}
+
+export default function ShopClient({ initialProducts, initialCategories, cardStyle }: ShopClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -87,21 +151,27 @@ export default function ShopClient({ initialProducts, initialCategories, searchP
   const [currentPage, setCurrentPage] = useState(Number(searchParams.get('page')) || 1);
   const itemsPerPage = 20;
 
-  // Sync with URL params (e.g. from Navbar search)
+  const [prevUrlSearch, setPrevUrlSearch] = useState<string | null>(searchParams.get('search') || searchParams.get('q'));
+  const [prevUrlPage, setPrevUrlPage] = useState<number>(Number(searchParams.get('page')) || 1);
+
+  // Sync search term and page from URL parameters inside an effect
   useEffect(() => {
     const urlSearch = searchParams.get('search') || searchParams.get('q');
-    if (urlSearch !== null) {
-      setSearchTerm(urlSearch);
+    if (urlSearch !== prevUrlSearch) {
+      setPrevUrlSearch(urlSearch);
+      if (urlSearch !== null && urlSearch !== searchTerm) {
+        setSearchTerm(urlSearch);
+      }
     }
-  }, [searchParams]);
 
-  // Sync page from URL parameter
-  useEffect(() => {
     const urlPage = Number(searchParams.get('page')) || 1;
-    if (urlPage !== currentPage) {
-      setCurrentPage(urlPage);
+    if (urlPage !== prevUrlPage) {
+      setPrevUrlPage(urlPage);
+      if (urlPage !== currentPage) {
+        setCurrentPage(urlPage);
+      }
     }
-  }, [searchParams, currentPage]);
+  }, [searchParams, prevUrlSearch, prevUrlPage, searchTerm, currentPage]);
 
   const skipClampRef = useRef(false);
   const isMounted = useRef(false);
@@ -193,58 +263,21 @@ export default function ShopClient({ initialProducts, initialCategories, searchP
     setShowOnlyTrending(false);
   };
 
-  const Sidebar = () => (
-    <div className="space-y-8">
-      <div>
-        <h3 className="text-sm font-bold uppercase tracking-wider mb-4">Categories</h3>
-        <div className="space-y-3">
-          {categories.map((cat) => (
-            <div key={cat._id} className="flex items-center space-x-2">
-              <Checkbox
-                id={cat._id}
-                checked={selectedCategories.includes(cat.slug)}
-                onCheckedChange={() => toggleCategory(cat.slug)}
-              />
-              <Label
-                htmlFor={cat._id}
-                className="text-sm font-medium leading-none cursor-pointer hover:text-primary transition-colors"
-              >
-                {cat.name}
-              </Label>
-            </div>
-          ))}
-        </div>
-      </div>
 
-      <div>
-        <h3 className="text-sm font-bold uppercase tracking-wider mb-6">Price Range</h3>
-        <Slider
-          value={priceRange}
-          max={50000}
-          step={500}
-          onValueChange={(val) => {
-            if (Array.isArray(val)) setPriceRange([...val]);
-          }}
-          className="mb-4"
-        />
-        <div className="flex items-center justify-between text-sm font-medium">
-          <span>৳{priceRange[0]}</span>
-          <span>৳{priceRange[1]}+</span>
-        </div>
-      </div>
-
-      <Button variant="outline" className="w-full" onClick={clearFilters}>
-        Reset All Filters
-      </Button>
-    </div>
-  );
 
   return (
     <div className="container mx-auto px-4 md:px-0 py-10">
       <div className="flex flex-col gap-8 md:flex-row">
         {/* Desktop Sidebar */}
         <aside className="hidden w-64 shrink-0 md:block sticky top-20 self-start h-fit max-h-[calc(100vh-6rem)] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40">
-          <Sidebar />
+          <ShopSidebar
+            categories={categories}
+            selectedCategories={selectedCategories}
+            toggleCategory={toggleCategory}
+            priceRange={priceRange}
+            setPriceRange={setPriceRange}
+            clearFilters={clearFilters}
+          />
         </aside>
 
         <div className="flex-1 space-y-6">
@@ -271,7 +304,14 @@ export default function ShopClient({ initialProducts, initialCategories, searchP
                   <SheetHeader className="mb-6 p-0">
                     <SheetTitle>Filter Products</SheetTitle>
                   </SheetHeader>
-                  <Sidebar />
+                  <ShopSidebar
+                    categories={categories}
+                    selectedCategories={selectedCategories}
+                    toggleCategory={toggleCategory}
+                    priceRange={priceRange}
+                    setPriceRange={setPriceRange}
+                    clearFilters={clearFilters}
+                  />
                 </SheetContent>
               </Sheet>
 

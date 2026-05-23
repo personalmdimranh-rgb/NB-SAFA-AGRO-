@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format, isValid } from 'date-fns';
@@ -5,7 +6,7 @@ import { format, isValid } from 'date-fns';
 export async function generateInvoicePDF(order: any, settings: any) {
   const doc = new jsPDF();
 
-  const brandName = settings?.brandName || "GO Mart";
+  const brandName = settings?.brandName || "NB SAFA AGRO";
   const brandEmail = settings?.contact?.email || "";
   const brandPhone = settings?.contact?.phone || "";
   const brandAddress = settings?.contact?.address || "";

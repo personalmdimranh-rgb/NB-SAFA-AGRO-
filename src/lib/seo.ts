@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { headers } from 'next/headers';
 
 async function getBaseUrl() {
@@ -12,7 +13,7 @@ export async function generateOrganizationSchema(settings: any) {
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: settings.brandName || 'GO Mart',
+    name: settings.brandName || 'NB SAFA AGRO',
     url: baseUrl,
     logo: settings.logo,
     contactPoint: {
@@ -41,7 +42,7 @@ export async function generateProductSchema(product: any) {
     sku: product.sku,
     brand: {
       '@type': 'Brand',
-      name: 'GO Mart',
+      name: 'NB SAFA AGRO',
     },
     offers: {
       '@type': 'Offer',
@@ -78,7 +79,7 @@ export async function generateBlogSchema(blog: any) {
     dateModified: blog.updatedAt || blog.createdAt,
     author: {
       '@type': 'Organization',
-      name: 'GO Mart',
+      name: 'NB SAFA AGRO',
     },
     description: blog.metaDescription || blog.title,
     url: `${baseUrl}/blog/${blog.slug}`,

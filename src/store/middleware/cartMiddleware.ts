@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Middleware } from '@reduxjs/toolkit';
 
 export const cartMiddleware: Middleware = (store) => (next) => (action: any) => {

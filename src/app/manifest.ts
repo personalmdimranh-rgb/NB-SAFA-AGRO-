@@ -23,14 +23,14 @@ const THEME_COLORS: Record<string, string> = {
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const settings = await getCachedSettings();
 
-  const brandName = settings?.brandName || 'GO Mart';
+  const brandName = settings?.brandName || 'NB SAFA AGRO';
   const themeName = settings?.uiTemplates?.theme?.toLowerCase() || 'default';
   const themeColor = THEME_COLORS[themeName] || THEME_COLORS.default;
 
   return {
     name: brandName,
-    short_name: brandName.split(' ')[0],
-    description: settings?.metaDescription || `The most popular online shop in Bangladesh. High performance ecommerce platform for ${brandName}.`,
+    short_name: 'NB SAFA AGRO',
+    description: settings?.metaDescription || `NB SAFA AGRO - Premium Maize Silage Production Farm.`,
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',

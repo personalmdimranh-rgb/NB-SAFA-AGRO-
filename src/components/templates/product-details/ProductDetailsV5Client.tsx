@@ -80,17 +80,24 @@ export default function ProductDetailsV5Client({ product }: ProductDetailsV5Clie
     [product.variants, selectedColor, selectedSize]
   );
 
-  useEffect(() => {
-    if (!product) return;
-    setSelectedColor(uniqueColors[0] || null);
-    setActiveImage(product.images?.[0] || '/placeholder.png');
-  }, [product?._id, uniqueColors]);
+  // Keep track of the current product ID for render-phase reset
+  const [prevProductId, setPrevProductId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (selectedSize == null || !availableSizes.includes(selectedSize)) {
-      setSelectedSize(availableSizes[0] || null);
-    }
-  }, [selectedColor, availableSizes]);
+  if (product?._id !== prevProductId) {
+    setPrevProductId(product?._id);
+    setSelectedColor(uniqueColors[0] || null);
+    setActiveImage(product?.images?.[0] || '/placeholder.png');
+    setQuantity(1);
+  }
+
+  // Adjust selection if dependencies change and current choice is unavailable
+  const expectedSize = (selectedSize == null || !availableSizes.includes(selectedSize))
+    ? (availableSizes[0] || null)
+    : selectedSize;
+
+  if (expectedSize !== selectedSize) {
+    setSelectedSize(expectedSize);
+  }
 
   const displayPrice = activeVariant?.price || product.price;
   const displaySalePrice = activeVariant?.salePrice || product.salePrice;

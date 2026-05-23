@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { unstable_cache } from 'next/cache';
 import connectToDatabase from './db';
 import Product from '@/models/Product';

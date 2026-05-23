@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Link from 'next/link';
 import connectToDatabase from "@/lib/db";
 import GlobalSettings from "@/models/GlobalSettings";
@@ -100,10 +101,10 @@ export default async function FooterV1() {
             <h4 className="mb-4 text-sm font-semibold uppercase tracking-widest text-primary">Categories</h4>
             <ul className="grid gap-2 text-sm text-muted-foreground">
               <li>
-                <Link href="/shop?category=mens-clothing" className="hover:text-primary transition-colors">Men's Clothing</Link>
+                <Link href="/shop?category=mens-clothing" className="hover:text-primary transition-colors">Men&apos;s Clothing</Link>
               </li>
               <li>
-                <Link href="/shop?category=womens-clothing" className="hover:text-primary transition-colors">Women's Clothing</Link>
+                <Link href="/shop?category=womens-clothing" className="hover:text-primary transition-colors">Women&apos;s Clothing</Link>
               </li>
               <li>
                 <Link href="/shop?category=footwear" className="hover:text-primary transition-colors">Footwear</Link>
@@ -135,7 +136,7 @@ export default async function FooterV1() {
             <ul className="grid gap-3 text-sm text-muted-foreground">
               <li className="flex items-start justify-center md:justify-start gap-3">
                 <MapPin size={16} className="text-primary mt-0.5 shrink-0" />
-                <span>{settings?.contact?.address || '123 GO Mart Avenue'}</span>
+                <span>{settings?.contact?.address || '123 NB SAFA AGRO Avenue'}</span>
               </li>
               <li className="flex items-center justify-center md:justify-start gap-3">
                 <Phone size={16} className="text-primary shrink-0" />
@@ -151,7 +152,7 @@ export default async function FooterV1() {
 
         <div className="mt-12 flex flex-col items-center justify-between border-t py-6 sm:flex-row text-sm text-muted-foreground gap-4">
           <div className="flex flex-col sm:flex-row items-center gap-4">
-            <p>© {new Date().getFullYear()} {settings?.brandName || 'GO Mart'}. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} {settings?.brandName || 'NB SAFA AGRO'}. All rights reserved.</p>
           </div>
 
           <div className="flex items-center gap-6">

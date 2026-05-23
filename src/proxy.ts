@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import NextAuth from "next-auth"
 import authConfig from "./auth.config"
 import { NextResponse } from "next/server"
@@ -8,14 +9,37 @@ export const proxy = auth(async (req) => {
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
   const role = (req.auth?.user as any)?.role as string | undefined;
+  const status = (req.auth?.user as any)?.status as string | undefined;
 
   const isAdminRoute = nextUrl.pathname.startsWith("/admin");
+  const isDealerRoute = nextUrl.pathname.startsWith("/dealer");
   const isAuthRoute = nextUrl.pathname.startsWith("/login") || nextUrl.pathname.startsWith("/register");
+
+  // Redirect legacy NB SAFA AGRO e-commerce routes to new Shafa Agro home
+  const isLegacyEcommerceRoute = [
+    "/shop",
+    "/cart",
+    "/checkout",
+    "/wishlist",
+    "/product",
+    "/track-order",
+    "/categories"
+  ].some(route => nextUrl.pathname.startsWith(route));
+
+  if (isLegacyEcommerceRoute) {
+    return NextResponse.redirect(new URL("/", nextUrl));
+  }
 
   // 1. Redirection for logged-in users on Auth routes (Login/Register)
   if (isAuthRoute && isLoggedIn) {
-    if (role === "admin" || role === "super_admin") {
+    if (role === "admin" || role === "super_admin" || role === "manager" || role === "staff") {
       return NextResponse.redirect(new URL("/admin/dashboard", nextUrl));
+    }
+    if (role === "director") {
+      return NextResponse.redirect(new URL("/admin/director", nextUrl));
+    }
+    if (role === "dealer") {
+      return NextResponse.redirect(new URL("/dealer/dashboard", nextUrl));
     }
     return NextResponse.redirect(new URL("/dashboard", nextUrl));
   }
@@ -26,15 +50,41 @@ export const proxy = auth(async (req) => {
       return NextResponse.redirect(new URL("/login", nextUrl));
     }
 
-    // Only allow admin/super_admin on admin routes
-    if (role !== "admin" && role !== "super_admin") {
-      return NextResponse.redirect(new URL("/dashboard", nextUrl));
+    // Check if director-only sub-route
+    const isDirectorRoute = nextUrl.pathname.startsWith("/admin/director");
+    if (isDirectorRoute) {
+      if (role !== "director" && role !== "super_admin") {
+        return NextResponse.redirect(new URL("/login", nextUrl));
+      }
+    } else {
+      // Allow super_admin, admin, manager, staff on other admin routes
+      if (role !== "admin" && role !== "super_admin" && role !== "manager" && role !== "staff") {
+        if (role === "director") {
+          return NextResponse.redirect(new URL("/admin/director", nextUrl));
+        }
+        if (role === "dealer") {
+          return NextResponse.redirect(new URL("/dealer/dashboard", nextUrl));
+        }
+        return NextResponse.redirect(new URL("/dashboard", nextUrl));
+      }
     }
 
     // /admin/system-design → strictly super_admin
     const isSystemDesignRoute = nextUrl.pathname.startsWith("/admin/system-design");
     if (isSystemDesignRoute && role !== "super_admin") {
       return NextResponse.redirect(new URL("/admin/dashboard", nextUrl));
+    }
+  }
+
+  // 3. Protection for Dealer routes
+  if (isDealerRoute) {
+    if (!isLoggedIn) {
+      return NextResponse.redirect(new URL("/login", nextUrl));
+    }
+
+    // Only allow active dealers
+    if (role !== "dealer" || status === "inactive") {
+      return NextResponse.redirect(new URL("/login", nextUrl));
     }
   }
 

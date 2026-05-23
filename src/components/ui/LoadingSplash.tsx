@@ -11,8 +11,8 @@ export default function LoadingSplash({
   logoUrl?: string;
   brandName?: string;
 }) {
-  const defaultWords = ["Quality", "Trust", "Shop", "Value"];
-  const words = brandName ? [brandName, ...defaultWords] : ["GO Mart", ...defaultWords];
+  const defaultWords = ["Quality", "Trust", "Silage", "Growth"];
+  const words = brandName ? [brandName, ...defaultWords] : ["NB SAFA AGRO", ...defaultWords];
   const [index, setIndex] = useState(0);
 
   useEffect(() => {

@@ -34,20 +34,21 @@ export default function FooterV2() {
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
-    // Check if running in standalone mode (already installed)
-    const checkStandalone = () => {
-      const isStandaloneMode = 
+    // Defer synchronous state initialisations to a microtask
+    Promise.resolve().then(() => {
+      // Check if running in standalone mode (already installed)
+      const isStandaloneMode =
         window.matchMedia('(display-mode: standalone)').matches ||
-        (window.navigator as any).standalone ||
+        (window.navigator as { standalone?: boolean }).standalone ||
         document.referrer.includes('android-app://');
       setIsStandalone(isStandaloneMode);
-    };
 
-    checkStandalone();
-
-    // Detect iOS device
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    setIsIOS(isIOSDevice);
+      // Detect iOS device
+      const isIOSDevice =
+        /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+        !('MSStream' in window);
+      setIsIOS(isIOSDevice);
+    });
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
@@ -110,8 +111,8 @@ export default function FooterV2() {
           {/* Brand Essence */}
           <div className="lg:col-span-4 space-y-6 flex flex-col items-center lg:items-start">
             <Link href="/" className="text-2xl md:text-3xl font-black tracking-tighter hover:scale-105 transition-all flex items-center gap-2 group text-foreground">
-              <Image src="/logo.webp" width={40} height={40} alt="GO Mart Logo" className="object-contain" />
-              {settings?.brandName || 'GO Mart'}
+              <Image src="/logo.webp" width={40} height={40} alt="NB SAFA AGRO Logo" className="object-contain" />
+              {settings?.brandName || 'NB SAFA AGRO'}
             </Link>
             <p className="text-muted-foreground text-sm max-w-sm leading-relaxed font-medium">
               Pushing the boundaries of design. Born in the heart of Dhaka, engineering for the world.
@@ -186,7 +187,7 @@ export default function FooterV2() {
 
         {/* Bottom Bar - Reduced Padding & Smart Layout */}
         <div className="pt-6 border-t border-muted flex flex-col md:flex-row items-center justify-between gap-6 text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">
-           <p className="text-center md:text-left">© {currentYear} GO MART CO. ALL RIGHTS RESERVED.</p>
+           <p className="text-center md:text-left">© {currentYear} NB SAFA AGRO CO. ALL RIGHTS RESERVED.</p>
            <div className="flex items-center gap-4">
              <DeveloperLogo className="opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all scale-90 md:scale-100" />
            </div>

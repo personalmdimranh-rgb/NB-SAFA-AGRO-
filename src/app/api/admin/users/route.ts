@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     const session = await auth();
     const userRole = (session?.user as any)?.role;
     
-    if (!session || (userRole !== 'admin' && userRole !== 'super_admin')) {
+    if (!session || (userRole !== 'admin' && userRole !== 'super_admin' && userRole !== 'director')) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
@@ -82,6 +82,7 @@ export async function POST(req: NextRequest) {
         $set: { role: 'admin' },
         $setOnInsert: { 
           name: email.split('@')[0], // Use email prefix as initial name
+          phone: 'N/A',
         }
       },
       { upsert: true, new: true }

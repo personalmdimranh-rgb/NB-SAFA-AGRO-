@@ -101,9 +101,13 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
     [product.variants, selectedColor, selectedSize]
   );
 
-  // Auto-select first available options on mount or product change
-  useEffect(() => {
-    if (!product) return;
+  // Keep track of the current product ID and session user for render-phase reset
+  const [prevProductId, setPrevProductId] = useState<string | null>(null);
+  const [prevSessionUser, setPrevSessionUser] = useState<any>(null);
+
+  if (product?._id !== prevProductId || session?.user !== prevSessionUser) {
+    setPrevProductId(product?._id);
+    setPrevSessionUser(session?.user);
 
     const initialColor = uniqueColors[0] || null;
     setSelectedColor(initialColor);
@@ -117,8 +121,30 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
 
     setSelectedImage(0);
     setQuantity(1);
+    setEligibility(null);
+  }
 
-    // Track ViewContent
+  // Adjust selection if dependencies change and current choice is unavailable
+  const expectedSize = (selectedSize == null || !availableSizes.includes(selectedSize))
+    ? (availableSizes[0] || null)
+    : selectedSize;
+
+  if (expectedSize !== selectedSize) {
+    setSelectedSize(expectedSize);
+  }
+
+  // Update main image if variant has one
+  if (activeVariant?.image) {
+    const variantImgIndex = (product.images || []).findIndex((img: string) => img === activeVariant.image);
+    if (variantImgIndex !== -1 && variantImgIndex !== selectedImage) {
+      setSelectedImage(variantImgIndex);
+    }
+  }
+
+  // Track ViewContent when product changes
+  useEffect(() => {
+    if (!product) return;
+
     fbEvent('ViewContent', {
       content_name: product.name,
       content_category: product.categories?.[0]?.name || 'Uncategorized',
@@ -131,17 +157,15 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
       ph: (session?.user as any)?.phone || undefined,
       fn: session?.user?.name || undefined
     });
-  }, [product?._id, uniqueColors, product.variants, session]);
+  }, [product, session]);
 
   // Fetch review eligibility separately to avoid unnecessary re-triggers
   useEffect(() => {
     if (!session?.user || !product?._id) {
-      setEligibility(null);
       return;
     }
 
     const controller = new AbortController();
-    setEligibility(null); // Reset to avoid stale UI
 
     async function checkEligibility() {
       try {
@@ -169,7 +193,8 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
       const element = document.getElementById('review-form');
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        setShouldScrollToReviewForm(false);
+        // Defer to avoid synchronous setState inside effect
+        setTimeout(() => setShouldScrollToReviewForm(false), 0);
       } else {
         // If element not yet in DOM, retry briefly
         const timer = setTimeout(() => {
@@ -180,21 +205,6 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
       }
     }
   }, [activeTab, shouldScrollToReviewForm]);
-
-  // Adjust selection if dependencies change and current choice is unavailable
-  useEffect(() => {
-    if (selectedSize == null || !availableSizes.includes(selectedSize)) {
-      setSelectedSize(availableSizes[0] || null);
-    }
-
-    // Update main image if variant has one
-    if (activeVariant?.image) {
-      const variantImgIndex = (product.images || []).findIndex((img: string) => img === activeVariant.image);
-      if (variantImgIndex !== -1) {
-        setSelectedImage(variantImgIndex);
-      }
-    }
-  }, [selectedColor, selectedSize, availableSizes, activeVariant, product.images]);
 
   const displayPrice = activeVariant?.price || product.price;
   const displaySalePrice = activeVariant?.salePrice || product.salePrice;
@@ -706,10 +716,10 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
               variant="outline"
               className="w-full h-14 rounded-full font-black text-xs uppercase tracking-[0.2em] border-2 border-[#25D366] text-[#25D366] hover:bg-[#25D366] hover:text-white transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2"
               onClick={() => {
-                const message = encodeURIComponent(`Hi, I'm interested in ${product.name}. Price: ${CURRENCY_SYMBOL}${Math.round(displaySalePrice || displayPrice)}`);
+                const message = encodeURIComponent(`Hi, I&apos;m interested in ${product.name}. Price: ${CURRENCY_SYMBOL}${Math.round(displaySalePrice || displayPrice)}`);
                 
                 // Parse whatsappNumber robustly
-                let cleanNumber = (whatsappNumber || '').trim();
+                const cleanNumber = (whatsappNumber || '').trim();
                 let phone = '';
                 
                 if (cleanNumber.includes('wa.me/')) {
@@ -788,7 +798,7 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
           <DialogHeader>
             <DialogTitle className="text-xl">Delete Product</DialogTitle>
             <DialogDescription className="pt-2">
-              Are you sure you want to delete <span className="font-bold text-foreground">"{product.name}"</span>?
+              Are you sure you want to delete <span className="font-bold text-foreground">&quot;{product.name}&quot;</span>?
               This action cannot be undone and will remove all associated data including variants and reviews.
             </DialogDescription>
           </DialogHeader>

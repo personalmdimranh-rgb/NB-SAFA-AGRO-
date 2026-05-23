@@ -189,10 +189,10 @@ export async function generateMetadata(): Promise<Metadata> {
     return {
       metadataBase: new URL(baseUrl),
       title: {
-        default: settings.metaTitle || settings.brandName || "GO Mart",
-        template: `%s | ${settings.brandName || "GO Mart"}`,
+        default: settings.metaTitle || settings.brandName || "NB SAFA AGRO",
+        template: `%s | ${settings.brandName || "NB SAFA AGRO"}`,
       },
-      description: settings.metaDescription || settings.brandName || "Your ultimate destination for quality products.",
+      description: settings.metaDescription || settings.brandName || "NB SAFA AGRO - Premium Maize Silage Production Farm",
       manifest: '/manifest.json',
       icons: {
         icon: settings.logoUrl || '/favicon.ico',
@@ -202,26 +202,24 @@ export async function generateMetadata(): Promise<Metadata> {
       appleWebApp: {
         capable: true,
         statusBarStyle: 'default',
-        title: settings.brandName || "GO Mart",
+        title: settings.brandName || "NB SAFA AGRO",
       },
       formatDetection: {
         telephone: false,
       },
       openGraph: {
-        title: settings.metaTitle || settings.brandName || "GO Mart",
-        description: settings.metaDescription || settings.brandName || "Your ultimate destination for quality products.",
+        title: settings.metaTitle || settings.brandName || "NB SAFA AGRO",
+        description: settings.metaDescription || settings.brandName || "NB SAFA AGRO - Premium Maize Silage Production Farm",
         url: baseUrl,
-        siteName: settings.brandName || "GO Mart",
+        siteName: settings.brandName || "NB SAFA AGRO",
         type: 'website',
       },
       twitter: {
         card: 'summary_large_image',
-        title: settings.metaTitle || settings.brandName || "GO Mart",
-        description: settings.metaDescription || settings.brandName || "Your ultimate destination for quality products.",
+        title: settings.metaTitle || settings.brandName || "NB SAFA AGRO",
+        description: settings.metaDescription || settings.brandName || "NB SAFA AGRO - Premium Maize Silage Production Farm",
       },
-      verification: {
-        google: settings.searchConsoleMeta,
-      },
+      verification: {},
       alternates: {
         canonical: './',
       },
@@ -233,8 +231,8 @@ export async function generateMetadata(): Promise<Metadata> {
     };
   } catch (error) {
     return {
-      title: "GO Mart",
-      description: "Your ultimate destination for quality products.",
+      title: "NB SAFA AGRO",
+      description: "NB SAFA AGRO - Premium Maize Silage Production Farm",
     };
   }
 }
@@ -254,10 +252,6 @@ export default async function RootLayout({
   } catch (e) {
     console.error("Error generating JSON-LD structured data", e);
   }
-
-  // Security Helper: Validate GA ID format (G-XXXX or UA-XXXX)
-  const isValidGAId = (id?: string) => id ? /^(G-[A-Z0-9]+|UA-[0-9-]+)$/i.test(id) : false;
-  const gaId = settings?.googleAnalyticsId;
 
   const theme = settings?.uiTemplates?.theme;
   const themeClass = (theme && theme !== 'default') ? `theme-${theme.toLowerCase()}` : '';
@@ -297,28 +291,6 @@ export default async function RootLayout({
               pixelId={settings?.metaPixelId || process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID}
             />
           </Suspense>
-
-          {isValidGAId(gaId) && (
-            <>
-              <Script
-                id="google-analytics"
-                strategy="afterInteractive"
-                src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-              />
-              <Script
-                id="ga-init"
-                strategy="afterInteractive"
-                dangerouslySetInnerHTML={{
-                  __html: `
-                    window.dataLayer = window.dataLayer || [];
-                    function gtag(){dataLayer.push(arguments);}
-                    gtag('js', new Date());
-                    gtag('config', '${gaId}');
-                  `,
-                }}
-              />
-            </>
-          )}
 
           <SmoothScroll>
             {children}

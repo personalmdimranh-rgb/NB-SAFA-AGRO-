@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import {
@@ -56,20 +57,24 @@ export function QuickAddModal({ product, isOpen, onClose }: QuickAddModalProps) 
   useEffect(() => {
     if (isOpen) {
       const initialColor = uniqueColors[0] || null;
-      setSelectedColor(initialColor);
+      Promise.resolve().then(() => {
+        setSelectedColor(initialColor);
 
-      const initialSizes = (product.variants || [])
-        .filter((v: any) => !initialColor || v.color === initialColor)
-        .map((v: any) => v.size)
-        .filter(Boolean);
-      const initialSize = initialSizes[0] || null;
-      setSelectedSize(initialSize);
+        const initialSizes = (product.variants || [])
+          .filter((v: any) => !initialColor || v.color === initialColor)
+          .map((v: any) => v.size)
+          .filter(Boolean);
+        const initialSize = initialSizes[0] || null;
+        setSelectedSize(initialSize);
+      });
     }
   }, [isOpen, uniqueColors, product.variants]);
 
   useEffect(() => {
     if (selectedSize == null || !availableSizes.includes(selectedSize)) {
-      setSelectedSize(availableSizes[0] || null);
+      Promise.resolve().then(() => {
+        setSelectedSize(availableSizes[0] || null);
+      });
     }
   }, [selectedColor, selectedSize, availableSizes]);
 

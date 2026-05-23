@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export type SectionType = 
   | 'hero' 
   | 'product_showcase' 

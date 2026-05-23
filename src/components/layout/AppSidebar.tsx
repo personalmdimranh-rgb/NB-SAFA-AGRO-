@@ -55,9 +55,106 @@ const data = {
       ],
     },
     {
+      title: "Accounts & P&L",
+      url: "#",
+      icon: FileText,
+      roles: ['super_admin', 'admin', 'manager', 'staff'],
+      items: [
+        {
+          title: "General Ledger",
+          url: "/admin/accounts",
+        },
+        {
+          title: "Profit & Loss",
+          url: "/admin/accounts/profit-loss",
+        },
+      ],
+    },
+    {
+      title: "Sales & Dealers",
+      url: "#",
+      icon: Store,
+      roles: ['super_admin', 'admin', 'manager', 'staff'],
+      items: [
+        {
+          title: "New Order",
+          url: "/admin/sales/new",
+        },
+        {
+          title: "Sales Ledger",
+          url: "/admin/sales",
+        },
+        {
+          title: "Dealer Portal Admin",
+          url: "/admin/dealers",
+        },
+      ],
+    },
+    {
+      title: "Farmer CRM",
+      url: "#",
+      icon: Users,
+      roles: ['super_admin', 'admin', 'manager', 'staff'],
+      items: [
+        {
+          title: "Farmers List",
+          url: "/admin/farmers",
+        },
+      ],
+    },
+    {
+      title: "Production & Inventory",
+      url: "#",
+      icon: ShoppingBag,
+      roles: ['super_admin', 'admin', 'manager', 'staff'],
+      items: [
+        {
+          title: "Silage Production",
+          url: "/admin/inventory/production",
+        },
+        {
+          title: "Stock Levels",
+          url: "/admin/inventory/stocks",
+        },
+      ],
+    },
+    {
+      title: "Employee Portal",
+      url: "#",
+      icon: Users,
+      roles: ['super_admin', 'admin', 'manager', 'staff'],
+      items: [
+        {
+          title: "Employees Directory",
+          url: "/admin/employees",
+        },
+        {
+          title: "Daily Attendance",
+          url: "/admin/employees/attendance",
+        },
+        {
+          title: "Payroll Sheet",
+          url: "/admin/employees/payroll",
+        },
+      ],
+    },
+    {
+      title: "Director Panel",
+      url: "#",
+      icon: Tag,
+      roles: ['super_admin', 'director'],
+      items: [
+        {
+          title: "Director Panel",
+          url: "/admin/director",
+        },
+      ],
+    },
+    {
       title: "Product Management",
       url: "#",
       icon: ShoppingBag,
+      roles: ['super_admin', 'admin', 'manager'],
       items: [
         {
           title: "All Products",
@@ -74,35 +171,10 @@ const data = {
       ],
     },
     {
-      title: "Sales & Orders",
-      url: "#",
-      icon: FileText,
-      items: [
-        {
-          title: "All Orders",
-          url: "/admin/orders",
-        },
-        {
-          title: "Expenses",
-          url: "/admin/expenses",
-        },
-      ],
-    },
-    {
-      title: "User Management",
-      url: "#",
-      icon: Users,
-      items: [
-        {
-          title: "All Users",
-          url: "/admin/users",
-        },
-      ],
-    },
-    {
       title: "CMS Manager",
       url: "#",
       icon: ImageIcon,
+      roles: ['super_admin', 'admin', 'manager', 'staff'],
       items: [
         {
           title: "Banners",
@@ -122,6 +194,7 @@ const data = {
       title: "Blogs",
       url: "#",
       icon: FileText,
+      roles: ['super_admin', 'admin', 'manager'],
       items: [
         {
           title: "Manage Blog",
@@ -134,9 +207,22 @@ const data = {
       ],
     },
     {
+      title: "User Management",
+      url: "#",
+      icon: Users,
+      roles: ['super_admin', 'admin'],
+      items: [
+        {
+          title: "All Users",
+          url: "/admin/users",
+        },
+      ],
+    },
+    {
       title: "System Settings",
       url: "#",
       icon: Settings,
+      roles: ['super_admin', 'admin'],
       items: [
         {
           title: "Coupons",
@@ -164,14 +250,19 @@ const data = {
 
 import { useSession } from "next-auth/react"
 
-function NavMain({ items, pathname, role }: { items: typeof data.navMain; pathname: string; role?: string }) {
+function NavMain({ items, pathname, role }: { items: any; pathname: string; role?: string }) {
   const { setOpenMobile, isMobile } = useSidebar()
 
   // Filter items based on role
-  const filteredItems = items.map(item => ({
+  const filteredItems = items.map((item: any) => ({
     ...item,
     items: item.items.filter((subItem: any) => !subItem.superOnly || role === 'super_admin')
-  })).filter(item => item.items.length > 0);
+  })).filter((item: any) => {
+    if (item.roles && !item.roles.includes(role)) {
+      return false;
+    }
+    return item.items.length > 0;
+  });
 
   const handleLinkClick = () => {
     if (isMobile) {
@@ -183,10 +274,10 @@ function NavMain({ items, pathname, role }: { items: typeof data.navMain; pathna
     <SidebarGroup>
       <SidebarGroupLabel>Menu</SidebarGroupLabel>
       <SidebarMenu>
-        {filteredItems.map((item) => {
+        {filteredItems.map((item: any) => {
           const isParentActive =
             item.items.some(
-              (subItem) =>
+              (subItem: any) =>
                 pathname === subItem.url ||
                 (subItem.url !== "#" &&
                   subItem.url !== "/admin" &&
@@ -207,7 +298,7 @@ function NavMain({ items, pathname, role }: { items: typeof data.navMain; pathna
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <SidebarMenuSub>
-                    {item.items.map((subItem) => (
+                    {item.items.map((subItem: any) => (
                       <SidebarMenuSubItem key={subItem.title}>
                         <SidebarMenuSubButton
                           render={<Link href={subItem.url} onClick={handleLinkClick} />}
@@ -217,7 +308,7 @@ function NavMain({ items, pathname, role }: { items: typeof data.navMain; pathna
                               subItem.url !== "/admin" &&
                               pathname.startsWith(subItem.url + "/") &&
                               !item.items.some(
-                                (otherItem) =>
+                                (otherItem: any) =>
                                   otherItem !== subItem &&
                                   otherItem.url.length > subItem.url.length &&
                                   (pathname === otherItem.url || pathname.startsWith(otherItem.url + "/"))

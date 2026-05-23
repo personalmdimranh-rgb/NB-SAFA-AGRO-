@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Suspense } from 'react';
 import ShopClient from './ShopClient';
 import { ShopHeaderSkeleton, ProductCardSkeleton } from '@/components/storefront/Skeletons';

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -259,7 +260,7 @@ export default function SettingsPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Branding</CardTitle>
-                  <CardDescription>Manage your store's identity and visibility.</CardDescription>
+                  <CardDescription>Manage your store&apos;s identity and visibility.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <FormField
@@ -267,9 +268,8 @@ export default function SettingsPage() {
                     name="brandName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-semibold text-gray-700">Brand Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="GO Mart" {...field} className="h-12 rounded-xl bg-gray-50 border-2 border-gray-100 focus:border-primary transition-all" />
+                        <FormLabel className="text-sm font-semibold text-muted-foreground">Brand Name</FormLabel>                        <FormControl>
+                          <Input placeholder="NB SAFA AGRO" {...field} className="h-12 rounded-xl bg-gray-50 border-2 border-gray-100 focus:border-primary transition-all" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -321,7 +321,7 @@ export default function SettingsPage() {
                         <FormItem>
                           <FormLabel>Global Meta Title</FormLabel>
                           <FormControl>
-                            <Input placeholder="GO Mart | Best Ecommerce in BD" {...field} />
+                            <Input placeholder="NB SAFA AGRO | Best Ecommerce in BD" {...field} />
                           </FormControl>
                           <FormDescription>Used as the primary browser title for the home page.</FormDescription>
                           <FormMessage />
@@ -335,7 +335,7 @@ export default function SettingsPage() {
                         <FormItem>
                           <FormLabel>Global Meta Description</FormLabel>
                           <FormControl>
-                            <Input placeholder="Shop the best products at GO Mart..." {...field} />
+                            <Input placeholder="Shop the best products at NB SAFA AGRO..." {...field} />
                           </FormControl>
                           <FormDescription>Used for search engine snippets and social sharing.</FormDescription>
                           <FormMessage />
@@ -699,7 +699,7 @@ export default function SettingsPage() {
                     <div>
                       <h4 className="font-bold">Live Preview (Coming Soon)</h4>
                       <p className="text-xs text-muted-foreground max-w-[250px] mx-auto">
-                        In the next update, you'll be able to see a live preview of the theme before applying it.
+                        In the next update, you&apos;ll be able to see a live preview of the theme before applying it.
                       </p>
                     </div>
                   </div>

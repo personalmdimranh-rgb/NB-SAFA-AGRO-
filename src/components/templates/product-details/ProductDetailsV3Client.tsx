@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { ShoppingCart, Heart, Share2, Star, Minus, Plus, ChevronRight, LayoutDashboard, Settings, Trash2 } from 'lucide-react';
+import { ShoppingCart, Heart, Share2,  Minus, Plus, LayoutDashboard, Settings, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
@@ -36,6 +36,7 @@ export default function ProductDetailsV3Client({ product }: ProductDetailsV3Clie
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [prevProductId, setPrevProductId] = useState<string | null>(null);
 
   const uniqueColors = useMemo(() => 
     Array.from(new Set((product.variants || []).map((v: any) => v.color).filter(Boolean))) as any[],
@@ -55,16 +56,21 @@ export default function ProductDetailsV3Client({ product }: ProductDetailsV3Clie
       .filter(Boolean) as any[];
   }, [product.variants, selectedColor, uniqueSizes]);
 
-  useEffect(() => {
-    if (!product) return;
+  // Sync state from props during rendering to avoid effect-based cascading renders
+  if (product?._id !== prevProductId) {
+    setPrevProductId(product?._id || null);
     setSelectedColor(uniqueColors[0] || null);
-  }, [product?._id, uniqueColors]);
+    setSelectedSize(null);
+    setQuantity(1);
+  }
 
-  useEffect(() => {
-    if (selectedSize == null || !availableSizes.includes(selectedSize)) {
-      setSelectedSize(availableSizes[0] || null);
+  // Adjust selected size during render if not available for the selected color
+  if (selectedSize === null || !availableSizes.includes(selectedSize)) {
+    const firstAvailable = availableSizes[0] || null;
+    if (selectedSize !== firstAvailable) {
+      setSelectedSize(firstAvailable);
     }
-  }, [selectedColor, availableSizes, selectedSize]);
+  }
 
   const activeVariant = useMemo(() => 
     (product.variants || []).find(

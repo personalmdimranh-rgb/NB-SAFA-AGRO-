@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { addToCart, removeFromCart, clearCart } from '@/store/slices/cartSlice';
 

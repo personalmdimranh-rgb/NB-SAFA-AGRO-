@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -50,7 +51,21 @@ export default function ReviewsSection({ productId }: ReviewsSectionProps) {
   };
 
   useEffect(() => {
-    fetchData();
+    (async () => {
+      try {
+        const encodedProductId = encodeURIComponent(productId);
+        const [reviewsRes, eligibilityRes] = await Promise.all([
+          fetch(`/api/reviews?productId=${encodedProductId}`),
+          fetch(`/api/reviews/check-eligibility?productId=${encodedProductId}`)
+        ]);
+        if (reviewsRes.ok) setReviews(await reviewsRes.json());
+        if (eligibilityRes.ok) setEligibility(await eligibilityRes.json());
+      } catch (error) {
+        console.error('Fetch Reviews Error:', error);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [productId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -105,7 +120,7 @@ export default function ReviewsSection({ productId }: ReviewsSectionProps) {
             <Badge variant="secondary" className="rounded-full">{reviews.length}</Badge>
           </h2>
           <p className="text-muted-foreground text-sm mt-1">
-            Real feedback from verified GO Mart customers.
+            Real feedback from verified NB SAFA AGRO customers.
           </p>
         </div>
 
@@ -229,7 +244,7 @@ export default function ReviewsSection({ productId }: ReviewsSectionProps) {
                       </span>
                     </div>
                     <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap italic">
-                      "{review.comment}"
+                      &quot;{review.comment}&quot;
                     </p>
                   </div>
                 </div>

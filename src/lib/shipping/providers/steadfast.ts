@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ShippingOrderData, ShippingOrderResponse, ShippingProvider } from '../index';
 
 export class SteadfastProvider implements ShippingProvider {

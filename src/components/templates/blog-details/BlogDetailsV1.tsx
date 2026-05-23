@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Calendar, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';

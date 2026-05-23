@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   ShoppingCart,
   Heart,
@@ -109,7 +111,11 @@ export default function Navbar() {
           }
         });
     } else {
-      setProfile(null);
+      Promise.resolve().then(() => {
+        if (isMounted) {
+          setProfile(null);
+        }
+      });
     }
 
     return () => {
@@ -124,7 +130,7 @@ export default function Navbar() {
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
-        } catch (e) {
+        } catch {
           // ignore if already stopped
         }
         recognitionRef.current.onstart = null;
@@ -148,8 +154,11 @@ export default function Navbar() {
   };
 
   const handleVoiceSearch = () => {
-    const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const windowExt = window as typeof window & {
+      SpeechRecognition?: new () => unknown;
+      webkitSpeechRecognition?: new () => unknown;
+    };
+    const SpeechRecognition = windowExt.SpeechRecognition || windowExt.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       Swal.fire({
@@ -162,12 +171,21 @@ export default function Navbar() {
     }
 
     if (isListening) {
-      recognitionRef.current?.stop();
+      (recognitionRef.current as { stop: () => void } | null)?.stop();
       setIsListening(false);
       return;
     }
 
-    const recognition = new SpeechRecognition();
+    const recognition = new (SpeechRecognition as new () => {
+      lang: string;
+      interimResults: boolean;
+      maxAlternatives: number;
+      onstart: (() => void) | null;
+      onend: (() => void) | null;
+      onerror: ((event: { error: string }) => void) | null;
+      onresult: ((event: { results: { [key: number]: { [key: number]: { transcript: string } } } }) => void) | null;
+      start: () => void;
+    })();
     recognition.lang = 'en-US';
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
@@ -175,7 +193,7 @@ export default function Navbar() {
 
     recognition.onstart = () => setIsListening(true);
     recognition.onend = () => setIsListening(false);
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event: { error: string }) => {
       setIsListening(false);
       console.error('Speech recognition error', event.error);
       if (event.error === 'not-allowed') {
@@ -186,7 +204,7 @@ export default function Navbar() {
         toast.info('No speech detected. Please try again.');
       }
     };
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: { results: { [key: number]: { [key: number]: { transcript: string } } } }) => {
       const transcript = event.results[0][0].transcript;
       router.push(`/shop?search=${encodeURIComponent(transcript.trim())}`);
     };
@@ -355,10 +373,13 @@ export default function Navbar() {
                       aria-label="Account menu"
                     >
                       <div className="h-8 w-8 rounded-full border-2 border-primary/20 overflow-hidden group-hover:border-primary transition-all">
-                        <img
+                        <Image
                           src={session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || 'U')}`}
                           alt={session.user?.name || 'User'}
                           className="h-full w-full object-cover"
+                          width={32}
+                          height={32}
+                          unoptimized
                         />
                       </div>
                       <span className="hidden sm:block text-xs font-bold text-gray-700 group-hover:text-primary transition-colors">
@@ -383,7 +404,7 @@ export default function Navbar() {
                       <DropdownMenuSeparator />
 
                       {/* Role Based Navigation */}
-                      {(session.user as any)?.role === 'super_admin' && (
+                      {(session.user as { role?: string })?.role === 'super_admin' && (
                         <>
                           <DropdownMenuItem asChild>
                             <Link href="/admin/dashboard" className="cursor-pointer">
@@ -398,7 +419,7 @@ export default function Navbar() {
                         </>
                       )}
 
-                      {(session.user as any)?.role === 'admin' && (
+                      {(session.user as { role?: string })?.role === 'admin' && (
                         <>
                           <DropdownMenuItem asChild>
                             <Link href="/admin/dashboard" className="cursor-pointer">
@@ -413,7 +434,7 @@ export default function Navbar() {
                         </>
                       )}
 
-                      {(session.user as any)?.role === 'user' && (
+                      {(session.user as { role?: string })?.role === 'user' && (
                         <>
                           <DropdownMenuItem asChild>
                             <Link href="/dashboard" className="cursor-pointer">

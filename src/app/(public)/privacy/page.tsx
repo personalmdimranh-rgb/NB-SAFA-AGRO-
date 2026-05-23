@@ -5,8 +5,8 @@ import { Separator } from '@/components/ui/separator';
 import { ShieldCheck, Info, Share2, Lock, Eye, Bell } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | GO Mart',
-  description: 'Learn how GO Mart collects, uses, and protects your personal information.',
+  title: 'Privacy Policy | NB SAFA AGRO',
+  description: 'Learn how NB SAFA AGRO collects, uses, and protects your personal information.',
 };
 
 async function getSettings() {
@@ -15,7 +15,7 @@ async function getSettings() {
     const settings = await GlobalSettings.findOne().lean();
     if (!settings) {
       return {
-        brandName: "GO Mart",
+        brandName: "NB SAFA AGRO",
         contact: {
           email: "support@bddukan.shop"
         }
@@ -25,7 +25,7 @@ async function getSettings() {
   } catch (error) {
     console.error('Error fetching settings for privacy page:', error);
     return {
-      brandName: "GO Mart",
+      brandName: "NB SAFA AGRO",
       contact: {
         email: "support@bddukan.shop"
       }

@@ -109,9 +109,9 @@ export default function LoginPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.6 }}
           >
-            <h2 className="text-4xl font-bold text-white mb-4 font-serif">Discover the Best Deals</h2>
+            <h2 className="text-4xl font-bold text-white mb-4 font-serif">NB SAFA AGRO</h2>
             <p className="text-lg text-white/80 max-w-md">
-              Join GO Mart today and get access to exclusive offers, personalized recommendations, and a seamless shopping experience.
+              Access the silage distribution and management portal. Manage production, sales, payroll, and dealer accounts in one place.
             </p>
           </motion.div>
         </div>

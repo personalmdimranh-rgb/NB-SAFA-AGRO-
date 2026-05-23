@@ -7,8 +7,8 @@ import { Separator } from '@/components/ui/separator';
 import { Card, CardContent } from '@/components/ui/card';
 
 export const metadata: Metadata = {
-  title: 'Contact Us | GO Mart',
-  description: 'Get in touch with GO Mart for any inquiries, support, or feedback.',
+  title: 'Contact Us | NB SAFA AGRO',
+  description: 'Get in touch with NB SAFA AGRO for any inquiries, support, or feedback.',
 };
 
 async function getSettings() {
@@ -17,7 +17,7 @@ async function getSettings() {
     const settings = await GlobalSettings.findOne().lean();
     if (!settings) {
       return {
-        brandName: "GO Mart",
+        brandName: "NB SAFA AGRO",
         contact: {
           email: "support@bddukan.shop",
           phone: "+8801234567890",
@@ -145,7 +145,7 @@ export default async function ContactPage() {
                 </p>
                 <div className="aspect-video w-full rounded-2xl overflow-hidden shadow-md border bg-muted">
                     <iframe 
-                      title="GO Mart Location"
+                      title="NB SAFA AGRO Location"
                       width="100%" 
                       height="100%" 
                       style={{ border: 0 }} 
