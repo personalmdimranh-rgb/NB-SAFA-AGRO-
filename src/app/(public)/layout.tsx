@@ -23,6 +23,12 @@ export default async function PublicLayout({ children }: { children: React.React
             <Link href="/" className="text-sm font-semibold hover:text-primary transition-colors">
               Home
             </Link>
+            <Link href="/faq" className="text-sm font-semibold hover:text-primary transition-colors">
+              FAQ
+            </Link>
+            <Link href="/team" className="text-sm font-semibold hover:text-primary transition-colors">
+              Our Team
+            </Link>
             
             <ModeToggle />
             
@@ -75,7 +81,8 @@ export default async function PublicLayout({ children }: { children: React.React
             <div className="flex flex-col space-y-1.5 text-xs text-muted-foreground">
               <Link href="/login" className="hover:text-primary hover:underline">Office Management Login</Link>
               <Link href="/login" className="hover:text-primary hover:underline">Dealer Register Portal</Link>
-              <Link href="/" className="hover:text-primary hover:underline">Products & Nutritional Stats</Link>
+              <Link href="/faq" className="hover:text-primary hover:underline">Support & FAQs</Link>
+              <Link href="/team" className="hover:text-primary hover:underline">Our Team</Link>
             </div>
           </div>
 
