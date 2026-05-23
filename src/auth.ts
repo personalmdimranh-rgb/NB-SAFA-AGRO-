@@ -56,20 +56,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
 
       // 2. Add DB-specific logic
-      if (user && user.id) {
+      const email = token.email || user?.email;
+      if (user && email) {
         try {
           await connectToDatabase();
-          const mongoose = (await import('mongoose')).default;
-          
-          if (mongoose.Types.ObjectId.isValid(user.id)) {
-            const dbUser = await User.findById(user.id);
-            if (dbUser) {
-              token.id = dbUser._id.toString();
-              token.role = dbUser.role ?? 'user';
-              token.status = dbUser.status ?? 'active';
-              token.phone = dbUser.phone;
-              token.image = dbUser.image || user.image || token.picture;
-            }
+          const dbUser = await User.findOne({ email });
+          if (dbUser) {
+            token.id = dbUser._id.toString();
+            token.role = dbUser.role ?? 'user';
+            token.status = dbUser.status ?? 'active';
+            token.phone = dbUser.phone;
+            token.image = dbUser.image || user.image || token.picture;
           }
         } catch (error) {
           console.error("JWT DB Enhancement Error:", error);

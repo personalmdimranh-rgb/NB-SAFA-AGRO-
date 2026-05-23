@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import connectToDatabase from '@/lib/db';
-import Order from '@/models/Order';
-import User from '@/models/User';
-import Product from '@/models/Product';
-import Expense from '@/models/Expense';
 
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session || !(['admin', 'super_admin'].includes((session?.user as any)?.role))) {
+    if (!session || !(['admin', 'super_admin', 'manager', 'staff'].includes((session?.user as any)?.role))) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
@@ -17,7 +13,6 @@ export async function GET(req: NextRequest) {
     const from = searchParams.get('from');
     const to = searchParams.get('to');
 
-    // Default range: Last 30 days
     const defaultFrom = new Date();
     defaultFrom.setDate(defaultFrom.getDate() - 30);
     const defaultTo = new Date();
@@ -25,243 +20,217 @@ export async function GET(req: NextRequest) {
     let startDate = defaultFrom;
     if (from) {
       const parsedFrom = new Date(from);
-      if (!isNaN(parsedFrom.getTime())) {
-        startDate = parsedFrom;
-      }
+      if (!isNaN(parsedFrom.getTime())) startDate = parsedFrom;
     }
 
     let endDate = defaultTo;
     if (to) {
       const parsedTo = new Date(to);
-      if (!isNaN(parsedTo.getTime())) {
-        endDate = parsedTo;
-      }
+      if (!isNaN(parsedTo.getTime())) endDate = parsedTo;
     }
     endDate.setHours(23, 59, 59, 999);
 
     await connectToDatabase();
 
-    // 1 & 2. Total Revenue, COGS, and Sales Count (Delivered Orders)
-    const revenueStats = await Order.aggregate([
-      { 
-        $match: { 
-          status: { $in: ['Paid', 'Confirmed', 'Ready for Delivery', 'Released for Delivery', 'Delivered'] },
-          createdAt: { $gte: startDate, $lte: endDate },
-          deletedAt: null
-        } 
-      },
-      {
-        $group: {
-          _id: null,
-          totalRevenue: { $sum: '$totalAmount' },
-          totalDeliveryCharge: { $sum: '$deliveryCharge' },
-          salesCount: { $sum: 1 },
-          totalCOGS: { 
-            $sum: { 
-              $sum: {
-                $map: {
-                  input: '$items',
-                  as: 'item',
-                  in: { $multiply: ['$$item.quantity', { $ifNull: ['$$item.purchasePrice', 0] }] }
-                }
-              }
-            }
+    // Dynamically import models to avoid issues if some don't exist yet
+    let Sale: any = null;
+    let LedgerTransaction: any = null;
+    let ProductionBatch: any = null;
+    let Employee: any = null;
+    let Dealer: any = null;
+    let Farmer: any = null;
+
+    try { Sale = (await import('@/models/Sale')).default; } catch {}
+    try { LedgerTransaction = (await import('@/models/LedgerTransaction')).default; } catch {}
+    try { ProductionBatch = (await import('@/models/ProductionBatch')).default; } catch {}
+    try { Employee = (await import('@/models/Employee')).default; } catch {}
+    try { Dealer = (await import('@/models/Dealer')).default; } catch {}
+    try { Farmer = (await import('@/models/Farmer')).default; } catch {}
+
+    // === KPI STATS ===
+
+    // 1. Total Silage Sales Revenue (in date range)
+    let totalSalesRevenue = 0;
+    let salesCount = 0;
+    let totalDueAmount = 0;
+    let recentSales: any[] = [];
+    let topDealers: any[] = [];
+    let salesChartData: any[] = [];
+
+    if (Sale) {
+      const salesStats = await Sale.aggregate([
+        { $match: { date: { $gte: startDate, $lte: endDate } } },
+        {
+          $group: {
+            _id: null,
+            totalRevenue: { $sum: '$grandTotal' },
+            totalDue: { $sum: '$dueAmount' },
+            count: { $sum: 1 }
           }
         }
-      }
-    ]);
+      ]);
+      totalSalesRevenue = salesStats[0]?.totalRevenue || 0;
+      totalDueAmount = salesStats[0]?.totalDue || 0;
+      salesCount = salesStats[0]?.count || 0;
 
-    const { 
-      totalRevenue = 0, 
-      totalDeliveryCharge = 0,
-      salesCount = 0, 
-      totalCOGS = 0 
-    } = revenueStats[0] || {};
+      // Recent sales (last 6)
+      recentSales = await Sale.find({ date: { $gte: startDate, $lte: endDate } })
+        .sort({ date: -1 })
+        .limit(6)
+        .select('invoiceNumber buyerType grandTotal paidAmount dueAmount paymentStatus date distributionDistrict');
 
-    // 3. Expenses
-    const expenseStats = await Expense.aggregate([
-      { 
-        $match: { 
-          date: { $gte: startDate, $lte: endDate }
-        } 
-      },
-      {
-        $group: {
-          _id: null,
-          totalExpenses: { $sum: '$amount' }
+      // Top dealers by sales
+      topDealers = await Sale.aggregate([
+        { $match: { buyerType: 'dealer', date: { $gte: startDate, $lte: endDate } } },
+        { $group: { _id: '$buyerId', totalSales: { $sum: '$grandTotal' }, count: { $sum: 1 } } },
+        { $sort: { totalSales: -1 } },
+        { $limit: 5 }
+      ]);
+
+      // Daily chart data for sales
+      salesChartData = await Sale.aggregate([
+        { $match: { date: { $gte: startDate, $lte: endDate } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m-%d', date: '$date' } },
+            revenue: { $sum: '$grandTotal' },
+            salesCount: { $sum: 1 },
+            collected: { $sum: '$paidAmount' }
+          }
+        },
+        { $project: { _id: 0, date: '$_id', revenue: 1, salesCount: 1, collected: 1 } },
+        { $sort: { date: 1 } }
+      ]);
+    }
+
+    // 2. Cash & Bank Ledger Summary
+    let cashBalance = 0;
+    let bankBalance = 0;
+    let totalIncome = 0;
+    let totalExpenses = 0;
+    let netProfit = 0;
+    let recentTransactions: any[] = [];
+
+    if (LedgerTransaction) {
+      const cashStats = await LedgerTransaction.aggregate([
+        { $match: { date: { $gte: startDate, $lte: endDate }, source: 'cash' } },
+        {
+          $group: {
+            _id: '$type',
+            total: { $sum: '$amount' }
+          }
         }
-      }
-    ]);
-    const totalExpenses = expenseStats[0]?.totalExpenses || 0;
-
-    // 4. Calculations
-    const grossProfit = totalRevenue - totalCOGS - totalDeliveryCharge;
-    const netProfit = grossProfit - totalExpenses;
-
-    // 5. Total Customers (Only users with role 'user')
-    const totalUsers = await User.countDocuments({ 
-      role: 'user' 
-    });
-
-    // 6. Pending Orders (Total, not date filtered)
-    const pendingOrdersCount = await Order.countDocuments({ status: 'Order Placed', deletedAt: null });
-
-    // 7. Recent Orders
-    const recentOrders = await Order.find({ deletedAt: null })
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .select('slug totalAmount status createdAt')
-      .populate('user', 'name email');
-
-    // 8. Low Stock Products
-    const lowStockProducts = await Product.find({ stock: { $lt: 5 } })
-      .limit(5)
-      .select('name stock price');
-
-    // 9. Loyalty Stats
-    const activeSubscribers = await User.countDocuments({ isSubscriptionActive: true });
-    const totalWalletBalanceResult = await User.aggregate([
-      { $group: { _id: null, total: { $sum: '$walletBalance' } } }
-    ]);
-    const totalWalletTokens = totalWalletBalanceResult[0]?.total || 0;
-
-    // 10. Top Selling Products
-    const topSellingProducts = await Order.aggregate([
-      { $match: { status: { $in: ['Paid', 'Confirmed', 'Ready for Delivery', 'Released for Delivery', 'Delivered'] }, createdAt: { $gte: startDate, $lte: endDate }, deletedAt: null } },
-      { $unwind: '$items' },
-      {
-        $group: {
-          _id: '$items.name',
-          revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } },
-          quantity: { $sum: '$items.quantity' }
+      ]);
+      const bankStats = await LedgerTransaction.aggregate([
+        { $match: { date: { $gte: startDate, $lte: endDate }, source: 'bank' } },
+        {
+          $group: {
+            _id: '$type',
+            total: { $sum: '$amount' }
+          }
         }
-      },
-      { $sort: { revenue: -1 } },
-      { $limit: 5 }
-    ]);
+      ]);
 
-    // 11. Top Customers
-    const topCustomers = await Order.aggregate([
-      { $match: { status: { $in: ['Paid', 'Confirmed', 'Ready for Delivery', 'Released for Delivery', 'Delivered'] }, createdAt: { $gte: startDate, $lte: endDate }, deletedAt: null } },
-      {
-        $group: {
-          _id: '$user',
-          totalSpend: { $sum: '$totalAmount' },
-          orderCount: { $sum: 1 }
-        }
-      },
-      { $sort: { totalSpend: -1 } },
-      { $limit: 5 },
-      {
-        $lookup: {
-          from: 'users',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'userData'
-        }
-      },
-      { $unwind: '$userData' },
-      {
-        $project: {
-          name: '$userData.name',
-          email: '$userData.email',
-          totalSpend: 1,
-          orderCount: 1
-        }
-      }
-    ]);
+      cashStats.forEach((s: any) => {
+        if (s._id === 'income') cashBalance += s.total;
+        else if (s._id === 'expense') cashBalance -= s.total;
+      });
+      bankStats.forEach((s: any) => {
+        if (s._id === 'income') bankBalance += s.total;
+        else if (s._id === 'expense') bankBalance -= s.total;
+      });
 
-    // 12. Ad ROI (ROAS)
-    const adExpenses = await Expense.aggregate([
-      { $match: { category: 'Ads', date: { $gte: startDate, $lte: endDate } } },
-      { $group: { _id: null, total: { $sum: '$amount' } } }
-    ]);
-    const totalAdSpend = adExpenses[0]?.total || 0;
-    const roas = totalAdSpend > 0 ? Number((totalRevenue / totalAdSpend).toFixed(2)) : 0;
+      // Income vs Expense summary
+      const allTxStats = await LedgerTransaction.aggregate([
+        { $match: { date: { $gte: startDate, $lte: endDate } } },
+        { $group: { _id: '$type', total: { $sum: '$amount' } } }
+      ]);
+      allTxStats.forEach((s: any) => {
+        if (s._id === 'income') totalIncome += s.total;
+        else if (s._id === 'expense') totalExpenses += s.total;
+      });
+      netProfit = totalIncome - totalExpenses;
 
-    // 13. New vs Returning (Sample simplified logic)
-    const allUsersWithOrders = await Order.aggregate([
-      { 
-        $match: { 
-          deletedAt: null,
-          createdAt: { $gte: startDate, $lte: endDate }
-        } 
-      },
-      { $group: { _id: '$user', count: { $sum: 1 } } }
-    ]);
-    const returningUsersCount = allUsersWithOrders.filter(u => u.count > 1).length;
-    const newUsersCount = allUsersWithOrders.filter(u => u.count === 1).length;
+      // Recent transactions
+      recentTransactions = await LedgerTransaction.find({ date: { $gte: startDate, $lte: endDate } })
+        .sort({ date: -1 })
+        .limit(6)
+        .select('date type source category amount description');
+    }
 
-    // 14. Chart Data & Simple Forecast
-    const chartData = await Order.aggregate([
-      {
-        $match: {
-          status: { $in: ['Paid', 'Confirmed', 'Ready for Delivery', 'Released for Delivery', 'Delivered'] },
-          createdAt: { $gte: startDate, $lte: endDate },
-          deletedAt: null
-        }
-      },
-      {
-        $group: {
-          _id: {
-            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
-          },
-          revenue: { $sum: '$totalAmount' },
-          orders: { $sum: 1 },
-          cogs: { 
-            $sum: { 
-              $sum: {
-                $map: {
-                  input: '$items',
-                  as: 'item',
-                  in: { $multiply: ['$$item.quantity', { $ifNull: ['$$item.purchasePrice', 0] }] }
-                }
-              }
-            }
-          },
-          deliveryCharge: { $sum: '$deliveryCharge' }
-        }
-      },
-      {
-        $project: {
-          _id: 0,
-          date: '$_id',
-          revenue: 1,
-          orders: 1,
-          profit: { $subtract: [{ $subtract: ['$revenue', '$cogs'] }, '$deliveryCharge'] }
-        }
-      },
-      { $sort: { date: 1 } }
-    ]);
+    // 3. Production Batches in range
+    let totalProducedQty = 0;
+    let batchCount = 0;
+    let recentBatches: any[] = [];
 
-    // Simple Forecasting: Average Daily Revenue * 30
-    const daysInRange = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) || 1;
-    const avgDailyRevenue = totalRevenue / daysInRange;
-    const projectedMonthlyRevenue = avgDailyRevenue * 30;
+    if (ProductionBatch) {
+      const prodStats = await ProductionBatch.aggregate([
+        { $match: { productionDate: { $gte: startDate, $lte: endDate } } },
+        {
+          $group: {
+            _id: null,
+            totalQty: { $sum: '$totalProducedQty' },
+            count: { $sum: 1 }
+          }
+        }
+      ]);
+      totalProducedQty = prodStats[0]?.totalQty || 0;
+      batchCount = prodStats[0]?.count || 0;
+      recentBatches = await ProductionBatch.find({ productionDate: { $gte: startDate, $lte: endDate } })
+        .sort({ productionDate: -1 })
+        .limit(5)
+        .select('batchNumber totalProducedQty productionCostPerUnit productionDate warehouseLocation');
+    }
+
+    // 4. Employees count
+    let totalEmployees = 0;
+    if (Employee) {
+      totalEmployees = await Employee.countDocuments({});
+    }
+
+    // 5. Active Dealers
+    let activeDealers = 0;
+    let totalDealerDues = 0;
+    if (Dealer) {
+      activeDealers = await Dealer.countDocuments({});
+      const dealerDuesStats = await Dealer.aggregate([
+        { $group: { _id: null, totalDues: { $sum: '$currentDues' } } }
+      ]);
+      totalDealerDues = dealerDuesStats[0]?.totalDues || 0;
+    }
+
+    // 6. Total Farmers
+    let totalFarmers = 0;
+    let totalFarmerDues = 0;
+    if (Farmer) {
+      totalFarmers = await Farmer.countDocuments({});
+      const farmerDuesStats = await Farmer.aggregate([
+        { $group: { _id: null, totalDues: { $sum: '$currentDues' } } }
+      ]);
+      totalFarmerDues = farmerDuesStats[0]?.totalDues || 0;
+    }
 
     return NextResponse.json({
       stats: {
-        totalRevenue,
+        totalSalesRevenue,
         salesCount,
-        totalUsers,
-        pendingOrdersCount,
-        activeSubscribers,
-        totalWalletTokens,
-        totalCOGS,
+        cashBalance,
+        bankBalance,
+        totalIncome,
         totalExpenses,
-        grossProfit,
         netProfit,
-        roas,
-        totalAdSpend,
-        newUsersCount,
-        returningUsersCount,
-        projectedMonthlyRevenue
+        totalDueAmount: totalDueAmount + totalDealerDues + totalFarmerDues,
+        totalProducedQty,
+        batchCount,
+        totalEmployees,
+        activeDealers,
+        totalFarmers,
       },
-      recentOrders,
-      lowStockProducts,
-      topSellingProducts,
-      topCustomers,
-      chartData
+      recentSales,
+      recentTransactions,
+      recentBatches,
+      topDealers,
+      salesChartData,
     });
   } catch (error) {
     console.error('Dashboard Stats Error:', error);
