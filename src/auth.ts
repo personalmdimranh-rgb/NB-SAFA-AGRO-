@@ -89,6 +89,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!user.email) return false;
         
         try {
+          const isSuperAdmin = user.email === 'imranshuvo101@gmail.com';
           const savedUser = await User.findOneAndUpdate(
             { email: user.email },
             { 
@@ -96,6 +97,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 name: user.name || 'Unknown',
                 image: user.image || '',
                 googleId: account.providerAccountId,
+                ...(isSuperAdmin ? { role: 'super_admin' } : {})
               },
               $setOnInsert: {
                 role: 'user',
