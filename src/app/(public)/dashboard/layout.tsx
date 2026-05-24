@@ -27,8 +27,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
+    } else if (status === 'authenticated' && session?.user) {
+      const role = (session.user as any).role;
+      if (role === 'admin' || role === 'super_admin' || role === 'manager' || role === 'staff') {
+        router.push('/admin/dashboard');
+      } else if (role === 'director') {
+        router.push('/admin/director');
+      } else if (role === 'dealer') {
+        router.push('/dealer/dashboard');
+      }
     }
-  }, [status, router]);
+  }, [status, session, router]);
 
   if (status === 'loading') {
     return (

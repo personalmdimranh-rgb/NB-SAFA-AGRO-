@@ -20,7 +20,11 @@ import {
   Package,
   Truck,
   HelpCircle,
-  ChevronDown
+  ChevronDown,
+  Shield,
+  Calendar,
+  ShoppingBag,
+  Users,
 } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { toast } from 'sonner';
@@ -389,16 +393,38 @@ export default function Navbar() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56 mt-2">
                     <DropdownMenuGroup>
-                      <DropdownMenuLabel className="font-serif">
-                        <div className="flex flex-col">
-                          <span>{session.user?.name}</span>
-                          <span className="text-xs font-normal text-muted-foreground truncate">{session.user?.email}</span>
-                          {profile && (
-                            <div className="mt-1.5 flex items-center gap-1.5 bg-primary/10 px-2 py-0.5 rounded-full w-fit border border-primary/20">
-                              <Package className="h-3 w-3 text-primary" />
-                              <span className="text-[10px] font-bold text-primary">৳{profile.walletBalance || 0} Tokens</span>
+                      <DropdownMenuLabel>
+                        <div className="flex items-center gap-3 py-1">
+                          <div className="h-10 w-10 rounded-full border-2 border-primary/20 overflow-hidden shrink-0">
+                            <Image
+                              src={session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || 'U')}&background=random`}
+                              alt={session.user?.name || 'User'}
+                              className="h-full w-full object-cover"
+                              width={40}
+                              height={40}
+                              unoptimized
+                            />
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-bold text-sm text-foreground truncate">{session.user?.name}</span>
+                            <span className="text-[10px] text-muted-foreground truncate">{session.user?.email}</span>
+                            <div className="mt-1 flex items-center gap-1 bg-primary/10 px-2 py-0.5 rounded-full w-fit border border-primary/20">
+                              <span className="text-[9px] font-black text-primary uppercase tracking-wider">
+                                {(
+                                  {
+                                    super_admin: 'Super Admin',
+                                    admin: 'Administrator',
+                                    manager: 'Manager',
+                                    staff: 'Staff Operator',
+                                    director: 'Director',
+                                    dealer: 'Approved Dealer',
+                                    user: 'Farmer / Customer',
+                                    farmer: 'Farmer / Customer',
+                                  } as Record<string, string>
+                                )[(session.user as any)?.role] || (session.user as any)?.role || 'User'}
+                              </span>
                             </div>
-                          )}
+                          </div>
                         </div>
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator />
@@ -434,11 +460,86 @@ export default function Navbar() {
                         </>
                       )}
 
-                      {(session.user as { role?: string })?.role === 'user' && (
+                      {/* Manager Options */}
+                      {(session.user as { role?: string })?.role === 'manager' && (
+                        <>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/dashboard" className="cursor-pointer">
+                              <LayoutDashboard className="mr-2 h-4 w-4" /> Manager Dashboard
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/inventory/production" className="cursor-pointer">
+                              <ShoppingBag className="mr-2 h-4 w-4" /> Silage Production
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/products" className="cursor-pointer">
+                              <Package className="mr-2 h-4 w-4" /> Product Catalog
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      {/* Staff Options */}
+                      {(session.user as { role?: string })?.role === 'staff' && (
+                        <>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/dashboard" className="cursor-pointer">
+                              <LayoutDashboard className="mr-2 h-4 w-4" /> Staff Dashboard
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/employees/attendance" className="cursor-pointer">
+                              <Calendar className="mr-2 h-4 w-4" /> Log Attendance
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/sales" className="cursor-pointer">
+                              <Truck className="mr-2 h-4 w-4" /> Sales Ledger
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      {/* Director Options */}
+                      {(session.user as { role?: string })?.role === 'director' && (
+                        <>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/director" className="cursor-pointer">
+                              <Shield className="mr-2 h-4 w-4" /> Director Board
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      {/* Dealer Options */}
+                      {(session.user as { role?: string })?.role === 'dealer' && (
+                        <>
+                          <DropdownMenuItem asChild>
+                            <Link href="/dealer/dashboard" className="cursor-pointer">
+                              <LayoutDashboard className="mr-2 h-4 w-4" /> Dealer Dashboard
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/dealer/order-new" className="cursor-pointer">
+                              <Package className="mr-2 h-4 w-4" /> Order Silage
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/dealer/commission" className="cursor-pointer">
+                              <Users className="mr-2 h-4 w-4" /> My Commission
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      {/* User / Farmer Options */}
+                      {((session.user as { role?: string })?.role === 'user' || (session.user as { role?: string })?.role === 'farmer') && (
                         <>
                           <DropdownMenuItem asChild>
                             <Link href="/dashboard" className="cursor-pointer">
-                              <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
+                              <LayoutDashboard className="mr-2 h-4 w-4" /> My Dashboard
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>

@@ -62,6 +62,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           await connectToDatabase();
           const dbUser = await User.findOne({ email });
           if (dbUser) {
+            // Auto update super_admin role in DB if it's not set
+            if (dbUser.email === 'imranshuvo101@gmail.com' && dbUser.role !== 'super_admin') {
+              dbUser.role = 'super_admin';
+              await dbUser.save();
+            }
             token.id = dbUser._id.toString();
             token.role = dbUser.role ?? 'user';
             token.status = dbUser.status ?? 'active';
@@ -100,7 +105,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 ...(isSuperAdmin ? { role: 'super_admin' } : {})
               },
               $setOnInsert: {
-                role: 'user',
+                ...(!isSuperAdmin ? { role: 'user' } : {}),
                 status: 'active',
                 phone: 'N/A',
               }

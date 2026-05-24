@@ -1,16 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { signIn, useSession } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
+import { signIn, useSession, getSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Loader2, GalleryVerticalEnd, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -28,8 +27,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { cn } from "@/lib/utils";
 import { Logo } from '@/components/ui/logo';
 
 const loginSchema = z.object({
@@ -39,8 +36,7 @@ const loginSchema = z.object({
 
 export default function LoginPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
-  const searchParams = useSearchParams();
+  const { status } = useSession();
 
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -77,7 +73,20 @@ export default function LoginPage() {
         toast.error(response.error);
       } else {
         toast.success('Logged in successfully!');
-        router.push('/dashboard');
+        
+        // Fetch session to determine role and redirect accordingly
+        const session = await getSession();
+        const role = (session?.user as any)?.role;
+        
+        if (role === 'admin' || role === 'super_admin' || role === 'manager' || role === 'staff') {
+          router.push('/admin/dashboard');
+        } else if (role === 'director') {
+          router.push('/admin/director');
+        } else if (role === 'dealer') {
+          router.push('/dealer/dashboard');
+        } else {
+          router.push('/dashboard');
+        }
         router.refresh();
       }
     } catch (error) {
@@ -88,38 +97,9 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="relative min-h-screen">
-      {/* Left Side: Image Banner */}
-      <motion.div
-        initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="fixed inset-y-0 left-0 hidden w-1/2 bg-muted lg:block"
-      >
-        <Image
-          src="/assets/login_banner_v2.webp"
-          alt="Login Banner"
-          fill
-          className="absolute inset-0 h-full w-full object-cover brightness-[0.8] contrast-[1.1]"
-          sizes="50vw"
-        />
-        <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent flex flex-col justify-end p-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
-          >
-            <h2 className="text-4xl font-bold text-white mb-4 font-serif">NB SAFA AGRO</h2>
-            <p className="text-lg text-white/80 max-w-md">
-              Access the silage distribution and management portal. Manage production, sales, payroll, and dealer accounts in one place.
-            </p>
-          </motion.div>
-        </div>
-      </motion.div>
-
-      {/* Right Side: Login Form */}
-      <div className="flex flex-col p-6 md:p-10 bg-background lg:ml-[50%] min-h-screen">
-        <div className="flex justify-center gap-2 md:justify-start mb-8">
+    <main className="relative min-h-screen flex flex-col justify-center items-center p-6 md:p-10 bg-background">
+      <div className="w-full max-w-md space-y-8">
+        <div className="flex justify-center mb-4">
           <Logo />
         </div>
 
@@ -127,11 +107,11 @@ export default function LoginPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="flex flex-1 items-center justify-center"
+          className="w-full"
         >
-          <div className="w-full max-w-sm space-y-8">
+          <div className="space-y-8 bg-card border border-border p-6 md:p-8 rounded-2xl shadow-md">
             <div className="space-y-2 text-center">
-              <h1 className="text-3xl font-bold tracking-tight">Welcome back</h1>
+              <h1 className="text-3xl font-bold tracking-tight text-primary">Welcome back</h1>
               <p className="text-sm text-muted-foreground">
                 Enter your credentials to access your account
               </p>
@@ -167,7 +147,7 @@ export default function LoginPage() {
                   <span className="w-full border-t border-muted" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-4 text-muted-foreground">
+                  <span className="bg-card px-4 text-muted-foreground">
                     Or continue with email
                   </span>
                 </div>
@@ -243,7 +223,7 @@ export default function LoginPage() {
                   />
                   <Button
                     type="submit"
-                    className="w-full h-11 text-base font-semibold transition-all hover:scale-[1.01] active:scale-[0.99]"
+                    className="w-full h-11 text-base font-semibold transition-all hover:scale-[1.01] active:scale-[0.99] mt-6"
                     disabled={isLoading || isGoogleLoading}
                   >
                     {isLoading ? (
@@ -267,7 +247,7 @@ export default function LoginPage() {
           </div>
         </motion.div>
 
-        <div className="mt-auto pt-6 text-center text-xs text-muted-foreground">
+        <div className="mt-8 text-center text-xs text-muted-foreground">
           By clicking continue, you agree to our{' '}
           <Link href="/terms" className="underline underline-offset-4 hover:text-primary">
             Terms of Service
@@ -281,4 +261,3 @@ export default function LoginPage() {
     </main>
   );
 }
-

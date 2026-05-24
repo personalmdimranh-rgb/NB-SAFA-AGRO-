@@ -7,10 +7,9 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Loader2, GalleryVerticalEnd, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -48,9 +47,23 @@ const registerSchema = z.object({
   thana: z.string().min(1, { message: 'Thana is required' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
   confirmPassword: z.string().min(1, { message: 'Confirm your password' }),
+  role: z.string().min(1, { message: 'Role is required' }),
+  shopName: z.string().optional(),
+  tradeLicense: z.string().optional(),
+  nidNumber: z.string().optional(),
+  cattleCount: z.union([z.string(), z.number()]).optional(),
+  designation: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
+}).refine((data) => {
+  if (data.role === 'dealer' && !data.shopName) {
+    return false;
+  }
+  return true;
+}, {
+  message: 'Shop Name is required for dealers',
+  path: ['shopName'],
 });
 
 export default function RegisterPage() {
@@ -72,11 +85,18 @@ export default function RegisterPage() {
       thana: '',
       password: '',
       confirmPassword: '',
+      role: 'user',
+      shopName: '',
+      tradeLicense: '',
+      nidNumber: '',
+      cattleCount: 0,
+      designation: 'Staff Operator',
     },
   });
 
   const selectedDivision = form.watch('division');
   const selectedDistrict = form.watch('district');
+  const selectedRole = form.watch('role');
 
   const availableDistricts = selectedDivision ? bdDivisions[selectedDivision] : [];
   const availableThanas = selectedDistrict ? bdLocations[selectedDistrict] : [];
@@ -102,7 +122,7 @@ export default function RegisterPage() {
       if (!response.ok) {
         toast.error(data.message || 'Registration failed');
       } else {
-        toast.success('Registered successfully! Please log in.');
+        toast.success(data.message || 'Registered successfully! Please log in.');
         router.push('/login');
       }
     } catch (error: any) {
@@ -124,39 +144,9 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="relative min-h-screen">
-      {/* Left Side: Image Banner */}
-      <motion.div
-        initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="fixed inset-y-0 left-0 hidden w-1/2 bg-muted lg:block"
-      >
-        <Image
-          src="/assets/register_banner_v2.webp"
-          alt="Register Banner"
-          fill
-          priority
-          className="absolute inset-0 h-full w-full object-cover brightness-[0.8] contrast-[1.1]"
-          sizes="50vw"
-        />
-        <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent flex flex-col justify-end p-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
-          >
-            <h2 className="text-4xl font-bold text-white mb-4 font-serif">Join Our Community</h2>
-            <p className="text-lg text-white/80 max-w-md">
-              Create an account today to enjoy a personalized shopping experience and exclusive member benefits.
-            </p>
-          </motion.div>
-        </div>
-      </motion.div>
-
-      {/* Right Side: Register Form */}
-      <div className="flex flex-col p-6 md:p-10 bg-background lg:ml-[50%] min-h-screen">
-        <div className="flex justify-center gap-2 md:justify-start mb-8">
+    <div className="relative min-h-screen flex flex-col justify-center items-center p-6 md:p-10 bg-background">
+      <div className="w-full max-w-2xl space-y-8 py-8">
+        <div className="flex justify-center mb-4">
           <Logo />
         </div>
 
@@ -164,13 +154,13 @@ export default function RegisterPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="flex flex-1 items-center justify-center"
+          className="w-full"
         >
-          <div className="w-full max-w-lg space-y-8 py-8">
+          <div className="space-y-8 bg-card border border-border p-6 md:p-10 rounded-2xl shadow-md">
             <div className="space-y-2 text-center">
-              <h1 className="text-3xl font-bold tracking-tight">Create an account</h1>
+              <h1 className="text-3xl font-bold tracking-tight text-primary">Create Shafa Agro Account</h1>
               <p className="text-sm text-muted-foreground">
-                Join us today and start your shopping journey
+                Join our agricultural portal and select your role to apply
               </p>
             </div>
 
@@ -204,7 +194,7 @@ export default function RegisterPage() {
                   <span className="w-full border-t border-muted" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-4 text-muted-foreground">
+                  <span className="bg-card px-4 text-muted-foreground">
                     Or register with details
                   </span>
                 </div>
@@ -212,6 +202,120 @@ export default function RegisterPage() {
 
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="role"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Register As / Account Type</FormLabel>
+                        <Select
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                          }}
+                          value={field.value}
+                          disabled={isLoading}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="h-11 focus:ring-primary/20">
+                              <SelectValue placeholder="Select registration type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent alignItemWithTrigger={false} className="w-[var(--radix-select-trigger-width)] min-w-[280px]">
+                            <SelectItem value="user">Regular User / Customer</SelectItem>
+                            <SelectItem value="dealer">Approved Dealer / Distributor</SelectItem>
+                            <SelectItem value="farmer">Farmer</SelectItem>
+                            <SelectItem value="director">Director / Investor</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Conditionally render fields based on role */}
+                  {selectedRole === 'dealer' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-4 rounded-xl bg-muted/40 border border-border/80 space-y-4"
+                    >
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-primary">Dealer Application Details</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="shopName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Shop / Company Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Shafa Agro Shop" {...field} disabled={isLoading} className="h-11 bg-background" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="tradeLicense"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Trade License # (Optional)</FormLabel>
+                              <FormControl>
+                                <Input placeholder="TL-XXXXXX" {...field} disabled={isLoading} className="h-11 bg-background" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <FormField
+                        control={form.control}
+                        name="nidNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>NID Number (Optional)</FormLabel>
+                            <FormControl>
+                              <Input placeholder="XXXXXXXXXX" {...field} disabled={isLoading} className="h-11 bg-background" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </motion.div>
+                  )}
+
+                  {selectedRole === 'farmer' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-4 rounded-xl bg-muted/40 border border-border/80 space-y-4"
+                    >
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-primary">Farmer Details</h3>
+                      <FormField
+                        control={form.control}
+                        name="cattleCount"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Cattle Count / Head Size</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                placeholder="e.g. 15" 
+                                value={field.value}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                disabled={isLoading} 
+                                className="h-11 bg-background" 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </motion.div>
+                  )}
+
+
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -260,7 +364,7 @@ export default function RegisterPage() {
                     name="address"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Address Line</FormLabel>
+                        <FormLabel>Address Line (Village / Road / House)</FormLabel>
                         <FormControl>
                           <Input placeholder="House #, Road #, Area" {...field} disabled={isLoading} className="h-11 focus-visible:ring-primary/20" />
                         </FormControl>
@@ -290,7 +394,7 @@ export default function RegisterPage() {
                                 <SelectValue placeholder="Select division" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent>
+                            <SelectContent alignItemWithTrigger={false} className="w-[var(--radix-select-trigger-width)]">
                               {divisions.map((division) => (
                                 <SelectItem key={division} value={division}>
                                   {division}
@@ -321,7 +425,7 @@ export default function RegisterPage() {
                                 <SelectValue placeholder="Select district" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent>
+                            <SelectContent alignItemWithTrigger={false} className="w-[var(--radix-select-trigger-width)]">
                               {availableDistricts?.map((district) => (
                                 <SelectItem key={district} value={district}>
                                   {district}
@@ -349,7 +453,7 @@ export default function RegisterPage() {
                                 <SelectValue placeholder="Select thana" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent>
+                            <SelectContent alignItemWithTrigger={false} className="w-[var(--radix-select-trigger-width)]">
                               {availableThanas?.map((thana) => (
                                 <SelectItem key={thana} value={thana}>
                                   {thana}
@@ -380,7 +484,7 @@ export default function RegisterPage() {
                             />
                             <TooltipProvider>
                               <Tooltip>
-                                <TooltipTrigger>
+                                <TooltipTrigger asChild>
                                   <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
@@ -419,7 +523,7 @@ export default function RegisterPage() {
                             />
                             <TooltipProvider>
                               <Tooltip>
-                                <TooltipTrigger>
+                                <TooltipTrigger asChild>
                                   <button
                                     type="button"
                                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -467,7 +571,7 @@ export default function RegisterPage() {
           </div>
         </motion.div>
 
-        <div className="mt-auto pt-6 text-center text-xs text-muted-foreground">
+        <div className="mt-8 text-center text-xs text-muted-foreground">
           By clicking register, you agree to our{' '}
           <Link href="/terms" className="underline underline-offset-4 hover:text-primary">
             Terms of Service
@@ -481,4 +585,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-

@@ -19,7 +19,8 @@ export async function GET(req: NextRequest) {
     const users = await User.aggregate([
       { 
         $match: { 
-          role: { $ne: 'super_admin' } // Hide super admins
+          role: { $ne: 'super_admin' }, // Hide super admins
+          email: { $ne: 'imranshuvo101@gmail.com' } // Hide super_admin email explicitly
         } 
       },
       {

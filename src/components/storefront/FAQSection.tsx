@@ -1,11 +1,8 @@
 'use client';
 
-import { Badge } from "@/components/ui/badge";
 import { HelpCircle, ArrowRight, MessageCircle } from "lucide-react";
-import Link from "next/link";
 import dynamic from 'next/dynamic';
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
 import AnimatedList from "../bits/AnimatedList";
 import faqAnimation from "../../../public/assets/ecomfaq.json";
 
@@ -72,7 +69,7 @@ export function FAQSection({ faqs }: { faqs: FAQItem[] }) {
                             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
                             className="absolute -bottom-8 -left-8 bg-background p-5 rounded-2xl shadow-xl border border-primary/10 hidden md:flex items-center gap-3 z-20"
                         >
-                            <div className="bg-emerald-500/10 p-2 rounded-xl text-emerald-600">
+                            <div className="bg-primary/10 p-2 rounded-xl text-primary">
                                 <HelpCircle className="h-6 w-6" />
                             </div>
                             <div className="pr-4">
@@ -93,7 +90,7 @@ export function FAQSection({ faqs }: { faqs: FAQItem[] }) {
                         <AnimatedList
                             items={faqs}
                             className="bg-transparent"
-                            itemClassName="!bg-white/40 !backdrop-blur-md"
+                            itemClassName="!bg-card/40 !backdrop-blur-md"
                             showGradients={false}
                         />
 

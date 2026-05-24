@@ -41,11 +41,15 @@ export default function FacebookPixel({
     trackPageView();
   }, [pathname, searchParams, trackPageView, pixelId, mounted, scriptLoaded]);
 
+  if (!pixelId) {
+    return null;
+  }
+
   // Sanitize pixelId to prevent XSS
-  const sanitizedPixelId = pixelId && /^\d+$/.test(pixelId) ? pixelId : null;
+  const sanitizedPixelId = /^\d+$/.test(pixelId) ? pixelId : null;
 
   if (!sanitizedPixelId) {
-    console.warn("FacebookPixel: Invalid or missing Pixel ID");
+    console.warn("FacebookPixel: Invalid Pixel ID format");
     return null;
   }
 

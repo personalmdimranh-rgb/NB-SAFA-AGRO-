@@ -1,8 +1,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { auth } from '@/auth';
-import { Shield, Users, LogIn, Mail, Phone, MapPin } from 'lucide-react';
-import { SignOutButton } from '@/components/layout/UserNav';
+import { LogIn, Mail, Phone, MapPin } from 'lucide-react';
+import { UserMenu } from '@/components/layout/UserNav';
 
 import { ModeToggle } from '@/components/mode-toggle';
 
@@ -16,7 +16,6 @@ export default async function PublicLayout({ children }: { children: React.React
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" className="flex flex-col">
             <span className="text-lg font-black tracking-wider text-primary font-logo">NB SAFA AGRO</span>
-            <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-widest">Silage Production Farm</span>
           </Link>
 
           <div className="flex items-center gap-6">
@@ -29,31 +28,11 @@ export default async function PublicLayout({ children }: { children: React.React
             <Link href="/team" className="text-sm font-semibold hover:text-primary transition-colors">
               Our Team
             </Link>
-            
+
             <ModeToggle />
-            
+
             {session ? (
-              <>
-                {['super_admin', 'admin', 'manager', 'staff'].includes((session.user as any).role) && (
-                  <Link href="/admin/dashboard" className="text-xs font-bold bg-primary hover:bg-primary/90 text-primary-foreground px-3 py-1.5 rounded-lg flex items-center gap-1 transition-all">
-                    <Shield className="h-3.5 w-3.5" /> Office Admin
-                  </Link>
-                )}
-                {(session.user as any).role === 'dealer' && (
-                  <Link href="/dealer/dashboard" className="text-xs font-bold bg-primary hover:bg-primary/90 text-primary-foreground px-3 py-1.5 rounded-lg flex items-center gap-1 transition-all">
-                    <Users className="h-3.5 w-3.5" /> Dealer Panel
-                  </Link>
-                )}
-                {(session.user as any).role === 'director' && (
-                  <Link href="/admin/director" className="text-xs font-bold bg-primary hover:bg-primary/90 text-primary-foreground px-3 py-1.5 rounded-lg flex items-center gap-1 transition-all">
-                    <Shield className="h-3.5 w-3.5" /> Director Board
-                  </Link>
-                )}
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Hi, {session.user?.name?.split(' ')[0]}</span>
-                  <SignOutButton />
-                </div>
-              </>
+              <UserMenu user={session.user} />
             ) : (
               <Link href="/login" className="text-xs font-bold bg-primary hover:bg-primary/90 text-primary-foreground px-3.5 py-2 rounded-lg flex items-center gap-1 transition-all">
                 <LogIn className="h-3.5 w-3.5" /> Log In / Register

@@ -22,7 +22,6 @@ export const proxy = auth(async (req) => {
     "/checkout",
     "/wishlist",
     "/product",
-    "/track-order",
     "/categories"
   ].some(route => nextUrl.pathname.startsWith(route));
 
@@ -85,6 +84,25 @@ export const proxy = auth(async (req) => {
     // Only allow active dealers
     if (role !== "dealer" || status === "inactive") {
       return NextResponse.redirect(new URL("/login", nextUrl));
+    }
+  }
+
+  // 4. Protection and Redirection for Customer Dashboard routes
+  const isDashboardRoute = nextUrl.pathname === "/dashboard" || nextUrl.pathname.startsWith("/dashboard/");
+  if (isDashboardRoute) {
+    if (!isLoggedIn) {
+      return NextResponse.redirect(new URL("/login", nextUrl));
+    }
+
+    // Redirect admins, directors, dealers to their respective dashboards
+    if (role === "admin" || role === "super_admin" || role === "manager" || role === "staff") {
+      return NextResponse.redirect(new URL("/admin/dashboard", nextUrl));
+    }
+    if (role === "director") {
+      return NextResponse.redirect(new URL("/admin/director", nextUrl));
+    }
+    if (role === "dealer") {
+      return NextResponse.redirect(new URL("/dealer/dashboard", nextUrl));
     }
   }
 
