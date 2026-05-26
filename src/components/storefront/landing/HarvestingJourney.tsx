@@ -20,23 +20,23 @@ const staggerContainer: Variants = {
 
 export default function HarvestingJourney() {
   return (
-    <section className="py-20 bg-card border-b border-border">
-      <div className="container mx-auto px-4 max-w-5xl">
-        <motion.div 
+    <section className="py-12 md:py-16 bg-card border-b border-border">
+      <div className="container mx-auto px-4">
+        <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
           variants={fadeUp}
           className="text-center space-y-4 mb-16"
         >
-          <span className="text-xs font-bold text-primary tracking-widest uppercase">Manufacturing Pipeline</span>
+
           <h2 className="text-3xl md:text-4xl font-extrabold text-foreground font-heading">The Harvesting & Fermentation Journey</h2>
           <p className="text-muted-foreground text-sm max-w-xl mx-auto">
             How we harvest whole-crop maize and package it to lock in optimal starches and sugars.
           </p>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
@@ -45,7 +45,7 @@ export default function HarvestingJourney() {
         >
           {/* Horizontal line on desktop */}
           <div className="hidden md:block absolute top-7 left-8 right-8 h-0.5 bg-border z-0" />
-          
+
           {[
             {
               step: '01',
@@ -68,8 +68,8 @@ export default function HarvestingJourney() {
               desc: 'Silage is packed in heavy-duty UV-barrier bags and vacuum sealed, initiating a 21-day anaerobic fermentation cycle.'
             }
           ].map((item, idx) => (
-            <motion.div 
-              key={idx} 
+            <motion.div
+              key={idx}
               variants={fadeUp}
               className="relative z-10 flex flex-col items-center md:items-start text-center md:text-left space-y-4 group"
             >

@@ -45,17 +45,17 @@ export default function TraceabilityFeed() {
   }, []);
 
   return (
-    <section className="py-20 bg-card border-b border-border">
-      <div className="container mx-auto px-4 max-w-4xl">
+    <section className="py-12 md:py-16 bg-card border-b border-border">
+      <div className="container mx-auto px-4 ">
         <div className="grid md:grid-cols-2 gap-12 items-center">
-          <motion.div 
+          <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
             variants={fadeUp}
             className="space-y-6 text-left"
           >
-            <span className="text-xs font-bold text-primary tracking-widest uppercase">Ecosystem Traceability</span>
+
             <h2 className="text-3xl font-extrabold text-foreground font-heading leading-tight">Every Bag Tracked <br />From Harvest To Rumen</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
               We believe in total logistical transparency. Shafa Agro’s backend portal enables administrators and directors to track raw material intake, production batch codes, dealer transaction ledgers, and credit limits in real-time.
@@ -78,7 +78,7 @@ export default function TraceabilityFeed() {
           </motion.div>
 
           {/* Traceability Telemetry Console */}
-          <motion.div 
+          <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
@@ -98,21 +98,20 @@ export default function TraceabilityFeed() {
               <div className="space-y-2 h-44 overflow-y-hidden text-left flex flex-col justify-start">
                 <AnimatePresence>
                   {telemetryLogs.map((log) => (
-                    <motion.div 
+                    <motion.div
                       key={log}
                       initial={{ opacity: 0, x: -15, height: 0 }}
                       animate={{ opacity: 1, x: 0, height: 'auto' }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.3 }}
-                      className={`border-l-2 pl-2 py-0.5 ${
-                        log.includes('SYSTEM') 
-                          ? 'border-muted text-muted-foreground' 
-                          : log.includes('BATCH') 
-                          ? 'border-primary text-foreground' 
-                          : log.includes('LAB') 
-                          ? 'border-primary/80 text-foreground font-bold' 
-                          : 'border-primary/45 text-muted-foreground'
-                      }`}
+                      className={`border-l-2 pl-2 py-0.5 ${log.includes('SYSTEM')
+                        ? 'border-muted text-muted-foreground'
+                        : log.includes('BATCH')
+                          ? 'border-primary text-foreground'
+                          : log.includes('LAB')
+                            ? 'border-primary/80 text-foreground font-bold'
+                            : 'border-primary/45 text-muted-foreground'
+                        }`}
                     >
                       {log}
                     </motion.div>

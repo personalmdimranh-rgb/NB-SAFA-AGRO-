@@ -47,7 +47,7 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative min-h-[90vh] flex items-center bg-card text-card-foreground border-b border-border overflow-hidden py-16 lg:py-24">
+    <section className="relative min-h-[90vh] flex items-center bg-card text-card-foreground border-b border-border overflow-hidden py-16 md:py-20">
       {/* Animated Background Gradients */}
       <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-background to-background pointer-events-none" />
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[120px] animate-pulse pointer-events-none" />
@@ -55,16 +55,13 @@ export default function HeroSection() {
 
       <div className="container mx-auto px-4 relative z-10 grid lg:grid-cols-12 gap-12 items-center">
         {/* Hero Left Content */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           className="lg:col-span-6 space-y-6 text-left"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20 backdrop-blur-md">
-            <Sparkles className="h-3.5 w-3.5 animate-spin" style={{ animationDuration: '6s' }} />
-            The Golden Standard of Livestock Nutrition
-          </div>
+
           <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-none text-foreground font-heading">
             Nurturing Gold, <br />
             <span className="bg-gradient-to-r from-primary via-primary/80 to-foreground bg-clip-text text-transparent">
@@ -88,7 +85,7 @@ export default function HeroSection() {
         </motion.div>
 
         {/* Hero Right Column: Animated Slider Carousel */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
@@ -96,12 +93,12 @@ export default function HeroSection() {
         >
           <div className="relative w-full max-w-lg group">
             <div className="absolute -inset-1.5 bg-gradient-to-r from-primary to-primary/40 rounded-2xl blur-lg opacity-30 group-hover:opacity-45 transition duration-1000" />
-            
+
             <div className="relative w-full bg-card/90 backdrop-blur-xl rounded-2xl p-5 border border-border shadow-2xl overflow-hidden flex flex-col">
               {/* Carousel Image Container */}
               <div className="relative aspect-video rounded-xl overflow-hidden bg-muted/30 border border-border mb-4">
                 <AnimatePresence mode="wait">
-                  <motion.img 
+                  <motion.img
                     key={currentSlide}
                     src={slides[currentSlide].image}
                     alt={slides[currentSlide].title}
@@ -119,13 +116,13 @@ export default function HeroSection() {
                 </div>
 
                 {/* Navigation Arrows */}
-                <button 
+                <button
                   onClick={handlePrevSlide}
                   className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-md hover:bg-primary hover:text-primary-foreground border border-border text-foreground flex items-center justify-center transition-all duration-300"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
-                <button 
+                <button
                   onClick={handleNextSlide}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-md hover:bg-primary hover:text-primary-foreground border border-border text-foreground flex items-center justify-center transition-all duration-300"
                 >
@@ -145,9 +142,8 @@ export default function HeroSection() {
                       <button
                         key={index}
                         onClick={() => setCurrentSlide(index)}
-                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                          currentSlide === index ? 'bg-primary w-5' : 'bg-muted-foreground/30'
-                        }`}
+                        className={`w-2 h-2 rounded-full transition-all duration-300 ${currentSlide === index ? 'bg-primary w-5' : 'bg-muted-foreground/30'
+                          }`}
                       />
                     ))}
                   </div>

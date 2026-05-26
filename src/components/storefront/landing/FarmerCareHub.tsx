@@ -18,11 +18,11 @@ const scaleIn: Variants = {
 
 export default function FarmerCareHub() {
   return (
-    <section className="py-20 bg-card border-b border-border">
-      <div className="container mx-auto px-4 max-w-4xl">
+    <section className="py-12 md:py-16 bg-card border-b border-border">
+      <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           {/* Visual Photo Card */}
-          <motion.div 
+          <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
@@ -33,10 +33,10 @@ export default function FarmerCareHub() {
               <div className="absolute -inset-1.5 bg-gradient-to-r from-primary/30 to-primary/10 rounded-2xl blur-lg opacity-40" />
               <div className="relative bg-background border border-border rounded-2xl p-4 shadow-xl space-y-4 overflow-hidden">
                 <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-muted border border-border">
-                  <Image 
-                    src="/assets/elite_dairy_cows.png" 
-                    alt="Elite Dairy Cows feeding" 
-                    className="object-cover group-hover:scale-105 transition-transform duration-700" 
+                  <Image
+                    src="/assets/elite_dairy_cows.png"
+                    alt="Elite Dairy Cows feeding"
+                    className="object-cover group-hover:scale-105 transition-transform duration-700"
                     fill
                     sizes="(max-width: 768px) 100vw, 384px"
                   />
@@ -50,14 +50,14 @@ export default function FarmerCareHub() {
           </motion.div>
 
           {/* Care Hub Text */}
-          <motion.div 
+          <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
             variants={fadeUp}
             className="space-y-6 text-left"
           >
-            <span className="text-xs font-bold text-primary tracking-widest uppercase">Cattle Performance Optimization</span>
+
             <h2 className="text-3xl font-extrabold text-foreground font-heading leading-tight">Farmer & Cattle Care Hub</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Whether you own a local farm with 5 dairy cows or manage a major cooperative with 500 bulls, Shafa Agro offers dedicated feed optimization assistance. Our distribution trucks provide door-to-door delivery across Bogura and surrounding districts.

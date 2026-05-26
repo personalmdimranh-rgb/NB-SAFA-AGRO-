@@ -26,23 +26,23 @@ export default function RoiCalculator() {
   const recommendedBags = Math.round((herdSize * 15 * 30) / 40); // 15kg/day per cow, 40kg bag
 
   return (
-    <section className="py-20 bg-card border-b border-border">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <motion.div 
+    <section className="py-12 md:py-16 bg-card border-b border-border">
+      <div className="container mx-auto px-4">
+        <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
           variants={fadeUp}
           className="text-center space-y-4 mb-12"
         >
-          <span className="text-xs font-bold text-primary tracking-widest uppercase">Dynamic Yield ROI Calculator</span>
+
           <h2 className="text-3xl md:text-4xl font-extrabold text-foreground font-heading">Project Your Farm Revenue</h2>
           <p className="text-muted-foreground text-sm max-w-xl mx-auto">
             Simulate feed requirements and calculate milk yield revenue growth based on cattle headcount.
           </p>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
@@ -62,13 +62,13 @@ export default function RoiCalculator() {
                     {herdSize} Head
                   </span>
                 </div>
-                <input 
-                  type="range" 
-                  min="5" 
-                  max="500" 
-                  value={herdSize} 
+                <input
+                  type="range"
+                  min="5"
+                  max="500"
+                  value={herdSize}
                   onChange={(e) => setHerdSize(parseInt(e.target.value))}
-                  className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary focus:outline-none" 
+                  className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary focus:outline-none"
                 />
                 <div className="flex justify-between text-[10px] text-muted-foreground">
                   <span>5 Cows</span>
@@ -85,13 +85,13 @@ export default function RoiCalculator() {
                     {milkYield} Ltr/day
                   </span>
                 </div>
-                <input 
-                  type="range" 
-                  min="5" 
-                  max="40" 
-                  value={milkYield} 
+                <input
+                  type="range"
+                  min="5"
+                  max="40"
+                  value={milkYield}
                   onChange={(e) => setMilkYield(parseInt(e.target.value))}
-                  className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary focus:outline-none" 
+                  className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary focus:outline-none"
                 />
                 <div className="flex justify-between text-[10px] text-muted-foreground">
                   <span>5 Liters</span>

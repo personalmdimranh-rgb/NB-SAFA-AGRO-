@@ -21,23 +21,23 @@ const staggerContainer = {
 
 export default function CorporateGovernance() {
   return (
-    <section className="py-20 bg-background border-b border-border">
-      <div className="container mx-auto px-4 max-w-4xl text-center space-y-10">
-        <motion.div 
+    <section className="py-12 md:py-16 bg-background border-b border-border">
+      <div className="container mx-auto px-4 text-center space-y-10">
+        <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
           variants={fadeUp}
           className="space-y-4 max-w-2xl mx-auto"
         >
-          <span className="text-xs font-bold text-primary tracking-widest uppercase">Director Board & Governance</span>
+
           <h2 className="text-3xl md:text-4xl font-extrabold text-foreground font-heading">Director Shareholder Audits</h2>
           <p className="text-muted-foreground text-sm">
             Secured shareholder access built into the core framework. Directors can monitor overall equity ratios, verify investment dates, track capital deposits, and inspect released dividend transactions.
           </p>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
@@ -63,8 +63,8 @@ export default function CorporateGovernance() {
           ].map((item, idx) => {
             const Icon = item.icon;
             return (
-              <motion.div 
-                key={idx} 
+              <motion.div
+                key={idx}
                 variants={fadeUp}
                 className="p-6 bg-card border border-border rounded-xl space-y-4 shadow-sm hover:border-primary/20 hover:shadow-md transition-all duration-300"
               >

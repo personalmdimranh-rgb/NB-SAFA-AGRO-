@@ -4,12 +4,12 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, Variants } from 'framer-motion';
-import { 
-  ShieldCheck, 
-  Scale, 
-  FlaskConical, 
-  Award, 
-  PhoneCall 
+import {
+  ShieldCheck,
+  Scale,
+  FlaskConical,
+  Award,
+  PhoneCall
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -35,16 +35,15 @@ const staggerContainer: Variants = {
 
 export default function SafetyStandards() {
   return (
-    <section className="py-20 bg-background">
-      <div className="container mx-auto px-4 max-w-5xl">
-        <motion.div 
+    <section className="py-12 md:py-16 bg-background">
+      <div className="container mx-auto px-4 ">
+        <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
           variants={fadeUp}
           className="text-center space-y-4 mb-12"
         >
-          <span className="text-xs font-bold text-primary tracking-widest uppercase">Laboratory Verification</span>
           <h2 className="text-3xl md:text-4xl font-extrabold text-foreground font-heading">Nutritional Safety & Lab Certifications</h2>
           <p className="text-muted-foreground text-sm max-w-xl mx-auto">
             Every production batch undergoes strict laboratory verification to ensure 100% safety parameters and nutrient viability.
@@ -54,7 +53,7 @@ export default function SafetyStandards() {
         {/* Grid Layout containing Lab Photo Card + Certifications */}
         <div className="grid lg:grid-cols-12 gap-8 items-center mb-16">
           {/* Lab QA Mockup Photo */}
-          <motion.div 
+          <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
@@ -65,10 +64,10 @@ export default function SafetyStandards() {
               <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 to-primary/10 rounded-2xl blur-md opacity-35" />
               <div className="relative bg-card border border-border rounded-xl p-3 shadow-lg">
                 <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-muted border border-border">
-                  <Image 
-                    src="/assets/agro_lab_qa.png" 
-                    alt="Shafa Agro Lab QA inspection" 
-                    className="object-cover group-hover:scale-105 transition-transform duration-700" 
+                  <Image
+                    src="/assets/agro_lab_qa.png"
+                    alt="Shafa Agro Lab QA inspection"
+                    className="object-cover group-hover:scale-105 transition-transform duration-700"
                     fill
                     sizes="(max-width: 768px) 100vw, 320px"
                   />
@@ -82,7 +81,7 @@ export default function SafetyStandards() {
           </motion.div>
 
           {/* Certifications Badges */}
-          <motion.div 
+          <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
@@ -117,8 +116,8 @@ export default function SafetyStandards() {
             ].map((item, idx) => {
               const Icon = item.icon;
               return (
-                <motion.div 
-                  key={idx} 
+                <motion.div
+                  key={idx}
                   variants={fadeUp}
                   className="p-5 bg-card border border-border rounded-xl shadow-sm space-y-3.5 flex flex-col justify-between hover:border-primary/45 transition-colors duration-300 text-left"
                 >
@@ -143,7 +142,7 @@ export default function SafetyStandards() {
         </div>
 
         {/* Quick Helpline banner */}
-        <motion.div 
+        <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}

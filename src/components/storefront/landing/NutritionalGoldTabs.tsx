@@ -23,16 +23,16 @@ export default function NutritionalGoldTabs() {
   const [activeTab, setActiveTab] = useState<'energy' | 'digest' | 'probiotic' | 'stability'>('energy');
 
   return (
-    <section className="py-20 bg-background border-b border-border">
-      <div className="container mx-auto px-4 max-w-5xl">
-        <motion.div 
+    <section className="py-12 md:py-16 bg-background border-b border-border">
+      <div className="container mx-auto px-4">
+        <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
           variants={fadeUp}
           className="text-center space-y-4 mb-12"
         >
-          <span className="text-xs font-bold text-primary tracking-widest uppercase">Nutritional Composition</span>
+
           <h2 className="text-3xl md:text-4xl font-extrabold text-foreground font-heading">Nutritional Gold Showcase</h2>
           <p className="text-muted-foreground text-sm max-w-xl mx-auto">
             Our forage is chopped, processed, and fermented at peak maturity to lock in essential dietary values.
@@ -40,7 +40,7 @@ export default function NutritionalGoldTabs() {
         </motion.div>
 
         {/* Tab Navigation */}
-        <motion.div 
+        <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
@@ -56,11 +56,10 @@ export default function NutritionalGoldTabs() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`py-3 px-4 rounded-lg text-xs font-bold transition-all duration-300 ${
-                activeTab === tab.id 
-                  ? 'bg-card text-primary shadow-sm border border-border'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-card/30'
-              }`}
+              className={`py-3 px-4 rounded-lg text-xs font-bold transition-all duration-300 ${activeTab === tab.id
+                ? 'bg-card text-primary shadow-sm border border-border'
+                : 'text-muted-foreground hover:text-foreground hover:bg-card/30'
+                }`}
             >
               <span>{tab.label}</span>
             </button>
@@ -68,7 +67,7 @@ export default function NutritionalGoldTabs() {
         </motion.div>
 
         {/* Tab Content Panels */}
-        <motion.div 
+        <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
@@ -99,11 +98,11 @@ export default function NutritionalGoldTabs() {
                       <span className="font-bold text-foreground">34.2%</span>
                     </div>
                     <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                      <motion.div 
+                      <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: '34.2%' }}
                         transition={{ duration: 0.8 }}
-                        className="h-full bg-primary rounded-full" 
+                        className="h-full bg-primary rounded-full"
                       />
                     </div>
                   </div>
@@ -141,11 +140,11 @@ export default function NutritionalGoldTabs() {
                       <span className="font-bold text-foreground">72.4%</span>
                     </div>
                     <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                      <motion.div 
+                      <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: '72.4%' }}
                         transition={{ duration: 0.8 }}
-                        className="h-full bg-primary rounded-full" 
+                        className="h-full bg-primary rounded-full"
                       />
                     </div>
                   </div>
@@ -183,11 +182,11 @@ export default function NutritionalGoldTabs() {
                       <span className="font-bold text-foreground">6.5%</span>
                     </div>
                     <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                      <motion.div 
+                      <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: '65%' }}
                         transition={{ duration: 0.8 }}
-                        className="h-full bg-primary rounded-full" 
+                        className="h-full bg-primary rounded-full"
                       />
                     </div>
                   </div>
@@ -225,11 +224,11 @@ export default function NutritionalGoldTabs() {
                       <span className="font-bold text-foreground">100% Hermetic</span>
                     </div>
                     <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                      <motion.div 
+                      <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: '100%' }}
                         transition={{ duration: 0.8 }}
-                        className="h-full bg-primary rounded-full" 
+                        className="h-full bg-primary rounded-full"
                       />
                     </div>
                   </div>

@@ -41,9 +41,9 @@ export default function RecentBlogs() {
   if (recentBlogs.length === 0) return null;
 
   return (
-    <section className="py-20 bg-card border-t border-border">
-      <div className="container mx-auto px-4 max-w-5xl">
-        <motion.div 
+    <section className="py-12 md:py-16 bg-card border-t border-border">
+      <div className="container mx-auto px-4">
+        <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
@@ -51,7 +51,7 @@ export default function RecentBlogs() {
           className="flex flex-col md:flex-row items-center md:items-end justify-between mb-12 gap-6"
         >
           <div className="flex flex-col items-center md:items-start text-center md:text-left space-y-4">
-            <span className="text-xs font-bold text-primary tracking-widest uppercase">Latest Articles</span>
+
             <h2 className="text-3xl md:text-4xl font-extrabold text-foreground font-heading">
               Recent News & Blog Posts
             </h2>
@@ -66,7 +66,7 @@ export default function RecentBlogs() {
           </Button>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
@@ -74,17 +74,17 @@ export default function RecentBlogs() {
           className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
         >
           {recentBlogs.map((blog) => (
-            <motion.div 
-              key={blog._id} 
+            <motion.div
+              key={blog._id}
               variants={fadeUp}
               className="bg-background border border-border rounded-xl shadow-sm hover:border-primary/50 hover:shadow-md transition-all duration-300 group overflow-hidden flex flex-col justify-between"
             >
               <Link href={`/blog/${blog.slug}`} className="block overflow-hidden relative aspect-video bg-muted border-b border-border">
                 {blog.thumbnail ? (
-                  <img 
-                    src={blog.thumbnail} 
-                    alt={blog.title} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                  <img
+                    src={blog.thumbnail}
+                    alt={blog.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/30">
@@ -99,8 +99,8 @@ export default function RecentBlogs() {
                     {(() => {
                       try {
                         const date = new Date(blog.createdAt);
-                        return isNaN(date.getTime()) 
-                          ? 'Recent' 
+                        return isNaN(date.getTime())
+                          ? 'Recent'
                           : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                       } catch (e) {
                         return 'Recent';

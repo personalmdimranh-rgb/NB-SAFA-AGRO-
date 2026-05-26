@@ -23,23 +23,23 @@ const staggerContainer: Variants = {
 
 export default function DistributorTiers() {
   return (
-    <section className="py-20 bg-background border-b border-border">
-      <div className="container mx-auto px-4 max-w-5xl">
-        <motion.div 
+    <section className="py-12 md:py-16 bg-background border-b border-border">
+      <div className="container mx-auto px-4">
+        <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
           variants={fadeUp}
           className="text-center space-y-4 mb-12"
         >
-          <span className="text-xs font-bold text-primary tracking-widest uppercase">Distribution Program</span>
+
           <h2 className="text-3xl md:text-4xl font-extrabold text-foreground font-heading">Premium Distributor Tiers</h2>
           <p className="text-muted-foreground text-sm max-w-xl mx-auto">
             Shafa Agro operates an exclusive regional dealer network. Register as a dealer and unlock higher commission structures and custom credit limits.
           </p>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
@@ -90,21 +90,20 @@ export default function DistributorTiers() {
               buttonStyle: 'outline'
             }
           ].map((tier, idx) => (
-            <motion.div 
-              key={idx} 
+            <motion.div
+              key={idx}
               variants={fadeUp}
-              className={`p-6 rounded-2xl border flex flex-col justify-between relative hover:shadow-lg hover:border-primary/30 transition-all duration-300 ${
-                tier.featured 
-                  ? 'border-primary bg-primary/5 shadow-md shadow-primary/5' 
-                  : 'border-border bg-card'
-              }`}
+              className={`p-6 rounded-2xl border flex flex-col justify-between relative hover:shadow-lg hover:border-primary/30 transition-all duration-300 ${tier.featured
+                ? 'border-primary bg-primary/5 shadow-md shadow-primary/5'
+                : 'border-border bg-card'
+                }`}
             >
               {tier.featured && (
                 <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] font-bold tracking-widest uppercase px-3 py-1 rounded-full border border-primary/20">
                   Recommended Tier
                 </span>
               )}
-              
+
               <div className="space-y-6 text-left">
                 <div>
                   <h3 className="font-extrabold text-lg text-foreground font-heading">{tier.title}</h3>

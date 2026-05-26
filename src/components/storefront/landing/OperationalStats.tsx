@@ -55,23 +55,23 @@ const staggerContainer: Variants = {
 
 export default function OperationalStats() {
   return (
-    <section className="py-20 bg-background border-b border-border">
-      <div className="container mx-auto px-4 max-w-5xl">
-        <motion.div 
+    <section className="py-12 md:py-16 bg-background border-b border-border">
+      <div className="container mx-auto px-4">
+        <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
           variants={fadeUp}
           className="text-center space-y-4 mb-12"
         >
-          <span className="text-xs font-bold text-primary tracking-widest uppercase">Shafa Agro Scale</span>
+
           <h2 className="text-3xl md:text-4xl font-extrabold text-foreground font-heading">Our Operational Impact</h2>
           <p className="text-muted-foreground text-sm max-w-xl mx-auto">
             Real-time metrics indicating our manufacturing volume, client base reach, and regional distribution footprint.
           </p>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
@@ -85,8 +85,8 @@ export default function OperationalStats() {
             { label: 'Cattle Nourished Daily', value: 18500, suffix: '+ Head', detail: 'Improved digestive health indexes' }
           ].map((stat, idx) => {
             return (
-              <motion.div 
-                key={idx} 
+              <motion.div
+                key={idx}
                 variants={fadeUp}
                 className="p-6 bg-card border border-border rounded-xl shadow-sm hover:border-primary/50 hover:shadow-md transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[140px]"
               >
