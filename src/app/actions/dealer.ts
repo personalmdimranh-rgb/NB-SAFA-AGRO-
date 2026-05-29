@@ -175,3 +175,21 @@ export async function getDealerDashboardSummary(userId: string) {
     recentSales: JSON.parse(JSON.stringify(sales)),
   };
 }
+
+export async function deleteDealer(dealerId: string) {
+  const session = await auth();
+  if (!session || !['super_admin', 'admin', 'manager'].includes((session.user as any).role)) {
+    throw new Error('Unauthorized');
+  }
+
+  await connectToDatabase();
+  const dealer = await Dealer.findById(dealerId);
+  if (!dealer) throw new Error('Dealer not found');
+
+  // Remove the associated user account too
+  await User.findByIdAndDelete(dealer.userId);
+  await Dealer.findByIdAndDelete(dealerId);
+
+  revalidatePath('/admin/dealers');
+  return { success: true };
+}

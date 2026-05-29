@@ -2,14 +2,18 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { getSales } from '@/app/actions/sales';
+import { getSales, deleteSale } from '@/app/actions/sales';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Download, Calendar, Search, MapPin } from 'lucide-react';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { FileText, Download, Calendar, Search, MapPin, MoreVertical, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import Swal from 'sweetalert2';
 
 export default function SalesPage() {
   const [sales, setSales] = useState<any[]>([]);
@@ -132,6 +136,26 @@ export default function SalesPage() {
     }
   };
 
+  const handleDelete = async (sale: any) => {
+    const result = await Swal.fire({
+      title: 'Delete Invoice?',
+      html: `<p class="text-sm text-gray-600">This will permanently delete invoice <strong>${sale.invoiceNumber}</strong> of <strong>৳${sale.grandTotal.toLocaleString()}</strong>.</p>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, Delete!',
+    });
+    if (!result.isConfirmed) return;
+    try {
+      await deleteSale(sale._id);
+      toast.success(`Invoice ${sale.invoiceNumber} deleted.`);
+      loadData();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to delete invoice');
+    }
+  };
+
   const filteredSales = sales.filter((sale) => {
     const term = searchTerm.toLowerCase();
     const buyerName = sale.buyerType === 'dealer'
@@ -180,6 +204,7 @@ export default function SalesPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[40px]">#</TableHead>
                     <TableHead>Invoice</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Buyer</TableHead>
@@ -187,16 +212,17 @@ export default function SalesPage() {
                     <TableHead>Grand Total</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Logistics</TableHead>
-                    <TableHead className="text-center">Action</TableHead>
+                    <TableHead className="text-center w-[60px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredSales.map((sale) => {
+                  {filteredSales.map((sale, index) => {
                     const buyerName = sale.buyerType === 'dealer'
                       ? sale.buyerId?.userId?.name || 'Dealer'
                       : sale.buyerId?.name || 'Farmer';
                     return (
                       <TableRow key={sale._id}>
+                        <TableCell className="text-xs text-muted-foreground font-medium">{index + 1}</TableCell>
                         <TableCell className="font-bold text-xs text-zinc-900">{sale.invoiceNumber}</TableCell>
                         <TableCell className="whitespace-nowrap font-medium text-xs">
                           <span className="flex items-center gap-1">
@@ -230,9 +256,27 @@ export default function SalesPage() {
                           </span>
                         </TableCell>
                         <TableCell className="text-center">
-                          <Button size="sm" variant="outline" onClick={() => handleDownloadInvoice(sale)} className="border-primary/30 text-primary hover:bg-primary/10 h-7 text-xs">
-                            <Download className="h-3.5 w-3.5 mr-1" /> Invoice
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-muted" id={`sale-action-${sale._id}`}>
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-40">
+                              <DropdownMenuItem className="cursor-pointer text-xs gap-2" onClick={() => handleDownloadInvoice(sale)}>
+                                <Download className="h-3.5 w-3.5 text-primary" />
+                                <span>Download Invoice</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="cursor-pointer text-xs gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
+                                onClick={() => handleDelete(sale)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                <span>Delete Invoice</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     );

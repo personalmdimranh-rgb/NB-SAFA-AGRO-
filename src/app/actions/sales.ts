@@ -325,3 +325,23 @@ export async function getSalesByDealer(userId: string) {
 }
 
 export const logSale = createSale;
+
+export async function deleteSale(saleId: string) {
+  const session = await auth();
+  if (!session || !session.user) {
+    throw new Error('Unauthorized');
+  }
+
+  const role = (session.user as any).role;
+  if (!['super_admin', 'admin', 'manager'].includes(role)) {
+    throw new Error('Forbidden: Insufficient permissions');
+  }
+
+  await connectToDatabase();
+  const sale = await Sale.findByIdAndDelete(saleId);
+  if (!sale) throw new Error('Sale not found');
+
+  revalidatePath('/admin/sales');
+  return { success: true };
+}
+

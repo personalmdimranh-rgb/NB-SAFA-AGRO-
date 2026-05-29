@@ -137,3 +137,58 @@ export async function getEmployees() {
   const employees = await Employee.find().sort({ joiningDate: -1 });
   return JSON.parse(JSON.stringify(employees));
 }
+
+export async function updateEmployee(
+  employeeId: string,
+  data: {
+    name: string;
+    phone: string;
+    address?: string;
+    designation: string;
+    basic: number;
+    allowance: number;
+    deductions: number;
+    joiningDate?: string;
+  }
+) {
+  const session = await auth();
+  if (!session || !['super_admin', 'admin', 'manager'].includes((session.user as any).role)) {
+    throw new Error('Unauthorized');
+  }
+
+  await connectToDatabase();
+
+  const employee = await Employee.findById(employeeId);
+  if (!employee) throw new Error('Employee not found');
+
+  employee.name = data.name;
+  employee.phone = data.phone;
+  employee.address = data.address;
+  employee.designation = data.designation;
+  employee.salaryStructure = {
+    basic: data.basic,
+    allowance: data.allowance,
+    deductions: data.deductions,
+  };
+  if (data.joiningDate) {
+    employee.joiningDate = new Date(data.joiningDate);
+  }
+
+  await employee.save();
+  revalidatePath('/admin/employees');
+  return { success: true, employee: JSON.parse(JSON.stringify(employee)) };
+}
+
+export async function deleteEmployee(employeeId: string) {
+  const session = await auth();
+  if (!session || !['super_admin', 'admin', 'manager'].includes((session.user as any).role)) {
+    throw new Error('Unauthorized');
+  }
+
+  await connectToDatabase();
+  const res = await Employee.findByIdAndDelete(employeeId);
+  if (!res) throw new Error('Employee not found');
+
+  revalidatePath('/admin/employees');
+  return { success: true };
+}

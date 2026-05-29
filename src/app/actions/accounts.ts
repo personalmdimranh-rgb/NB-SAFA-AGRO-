@@ -55,7 +55,7 @@ export async function getTransactions() {
   await connectToDatabase();
   const transactions = await LedgerTransaction.find()
     .populate('recordedBy', 'name email')
-    .sort({ date: -1 });
+    .sort({ date: -1, createdAt: -1 });
   return JSON.parse(JSON.stringify(transactions));
 }
 
@@ -153,4 +153,76 @@ export async function getProfitLossReport() {
     expenseByCategory: Object.entries(expenseByCategory).map(([category, amount]) => ({ category, amount })),
     chartData,
   };
+}
+
+export async function deleteTransaction(id: string) {
+  const session = await auth();
+  if (!session || !session.user) {
+    throw new Error('Unauthorized');
+  }
+
+  const role = (session.user as any).role;
+  if (!['super_admin', 'admin', 'manager'].includes(role)) {
+    throw new Error('Forbidden: Insufficient permissions');
+  }
+
+  await connectToDatabase();
+  const res = await LedgerTransaction.findByIdAndDelete(id);
+  if (!res) {
+    throw new Error('Transaction not found');
+  }
+
+  revalidatePath('/admin/accounts');
+  return { success: true };
+}
+
+export async function updateTransaction(
+  id: string,
+  data: {
+    type: 'income' | 'expense' | 'transfer';
+    source: 'cash' | 'bank';
+    bankDetails?: {
+      bankName?: string;
+      accountNo?: string;
+    };
+    category: string;
+    amount: number;
+    description?: string;
+    date?: string;
+  }
+) {
+  const session = await auth();
+  if (!session || !session.user) {
+    throw new Error('Unauthorized');
+  }
+
+  const role = (session.user as any).role;
+  if (!['super_admin', 'admin', 'manager'].includes(role)) {
+    throw new Error('Forbidden: Insufficient permissions');
+  }
+
+  await connectToDatabase();
+  const tx = await LedgerTransaction.findById(id);
+  if (!tx) {
+    throw new Error('Transaction not found');
+  }
+
+  tx.type = data.type;
+  tx.source = data.source;
+  tx.category = data.category;
+  tx.amount = data.amount;
+  tx.description = data.description;
+  if (data.date) {
+    tx.date = new Date(data.date);
+  }
+  if (data.source === 'bank') {
+    tx.bankDetails = data.bankDetails;
+  } else {
+    tx.bankDetails = undefined;
+  }
+
+  await tx.save();
+
+  revalidatePath('/admin/accounts');
+  return { success: true, transaction: JSON.parse(JSON.stringify(tx)) };
 }

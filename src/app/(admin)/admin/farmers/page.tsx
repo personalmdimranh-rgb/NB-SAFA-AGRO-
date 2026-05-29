@@ -1,13 +1,18 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { getFarmers, createFarmer, updateFarmer } from '@/app/actions/farmer';
+import { getFarmers, createFarmer, updateFarmer, deleteFarmer } from '@/app/actions/farmer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Users, PlusCircle, PenTool, Phone, MapPin, Eye } from 'lucide-react';
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Users, PlusCircle, Phone, MapPin, MoreVertical, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 
@@ -43,6 +48,12 @@ export default function FarmersPage() {
     loadData();
   }, []);
 
+  const resetForm = () => {
+    setName(''); setPhone(''); setVillage(''); setThana('');
+    setDistrict(''); setCattleCount(''); setCreditLimit('');
+    setEditingFarmerId(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !phone) {
@@ -53,40 +64,21 @@ export default function FarmersPage() {
     try {
       setSubmitting(true);
       if (editingFarmerId) {
-        // Update
         await updateFarmer(editingFarmerId, {
-          name,
-          phone,
-          village,
-          thana,
-          district,
+          name, phone, village, thana, district,
           cattleCount: parseInt(cattleCount) || 0,
           creditLimit: parseFloat(creditLimit) || 0,
         });
         toast.success('Farmer profile updated successfully!');
       } else {
-        // Create
         await createFarmer({
-          name,
-          phone,
-          village,
-          thana,
-          district,
+          name, phone, village, thana, district,
           cattleCount: parseInt(cattleCount) || 0,
           creditLimit: parseFloat(creditLimit) || 0,
         });
         toast.success('Farmer profile registered successfully!');
       }
-
-      // Reset
-      setName('');
-      setPhone('');
-      setVillage('');
-      setThana('');
-      setDistrict('');
-      setCattleCount('');
-      setCreditLimit('');
-      setEditingFarmerId(null);
+      resetForm();
       loadData();
     } catch (err: any) {
       toast.error(err.message || 'Operation failed');
@@ -104,29 +96,41 @@ export default function FarmersPage() {
     setDistrict(farmer.address?.district || '');
     setCattleCount(String(farmer.cattleCount));
     setCreditLimit(String(farmer.creditLimit));
+    // Scroll to form
+    document.getElementById('farmer-form')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleCancelEdit = () => {
-    setEditingFarmerId(null);
-    setName('');
-    setPhone('');
-    setVillage('');
-    setThana('');
-    setDistrict('');
-    setCattleCount('');
-    setCreditLimit('');
+  const handleDelete = async (farmer: any) => {
+    const result = await Swal.fire({
+      title: 'Delete Farmer Profile?',
+      html: `<p class="text-sm text-gray-600">This will permanently remove <strong>${farmer.name}</strong> from the farmer database.</p>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, Delete!',
+      cancelButtonText: 'Cancel',
+    });
+    if (!result.isConfirmed) return;
+    try {
+      await deleteFarmer(farmer._id);
+      toast.success(`${farmer.name}'s profile removed.`);
+      loadData();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to delete farmer');
+    }
   };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-primary">Farmer CRM & Credit Limits</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-primary">Farmer CRM &amp; Credit Limits</h1>
         <p className="text-muted-foreground">Register retail farmers, track cattle size, view distribution counts and set credit boundaries</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-12">
         {/* Form */}
-        <Card className="lg:col-span-4 border-primary/10 bg-white/70">
+        <Card className="lg:col-span-4 border-primary/10 bg-card/70" id="farmer-form">
           <CardHeader>
             <CardTitle className="text-lg font-semibold flex items-center gap-2 text-primary">
               <PlusCircle className="h-5 w-5 text-primary" />
@@ -137,45 +141,45 @@ export default function FarmersPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">Farmer Name</label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} required className="border-primary/10" />
+                <Input value={name} onChange={(e) => setName(e.target.value)} required className="border-primary/20" />
               </div>
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">Phone Number</label>
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} required className="border-primary/10" />
+                <Input value={phone} onChange={(e) => setPhone(e.target.value)} required className="border-primary/20" />
               </div>
 
-              <div className="grid grid-cols-3 gap-2 border p-2 rounded-lg bg-zinc-50/50">
+              <div className="grid grid-cols-3 gap-2 border p-2 rounded-lg bg-muted/50">
                 <div>
                   <label className="text-[10px] font-semibold text-muted-foreground block mb-0.5">Village</label>
-                  <Input value={village} onChange={(e) => setVillage(e.target.value)} className="h-8 text-xs border-primary/10" />
+                  <Input value={village} onChange={(e) => setVillage(e.target.value)} className="h-8 text-xs border-primary/20" />
                 </div>
                 <div>
                   <label className="text-[10px] font-semibold text-muted-foreground block mb-0.5">Thana</label>
-                  <Input value={thana} onChange={(e) => setThana(e.target.value)} className="h-8 text-xs border-primary/10" />
+                  <Input value={thana} onChange={(e) => setThana(e.target.value)} className="h-8 text-xs border-primary/20" />
                 </div>
                 <div>
                   <label className="text-[10px] font-semibold text-muted-foreground block mb-0.5">District</label>
-                  <Input value={district} onChange={(e) => setDistrict(e.target.value)} className="h-8 text-xs border-primary/10" />
+                  <Input value={district} onChange={(e) => setDistrict(e.target.value)} className="h-8 text-xs border-primary/20" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">Cattle Count</label>
-                  <Input type="number" value={cattleCount} onChange={(e) => setCattleCount(e.target.value)} placeholder="0" className="border-primary/10" />
+                  <Input type="number" value={cattleCount} onChange={(e) => setCattleCount(e.target.value)} placeholder="0" className="border-primary/20" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">Credit Limit</label>
-                  <Input type="number" value={creditLimit} onChange={(e) => setCreditLimit(e.target.value)} placeholder="0.00" className="border-primary/10" />
+                  <Input type="number" value={creditLimit} onChange={(e) => setCreditLimit(e.target.value)} placeholder="0.00" className="border-primary/20" />
                 </div>
               </div>
 
               <div className="flex gap-2">
-                <Button type="submit" disabled={submitting} className="flex-1 bg-primary hover:bg-primary/95 text-white font-semibold">
+                <Button type="submit" disabled={submitting} className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
                   {submitting ? 'Saving...' : editingFarmerId ? 'Update Profile' : 'Register Profile'}
                 </Button>
                 {editingFarmerId && (
-                  <Button type="button" variant="outline" onClick={handleCancelEdit} className="border-zinc-200">
+                  <Button type="button" variant="outline" onClick={resetForm} className="border-primary/20">
                     Cancel
                   </Button>
                 )}
@@ -185,7 +189,7 @@ export default function FarmersPage() {
         </Card>
 
         {/* Database Grid */}
-        <Card className="lg:col-span-8 border-primary/10 bg-white/70">
+        <Card className="lg:col-span-8 border-primary/10 bg-card/70">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-primary flex items-center gap-2">
               <Users className="h-5 w-5 text-primary" /> Farmers Database
@@ -201,18 +205,20 @@ export default function FarmersPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-[40px]">#</TableHead>
                       <TableHead>Farmer Name</TableHead>
                       <TableHead>Location</TableHead>
                       <TableHead className="text-center">Cattle Count</TableHead>
                       <TableHead className="text-center">Purchases</TableHead>
                       <TableHead className="text-right">Credit Limit</TableHead>
                       <TableHead className="text-right">Outstanding Dues</TableHead>
-                      <TableHead className="text-center">Action</TableHead>
+                      <TableHead className="text-center w-[60px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {farmers.map((f) => (
+                    {farmers.map((f, index) => (
                       <TableRow key={f._id}>
+                        <TableCell className="text-xs text-muted-foreground font-medium">{index + 1}</TableCell>
                         <TableCell className="font-semibold text-xs text-primary">
                           {f.name}
                           <span className="block text-[10px] text-muted-foreground font-normal flex items-center gap-0.5">
@@ -235,9 +241,27 @@ export default function FarmersPage() {
                           ৳{f.currentDues.toLocaleString()}
                         </TableCell>
                         <TableCell className="text-center">
-                          <Button size="sm" variant="outline" onClick={() => handleEdit(f)} className="h-7 px-2 border-primary/10 hover:bg-primary/10 text-primary text-xs">
-                            <PenTool className="h-3.5 w-3.5 mr-1" /> Edit
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-muted" id={`farmer-action-${f._id}`}>
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-36">
+                              <DropdownMenuItem className="cursor-pointer text-xs gap-2" onClick={() => handleEdit(f)}>
+                                <Edit className="h-3.5 w-3.5 text-primary" />
+                                <span>Edit</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="cursor-pointer text-xs gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
+                                onClick={() => handleDelete(f)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                <span>Delete</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     ))}

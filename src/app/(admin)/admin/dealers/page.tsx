@@ -1,13 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { getDealers, approveDealer, updateDealerSettings, registerDealer } from '@/app/actions/dealer';
+import { getDealers, approveDealer, updateDealerSettings, registerDealer, deleteDealer } from '@/app/actions/dealer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Users, UserCheck, ShieldAlert, Award, CreditCard, PlusCircle } from 'lucide-react';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Users, UserCheck, PlusCircle, MoreVertical, Edit2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 
@@ -123,19 +127,34 @@ export default function DealersAdminPage() {
       });
 
       toast.success('Dealer account registered successfully (Pending approval).');
-      // Reset form
-      setName('');
-      setEmail('');
-      setPhone('');
-      setShopName('');
-      setDistrict('');
-      setTradeLicense('');
-      setNidNumber('');
+      setName(''); setEmail(''); setPhone(''); setShopName('');
+      setDistrict(''); setTradeLicense(''); setNidNumber('');
       loadData();
     } catch (err: any) {
       toast.error('Registration failed: ' + err.message);
     } finally {
       setRegistering(false);
+    }
+  };
+
+  const handleDelete = async (dealer: any) => {
+    const u = dealer.userId || {};
+    const result = await Swal.fire({
+      title: 'Remove Dealer?',
+      html: `<p class="text-sm text-gray-600">This will permanently remove <strong>${u.name || dealer.shopName}</strong> and their user account from the system.</p>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, Remove!',
+    });
+    if (!result.isConfirmed) return;
+    try {
+      await deleteDealer(dealer._id);
+      toast.success('Dealer removed successfully.');
+      loadData();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to remove dealer');
     }
   };
 
@@ -209,6 +228,7 @@ export default function DealersAdminPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-[40px]">#</TableHead>
                       <TableHead>Dealer / Shop</TableHead>
                       <TableHead>Contact</TableHead>
                       <TableHead>Status</TableHead>
@@ -216,14 +236,15 @@ export default function DealersAdminPage() {
                       <TableHead className="text-right">Wallet</TableHead>
                       <TableHead className="text-right">Credit Limit</TableHead>
                       <TableHead className="text-right">Dues</TableHead>
-                      <TableHead className="text-center">Actions</TableHead>
+                      <TableHead className="text-center w-[60px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {dealers.map((d) => {
+                    {dealers.map((d, index) => {
                       const u = d.userId || {};
                       return (
                         <TableRow key={d._id}>
+                          <TableCell className="text-xs text-muted-foreground font-medium">{index + 1}</TableCell>
                           <TableCell className="font-semibold text-xs text-primary">
                             {u.name || 'Unknown'}
                             <span className="block text-[10px] text-muted-foreground font-normal italic">
@@ -248,16 +269,33 @@ export default function DealersAdminPage() {
                             ৳{d.currentDues.toLocaleString()}
                           </TableCell>
                           <TableCell className="text-center">
-                            <div className="flex justify-center gap-1">
-                              {u.status === 'inactive' && (
-                                <Button size="sm" onClick={() => handleApprove(u._id, u.name)} className="bg-primary hover:bg-primary/95 text-white h-7 px-2 text-xs">
-                                  <UserCheck className="h-3.5 w-3.5 mr-1" /> Approve
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-muted" id={`dealer-action-${d._id}`}>
+                                  <MoreVertical className="h-4 w-4" />
                                 </Button>
-                              )}
-                              <Button size="sm" variant="outline" onClick={() => handleUpdateSettings(d._id, d.shopName, d.commissionRate, d.creditLimit)} className="h-7 px-2 text-xs border-primary/30 text-primary hover:bg-primary/10">
-                                Configure
-                              </Button>
-                            </div>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-40">
+                                {u.status === 'inactive' && (
+                                  <DropdownMenuItem className="cursor-pointer text-xs gap-2" onClick={() => handleApprove(u._id, u.name)}>
+                                    <UserCheck className="h-3.5 w-3.5 text-primary" />
+                                    <span>Approve</span>
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem className="cursor-pointer text-xs gap-2" onClick={() => handleUpdateSettings(d._id, d.shopName, d.commissionRate, d.creditLimit)}>
+                                  <Edit2 className="h-3.5 w-3.5 text-primary" />
+                                  <span>Configure</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="cursor-pointer text-xs gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
+                                  onClick={() => handleDelete(d)}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                  <span>Remove</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </TableCell>
                         </TableRow>
                       );

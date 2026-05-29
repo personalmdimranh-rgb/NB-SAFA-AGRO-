@@ -98,3 +98,18 @@ export async function getFarmers() {
   const farmers = await Farmer.find().sort({ createdAt: -1 });
   return JSON.parse(JSON.stringify(farmers));
 }
+
+export async function deleteFarmer(farmerId: string) {
+  const session = await auth();
+  if (!session || !['super_admin', 'admin', 'manager'].includes((session.user as any).role)) {
+    throw new Error('Unauthorized');
+  }
+
+  await connectToDatabase();
+  const res = await Farmer.findByIdAndDelete(farmerId);
+  if (!res) throw new Error('Farmer not found');
+
+  revalidatePath('/admin/farmers');
+  return { success: true };
+}
+

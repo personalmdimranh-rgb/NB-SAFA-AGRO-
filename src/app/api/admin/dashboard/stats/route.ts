@@ -153,7 +153,7 @@ export async function GET(req: NextRequest) {
 
       // Recent transactions
       recentTransactions = await LedgerTransaction.find({ date: { $gte: startDate, $lte: endDate } })
-        .sort({ date: -1 })
+        .sort({ date: -1, createdAt: -1 })
         .limit(6)
         .select('date type source category amount description');
     }

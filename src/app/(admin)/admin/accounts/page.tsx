@@ -2,16 +2,30 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { createTransaction, getLedgerBalances, getTransactions } from '@/app/actions/accounts';
+import { createTransaction, getLedgerBalances, getTransactions, deleteTransaction, updateTransaction } from '@/app/actions/accounts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { DollarSign, ArrowUpRight, ArrowDownLeft, ArrowLeftRight, Calendar, PlusCircle } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { DollarSign, ArrowUpRight, ArrowDownLeft, ArrowLeftRight, Calendar, PlusCircle, MoreVertical, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export default function AccountsPage() {
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -20,7 +34,7 @@ export default function AccountsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [filterType, setFilterType] = useState<string>('all');
 
-  // Form states
+  // Create Form states
   const [type, setType] = useState<'income' | 'expense' | 'transfer'>('income');
   const [source, setSource] = useState<'cash' | 'bank'>('cash');
   const [category, setCategory] = useState('');
@@ -29,6 +43,19 @@ export default function AccountsPage() {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [bankName, setBankName] = useState('');
   const [accountNo, setAccountNo] = useState('');
+
+  // Edit modal states
+  const [editOpen, setEditOpen] = useState(false);
+  const [editTx, setEditTx] = useState<any>(null);
+  const [editType, setEditType] = useState<'income' | 'expense' | 'transfer'>('income');
+  const [editSource, setEditSource] = useState<'cash' | 'bank'>('cash');
+  const [editCategory, setEditCategory] = useState('');
+  const [editAmount, setEditAmount] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editDate, setEditDate] = useState('');
+  const [editBankName, setEditBankName] = useState('');
+  const [editAccountNo, setEditAccountNo] = useState('');
+  const [updating, setUpdating] = useState(false);
 
   const loadData = async () => {
     try {
@@ -54,7 +81,6 @@ export default function AccountsPage() {
       return;
     }
 
-    // SwAlert Confirmation
     const result = await Swal.fire({
       title: 'Confirm Transaction',
       text: `Are you sure you want to log this ${type} of ${amount} BDT?`,
@@ -81,7 +107,6 @@ export default function AccountsPage() {
 
       if (response.success) {
         toast.success('Transaction logged successfully!');
-        // Reset form
         setCategory('');
         setAmount('');
         setDescription('');
@@ -96,6 +121,73 @@ export default function AccountsPage() {
     }
   };
 
+  const handleOpenEdit = (tx: any) => {
+    setEditTx(tx);
+    setEditType(tx.type);
+    setEditSource(tx.source);
+    setEditCategory(tx.category);
+    setEditAmount(String(tx.amount));
+    setEditDescription(tx.description || '');
+    setEditDate(new Date(tx.date).toISOString().split('T')[0]);
+    setEditBankName(tx.bankDetails?.bankName || '');
+    setEditAccountNo(tx.bankDetails?.accountNo || '');
+    setEditOpen(true);
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editCategory || !editAmount || parseFloat(editAmount) <= 0) {
+      toast.error('Please enter a valid category and amount');
+      return;
+    }
+
+    try {
+      setUpdating(true);
+      const response = await updateTransaction(editTx._id, {
+        type: editType,
+        source: editSource,
+        category: editCategory,
+        amount: parseFloat(editAmount),
+        description: editDescription,
+        date: editDate,
+        bankDetails: editSource === 'bank' ? { bankName: editBankName, accountNo: editAccountNo } : undefined,
+      });
+
+      if (response.success) {
+        toast.success('Transaction updated successfully!');
+        setEditOpen(false);
+        loadData();
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Something went wrong');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleDelete = async (tx: any) => {
+    const result = await Swal.fire({
+      title: 'Delete Transaction?',
+      html: `<p class="text-sm text-gray-600">This will permanently remove the <strong>${tx.type}</strong> entry of <strong>৳${tx.amount.toLocaleString()}</strong> (${tx.category}).</p>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, Delete it!',
+      cancelButtonText: 'Cancel',
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await deleteTransaction(tx._id);
+      toast.success('Transaction deleted successfully!');
+      loadData();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to delete transaction');
+    }
+  };
+
   const filteredTxs = transactions.filter((tx) => {
     if (filterType === 'all') return true;
     return tx.type === filterType;
@@ -106,7 +198,7 @@ export default function AccountsPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-primary">Financial Ledger</h1>
-          <p className="text-muted-foreground">Manage cash & bank transaction flows for Shafa Agro</p>
+          <p className="text-muted-foreground">Manage cash &amp; bank transaction flows for Shafa Agro</p>
         </div>
       </div>
 
@@ -240,7 +332,7 @@ export default function AccountsPage() {
                         <SelectItem value="Raw Materials">Raw Materials (Silage)</SelectItem>
                         <SelectItem value="Salary">Employee Salary</SelectItem>
                         <SelectItem value="Dividend">Dividend Released</SelectItem>
-                        <SelectItem value="Rent">Rent & Utilities</SelectItem>
+                        <SelectItem value="Rent">Rent &amp; Utilities</SelectItem>
                         <SelectItem value="Other Expense">Other Expense</SelectItem>
                       </>
                     )}
@@ -332,17 +424,22 @@ export default function AccountsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-[40px]">#</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Source</TableHead>
                       <TableHead>Category</TableHead>
                       <TableHead className="text-right">Amount</TableHead>
                       <TableHead>Notes</TableHead>
+                      <TableHead className="text-center w-[60px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredTxs.map((tx) => (
+                    {filteredTxs.map((tx, index) => (
                       <TableRow key={tx._id}>
+                        <TableCell className="text-xs text-muted-foreground font-medium">
+                          {index + 1}
+                        </TableCell>
                         <TableCell className="whitespace-nowrap font-medium text-xs">
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3 text-muted-foreground" />
@@ -369,9 +466,16 @@ export default function AccountsPage() {
                         <TableCell className="capitalize text-xs font-semibold">
                           {tx.source}
                           {tx.source === 'bank' && tx.bankDetails?.bankName && (
-                            <span className="block text-[10px] text-muted-foreground">
-                              {tx.bankDetails.bankName}
-                            </span>
+                            <>
+                              <span className="block text-[10px] text-muted-foreground font-semibold">
+                                {tx.bankDetails.bankName}
+                              </span>
+                              {tx.bankDetails.accountNo && (
+                                <span className="block text-[9px] text-muted-foreground/80">
+                                  A/C: {tx.bankDetails.accountNo}
+                                </span>
+                              )}
+                            </>
                           )}
                         </TableCell>
                         <TableCell className="text-xs font-medium">{tx.category}</TableCell>
@@ -380,8 +484,39 @@ export default function AccountsPage() {
                         }`}>
                           ৳{tx.amount.toLocaleString()}
                         </TableCell>
-                        <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">
+                        <TableCell className="text-xs text-muted-foreground max-w-[150px] truncate">
                           {tx.description}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 hover:bg-muted"
+                                id={`tx-action-${tx._id}`}
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-36">
+                              <DropdownMenuItem
+                                className="cursor-pointer text-xs gap-2"
+                                onClick={() => handleOpenEdit(tx)}
+                              >
+                                <Edit className="h-3.5 w-3.5 text-primary" />
+                                <span>Edit</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="cursor-pointer text-xs gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
+                                onClick={() => handleDelete(tx)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                <span>Delete</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -392,6 +527,133 @@ export default function AccountsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Edit Transaction Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary">
+              <Edit className="h-5 w-5" /> Edit Transaction
+            </DialogTitle>
+          </DialogHeader>
+          {editTx && (
+            <form onSubmit={handleUpdate} className="space-y-4 pt-2">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">Type</label>
+                  <Select value={editType} onValueChange={(val: any) => setEditType(val)}>
+                    <SelectTrigger className="w-full border-primary/20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="income">Income</SelectItem>
+                      <SelectItem value="expense">Expense</SelectItem>
+                      <SelectItem value="transfer">Transfer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">Source</label>
+                  <Select value={editSource} onValueChange={(val: any) => setEditSource(val)}>
+                    <SelectTrigger className="w-full border-primary/20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="bank">Bank</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {editSource === 'bank' && (
+                <div className="grid grid-cols-2 gap-2 border p-2 rounded-lg bg-muted/50">
+                  <div>
+                    <label className="text-xs font-semibold text-muted-foreground mb-1 block">Bank Name</label>
+                    <Input
+                      placeholder="e.g. Dutch Bangla"
+                      value={editBankName}
+                      onChange={(e) => setEditBankName(e.target.value)}
+                      className="h-8 border-primary/20 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-muted-foreground mb-1 block">Account No</label>
+                    <Input
+                      placeholder="e.g. 122.100.123"
+                      value={editAccountNo}
+                      onChange={(e) => setEditAccountNo(e.target.value)}
+                      className="h-8 border-primary/20 text-xs"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">Category</label>
+                <Input
+                  value={editCategory}
+                  onChange={(e) => setEditCategory(e.target.value)}
+                  className="border-primary/20"
+                  placeholder="e.g. Silage Sale"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">Amount (BDT)</label>
+                  <Input
+                    type="number"
+                    value={editAmount}
+                    onChange={(e) => setEditAmount(e.target.value)}
+                    className="border-primary/20"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">Date</label>
+                  <Input
+                    type="date"
+                    value={editDate}
+                    onChange={(e) => setEditDate(e.target.value)}
+                    className="border-primary/20"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">Description</label>
+                <Input
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  className="border-primary/20"
+                  placeholder="Memo/Notes"
+                />
+              </div>
+
+              <DialogFooter className="gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditOpen(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={updating}
+                  className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+                >
+                  {updating ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
