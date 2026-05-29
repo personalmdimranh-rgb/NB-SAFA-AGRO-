@@ -138,6 +138,33 @@ export async function getEmployees() {
   return JSON.parse(JSON.stringify(employees));
 }
 
+export async function getAttendanceByDate(dateStr: string) {
+  await connectToDatabase();
+  const targetDate = new Date(dateStr);
+  targetDate.setUTCHours(0, 0, 0, 0);
+  const nextDay = new Date(targetDate);
+  nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+
+  const employees = await Employee.find().sort({ joiningDate: -1 });
+
+  const report = employees.map((emp) => {
+    const record = emp.attendanceRecords.find((att: any) => {
+      const attDate = new Date(att.date);
+      attDate.setUTCHours(0, 0, 0, 0);
+      return attDate.getTime() === targetDate.getTime();
+    });
+    return {
+      _id: emp._id.toString(),
+      name: emp.name,
+      phone: emp.phone,
+      designation: emp.designation,
+      status: record ? record.status : null,
+    };
+  });
+
+  return JSON.parse(JSON.stringify(report));
+}
+
 export async function updateEmployee(
   employeeId: string,
   data: {
