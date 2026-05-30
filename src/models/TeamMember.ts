@@ -9,6 +9,8 @@ export interface ITeamMember extends Document {
   facebook?: string;
   twitter?: string;
   linkedin?: string;
+  email?: string;
+  whatsapp?: string;
   order: number;
   updatedBy?: string;
   createdAt: Date;
@@ -25,6 +27,8 @@ const TeamMemberSchema: Schema<ITeamMember> = new Schema(
     facebook: { type: String, default: '' },
     twitter: { type: String, default: '' },
     linkedin: { type: String, default: '' },
+    email: { type: String, default: '' },
+    whatsapp: { type: String, default: '' },
     order: { type: Number, default: 0 },
     updatedBy: { type: String, default: 'System' },
   },

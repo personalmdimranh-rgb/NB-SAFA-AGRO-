@@ -1,7 +1,6 @@
-'use client';
-
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   Table,
@@ -13,6 +12,15 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Pagination } from '@/components/ui/pagination';
 import { 
   MoreHorizontal, 
   Loader2, 
@@ -23,6 +31,8 @@ import {
   UserCog,
   Trash2,
   ArrowRight,
+  Search,
+  Store,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -63,16 +73,40 @@ export default function UsersPage() {
   const [isAssignAdminOpen, setIsAssignAdminOpen] = useState(false);
   const [adminEmail, setAdminEmail] = useState('');
   const [isAssigning, setIsAssigning] = useState(false);
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 1, page: 1 });
 
   const { data: session } = useSession();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const isSuperAdmin = (session?.user as any)?.role === 'super_admin';
+
+  const currentPage = parseInt(searchParams.get('page') || '1') || 1;
+  const searchVal = (searchParams.get('search') || '') as string;
+  const roleVal = (searchParams.get('role') || '') as string;
+
+  const [searchInput, setSearchInput] = useState<string>(searchVal);
+  const [roleInput, setRoleInput] = useState<string>(roleVal);
+
+  useEffect(() => {
+    setSearchInput(searchVal);
+    setRoleInput(roleVal);
+  }, [searchVal, roleVal]);
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/admin/users');
+      setLoading(true);
+      const q = new URLSearchParams({
+        page: String(currentPage),
+        search: searchVal,
+        role: roleVal,
+        limit: '20'
+      });
+      const response = await fetch(`/api/admin/users?${q.toString()}`);
       if (!response.ok) throw new Error('Failed to fetch users');
       const data = await response.json();
-      setUsers(data);
+      setUsers(data.users || []);
+      setPagination(data.pagination || { total: 0, totalPages: 1, page: 1 });
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('Failed to load users');
@@ -83,7 +117,34 @@ export default function UsersPage() {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [currentPage, searchVal, roleVal]);
+
+  const updateFilters = (newFilters: { page?: number; search?: string; role?: string }) => {
+    const params = new URLSearchParams(searchParams.toString());
+    
+    if (newFilters.page !== undefined) {
+      if (newFilters.page > 1) params.set('page', String(newFilters.page));
+      else params.delete('page');
+    }
+    if (newFilters.search !== undefined) {
+      if (newFilters.search) {
+        params.set('search', newFilters.search);
+        params.delete('page');
+      } else {
+        params.delete('search');
+      }
+    }
+    if (newFilters.role !== undefined) {
+      if (newFilters.role) {
+        params.set('role', newFilters.role);
+        params.delete('page');
+      } else {
+        params.delete('role');
+      }
+    }
+
+    router.push(`/admin/users?${params.toString()}`);
+  };
 
   const handleUpdateRole = async (userId: string, newRole: string) => {
     const result = await Swal.fire({
@@ -91,8 +152,8 @@ export default function UsersPage() {
       text: `Are you sure you want to change this user's role to ${newRole}?`,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#2563eb', // blue-600
-      cancelButtonColor: '#64748b', // slate-500
+      confirmButtonColor: '#2563eb',
+      cancelButtonColor: '#64748b',
       confirmButtonText: 'Yes, change it!',
       customClass: {
         popup: 'rounded-3xl',
@@ -156,8 +217,8 @@ export default function UsersPage() {
       text: `Are you sure you want to permanently delete user "${userName}"? This action cannot be undone.`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#ef4444', // red-500
-      cancelButtonColor: '#64748b', // slate-500
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#64748b',
       confirmButtonText: 'Yes, delete permanently!',
       customClass: {
         popup: 'rounded-3xl',
@@ -205,8 +266,57 @@ export default function UsersPage() {
             </Button>
           )}
           <div className="bg-primary/10 px-5 py-2.5 rounded-full border border-primary/20">
-            <span className="text-primary font-bold text-sm">{users.length} Total Users</span>
+            <span className="text-primary font-bold text-sm">{pagination.total} Total Users</span>
           </div>
+        </div>
+      </div>
+
+      {/* Search and Filters Section */}
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl border shadow-sm">
+        <div className="relative w-full md:max-w-md flex items-center">
+          <Input
+            placeholder="Search by name, email, or mobile..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                updateFilters({ search: searchInput });
+              }
+            }}
+            className="pr-10 border-primary/20 rounded-xl"
+          />
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => updateFilters({ search: searchInput })}
+            className="absolute right-1 text-muted-foreground hover:text-primary h-8 w-8 p-0"
+          >
+            <Search className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">Filter by Role:</span>
+          <Select
+            value={roleInput || 'all'}
+            onValueChange={(val) => {
+              const resolvedVal = (val === 'all' ? '' : val) || '';
+              setRoleInput(resolvedVal);
+              updateFilters({ role: resolvedVal });
+            }}
+          >
+            <SelectTrigger className="w-full md:w-[180px] border-primary/20 rounded-xl">
+              <SelectValue placeholder="All Roles" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Roles</SelectItem>
+              <SelectItem value="user">User / Farmer</SelectItem>
+              <SelectItem value="dealer">Dealer</SelectItem>
+              <SelectItem value="staff">Staff</SelectItem>
+              <SelectItem value="manager">Manager</SelectItem>
+              <SelectItem value="director">Director</SelectItem>
+              <SelectItem value="admin">Admin</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -215,7 +325,7 @@ export default function UsersPage() {
           <TableHeader className="bg-muted/50">
             <TableRow>
               <TableHead className="w-[80px]">Avatar</TableHead>
-              <TableHead className="font-bold">Name</TableHead>
+              <TableHead className="font-bold">Name &amp; Details</TableHead>
               <TableHead className="font-bold">Email</TableHead>
               <TableHead className="font-bold">Orders</TableHead>
               <TableHead className="font-bold">Role</TableHead>
@@ -261,13 +371,23 @@ export default function UsersPage() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Link
-                      href={`/admin/users/${user._id}`}
-                      className="font-semibold text-slate-900 hover:text-primary transition-colors flex items-center gap-1 group"
-                    >
-                      {user.name}
-                      <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
-                    </Link>
+                    <div className="flex flex-col">
+                      <Link
+                        href={`/admin/users/${user._id}`}
+                        className="font-semibold text-slate-900 hover:text-primary transition-colors flex items-center gap-1 group w-fit"
+                      >
+                        {user.name}
+                        <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                      </Link>
+                      {user.phone && user.phone !== 'N/A' && (
+                        <span className="text-[11px] text-muted-foreground font-mono font-medium">{user.phone}</span>
+                      )}
+                      {user.addresses && user.addresses.length > 0 && (
+                        <span className="text-[10px] text-muted-foreground truncate max-w-[200px] mt-0.5">
+                          {[user.addresses[0].street, user.addresses[0].city, user.addresses[0].state].filter(Boolean).join(', ')}
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-slate-600">{user.email}</TableCell>
                   <TableCell>
@@ -309,6 +429,13 @@ export default function UsersPage() {
                               <Eye className="mr-2 h-4 w-4" /> View Profile
                             </Link>
                           </DropdownMenuItem>
+                          {user.role !== 'dealer' && (
+                            <DropdownMenuItem asChild className="cursor-pointer text-primary font-bold">
+                              <Link href={`/admin/dealers?register=true&name=${encodeURIComponent(user.name)}&email=${encodeURIComponent(user.email)}&phone=${encodeURIComponent(user.phone && user.phone !== 'N/A' ? user.phone : '')}`} className="flex items-center">
+                                <Store className="mr-2 h-4 w-4" /> Make Dealer
+                              </Link>
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuGroup>
 
                         <DropdownMenuSeparator />
@@ -353,7 +480,16 @@ export default function UsersPage() {
         </Table>
       </div>
 
-
+      {/* Pagination Component */}
+      {!loading && pagination.totalPages > 1 && (
+        <div className="pt-2">
+          <Pagination
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            onPageChange={(page) => updateFilters({ page })}
+          />
+        </div>
+      )}
 
       {/* Assign Admin Modal */}
       <Dialog open={isAssignAdminOpen} onOpenChange={setIsAssignAdminOpen}>

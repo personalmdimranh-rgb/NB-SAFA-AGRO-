@@ -48,8 +48,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
 import Link from 'next/link';
 import { format, subDays, parseISO, isAfter, startOfToday } from 'date-fns';
+import { useSession } from 'next-auth/react';
+import { getLoggedEmployeeDashboardData } from '@/app/actions/employee';
+import { toast } from 'sonner';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const tk = (n: number) =>
@@ -144,16 +150,218 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 // ─── Main Dashboard ────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
+  const { data: session } = useSession();
+  const role = (session?.user as any)?.role;
+
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeMetric, setActiveMetric] = useState<'revenue' | 'collected' | 'salesCount'>('revenue');
+
+  const [staffData, setStaffData] = useState<any>(null);
+  const [staffLoading, setStaffLoading] = useState(true);
 
   const [dateRange, setDateRange] = useState({
     from: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
     to: format(new Date(), 'yyyy-MM-dd'),
   });
   const [debouncedRange, setDebouncedRange] = useState(dateRange);
+
+  useEffect(() => {
+    if (role === 'staff') {
+      getLoggedEmployeeDashboardData().then(res => {
+        setStaffData(res);
+        setStaffLoading(false);
+      }).catch(err => {
+        toast.error('Failed to load employee dashboard data: ' + err.message);
+        setStaffLoading(false);
+      });
+    }
+  }, [role]);
+
+  if (role === 'staff') {
+    if (staffLoading) {
+      return (
+        <div className="flex h-[80vh] items-center justify-center flex-col gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Loading your salary tracker...</p>
+        </div>
+      );
+    }
+
+    if (!staffData) {
+      return (
+        <div className="container mx-auto p-6 text-center max-w-md mt-10">
+          <Card className="border-destructive/30 bg-destructive/5">
+            <CardHeader>
+              <CardTitle className="text-destructive font-black">Employee Profile Not Found</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                Your account email <strong className="text-zinc-800">{session?.user?.email}</strong> is not associated with any registered employee profile in the database.
+              </p>
+              <p className="text-xs">
+                Please contact the farm administrator or manager to register your email in the Employee Directory.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    const { employee, salaryHistory } = staffData;
+    const netSalary = employee.salaryStructure.basic + employee.salaryStructure.allowance - employee.salaryStructure.deductions;
+
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-primary">Employee Dashboard</h1>
+          <p className="text-muted-foreground text-sm">Welcome back, {employee.name}! View your profile details and track processed salary records.</p>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-3">
+          {/* Profile Card */}
+          <Card className="md:col-span-2 border-primary/20 bg-card">
+            <CardHeader className="border-b pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-full bg-primary/10 text-primary">
+                  <Users className="h-6 w-6" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-bold">{employee.name}</CardTitle>
+                  <CardDescription className="capitalize font-semibold text-primary">{employee.designation}</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-semibold text-muted-foreground block text-xs uppercase">Employee ID</span>
+                <span className="font-mono font-bold text-zinc-800">{employee.employeeId || '—'}</span>
+              </div>
+              <div>
+                <span className="font-semibold text-muted-foreground block text-xs uppercase">Phone</span>
+                <span className="font-medium text-zinc-800">{employee.phone}</span>
+              </div>
+              <div>
+                <span className="font-semibold text-muted-foreground block text-xs uppercase">Email</span>
+                <span className="font-medium text-zinc-800">{employee.email || '—'}</span>
+              </div>
+              <div>
+                <span className="font-semibold text-muted-foreground block text-xs uppercase">Joining Date</span>
+                <span className="font-medium text-zinc-800">{new Date(employee.joiningDate).toLocaleDateString()}</span>
+              </div>
+              <div className="sm:col-span-2">
+                <span className="font-semibold text-muted-foreground block text-xs uppercase">Full Address</span>
+                <span className="font-medium text-zinc-800">
+                  {[employee.address, employee.thana, employee.district, employee.division].filter(Boolean).join(', ') || '—'}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Salary Settings Card */}
+          <Card className="border-primary/20 bg-muted/20">
+            <CardHeader className="border-b pb-4">
+              <CardTitle className="text-base font-bold text-zinc-800">Salary Structure</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-3.5 text-sm">
+              <div className="flex justify-between items-center border-b pb-1.5">
+                <span className="text-muted-foreground text-xs uppercase font-medium">Basic Salary</span>
+                <span className="font-bold text-zinc-800">৳{employee.salaryStructure.basic.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center border-b pb-1.5">
+                <span className="text-muted-foreground text-xs uppercase font-medium">Allowance</span>
+                <span className="font-semibold text-green-600">+৳{employee.salaryStructure.allowance.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center border-b pb-1.5">
+                <span className="text-muted-foreground text-xs uppercase font-medium">Regular Deduction</span>
+                <span className="font-semibold text-destructive">-৳{employee.salaryStructure.deductions.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center border-b pb-1.5">
+                <span className="text-muted-foreground text-xs uppercase font-medium">Allowed Absents / month</span>
+                <span className="font-bold text-zinc-800">{employee.allowedAbsent ?? 1} Days</span>
+              </div>
+              <div className="flex justify-between items-center border-b pb-1.5">
+                <span className="text-muted-foreground text-xs uppercase font-medium">Absent Deduction Rate</span>
+                <span className="font-bold text-destructive">৳{(employee.absentDeductionRate ?? 0).toLocaleString()} / day</span>
+              </div>
+              <div className="flex justify-between items-center pt-1">
+                <span className="text-primary font-bold text-xs uppercase">Est. Net Base Salary</span>
+                <span className="font-black text-primary text-base">৳{netSalary.toLocaleString()}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Weekend Details Info */}
+        <Card className="border-primary/20 bg-card">
+          <CardContent className="p-4 flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <p className="text-sm font-bold text-zinc-800">Your Regular Offdays (Weekend)</p>
+              <p className="text-xs text-muted-foreground">Default status is set automatically on these days.</p>
+            </div>
+            <div className="flex gap-2">
+              {(employee.weekend || ['friday']).map((day: string) => (
+                <Badge key={day} className="bg-primary/10 text-primary border-primary/20 capitalize font-bold px-3 py-1 text-xs">
+                  {day}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Payroll History Table */}
+        <Card className="border-primary/15 bg-card">
+          <CardHeader className="border-b">
+            <CardTitle className="text-lg font-bold text-primary flex items-center gap-2">
+              <BadgeDollarSign className="h-5 w-5" /> Salary &amp; Payroll Record History
+            </CardTitle>
+            <CardDescription className="text-xs">Your processed salary receipts and ledger logs</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            {salaryHistory.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground text-sm">
+                No salary transactions found. When payroll is processed by admin, history will show here.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/40">
+                      <TableHead>Payment Date</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Ledger description &amp; calculation</TableHead>
+                      <TableHead className="text-right font-bold">Net Salary Disbursed</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {salaryHistory.map((tx: any) => (
+                      <TableRow key={tx._id}>
+                        <TableCell className="whitespace-nowrap font-medium text-xs">
+                          {new Date(tx.date).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className="bg-green-100 text-green-700 font-semibold text-[10px]">
+                            {tx.category}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground max-w-md">
+                          {tx.description}
+                        </TableCell>
+                        <TableCell className="text-right font-black text-primary text-sm whitespace-nowrap">
+                          ৳{tx.amount.toLocaleString()}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedRange(dateRange), 500);
@@ -300,10 +508,10 @@ export default function AdminDashboard() {
       {/* ── KPI Grid (top row) ──────────────────────────────────────────── */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <KpiCard
-          title="Silage Sales Revenue"
-          value={tk(stats?.totalSalesRevenue || 0)}
-          sub={`${stats?.salesCount || 0} invoices in period`}
-          icon={BadgeDollarSign}
+          title="Pending Orders"
+          value={String(stats?.pendingOrdersCount || 0)}
+          sub="Unresolved dealer & farmer orders"
+          icon={Clock}
           href="/admin/sales"
         />
         <KpiCard

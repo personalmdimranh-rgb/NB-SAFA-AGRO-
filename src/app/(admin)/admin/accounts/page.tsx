@@ -2,6 +2,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { Pagination } from '@/components/ui/pagination';
 import { createTransaction, getLedgerBalances, getTransactions, deleteTransaction, updateTransaction } from '@/app/actions/accounts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,11 +30,20 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export default function AccountsPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const [transactions, setTransactions] = useState<any[]>([]);
   const [balances, setBalances] = useState({ cashBalance: 0, bankBalance: 0, totalBalance: 0 });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [filterType, setFilterType] = useState<string>('all');
+
+  const currentPage = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
+  const pageSize = 20;
+
+  const [addOpen, setAddOpen] = useState(false);
 
   // Create Form states
   const [type, setType] = useState<'income' | 'expense' | 'transfer'>('income');
@@ -112,6 +123,7 @@ export default function AccountsPage() {
         setDescription('');
         setBankName('');
         setAccountNo('');
+        setAddOpen(false);
         loadData();
       }
     } catch (err: any) {
@@ -193,6 +205,9 @@ export default function AccountsPage() {
     return tx.type === filterType;
   });
 
+  const totalPages = Math.ceil(filteredTxs.length / pageSize) || 1;
+  const paginatedTxs = filteredTxs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -200,6 +215,12 @@ export default function AccountsPage() {
           <h1 className="text-3xl font-bold tracking-tight text-primary">Financial Ledger</h1>
           <p className="text-muted-foreground">Manage cash &amp; bank transaction flows for Shafa Agro</p>
         </div>
+        <Button
+          onClick={() => setAddOpen(true)}
+          className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold gap-2"
+        >
+          <PlusCircle className="h-4 w-4" /> Add Transaction
+        </Button>
       </div>
 
       {/* Balance Cards */}
@@ -244,183 +265,192 @@ export default function AccountsPage() {
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-12">
-        {/* Transaction Logger Form */}
-        <Card className="lg:col-span-4 border-primary/20 bg-card/70">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold flex items-center gap-2 text-primary">
+      {/* Log Transaction Dialog */}
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary">
               <PlusCircle className="h-5 w-5 text-primary" /> Log Transaction
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">
-                  Type
-                </label>
-                <Select value={type} onValueChange={(val: any) => setType(val)}>
-                  <SelectTrigger className="w-full border-primary/20">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="income">Income</SelectItem>
-                    <SelectItem value="expense">Expense</SelectItem>
-                    <SelectItem value="transfer">Cash ↔ Bank Transfer</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">
-                  Source / Account
-                </label>
-                <Select value={source} onValueChange={(val: any) => setSource(val)}>
-                  <SelectTrigger className="w-full border-primary/20">
-                    <SelectValue placeholder="Select source" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cash">Cash In-Hand</SelectItem>
-                    <SelectItem value="bank">Bank Account</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {source === 'bank' && (
-                <div className="grid grid-cols-2 gap-2 border p-2 rounded-lg bg-muted/50">
-                  <div>
-                    <label className="text-xs font-semibold text-muted-foreground mb-1 block">Bank Name</label>
-                    <Input
-                      placeholder="e.g. Dutch Bangla"
-                      value={bankName}
-                      onChange={(e) => setBankName(e.target.value)}
-                      className="h-8 border-primary/20 text-xs"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-muted-foreground mb-1 block">Account No</label>
-                    <Input
-                      placeholder="e.g. 122.100.123"
-                      value={accountNo}
-                      onChange={(e) => setAccountNo(e.target.value)}
-                      className="h-8 border-primary/20 text-xs"
-                      required
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">
-                  Category
-                </label>
-                <Select value={category} onValueChange={(val: any) => setCategory(val || '')}>
-                  <SelectTrigger className="w-full border-primary/20">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {type === 'income' && (
-                      <>
-                        <SelectItem value="Silage Sale">Silage Sale</SelectItem>
-                        <SelectItem value="Due Collection">Due Collection</SelectItem>
-                        <SelectItem value="Investment">Director Investment</SelectItem>
-                        <SelectItem value="Other Income">Other Income</SelectItem>
-                      </>
-                    )}
-                    {type === 'expense' && (
-                      <>
-                        <SelectItem value="Raw Materials">Raw Materials (Silage)</SelectItem>
-                        <SelectItem value="Salary">Employee Salary</SelectItem>
-                        <SelectItem value="Dividend">Dividend Released</SelectItem>
-                        <SelectItem value="Rent">Rent &amp; Utilities</SelectItem>
-                        <SelectItem value="Other Expense">Other Expense</SelectItem>
-                      </>
-                    )}
-                    {type === 'transfer' && (
-                      <SelectItem value="Liquidity Transfer">Internal Transfer</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">
-                  Amount (BDT)
-                </label>
-                <Input
-                  type="number"
-                  placeholder="0.00"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="border-primary/20"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">
-                  Date
-                </label>
-                <Input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="border-primary/20"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">
-                  Description
-                </label>
-                <Input
-                  placeholder="Memo/Notes"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="border-primary/20"
-                />
-              </div>
-
-              <Button
-                type="submit"
-                disabled={submitting}
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
-              >
-                {submitting ? 'Submitting...' : 'Log Transaction'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        {/* Ledger Transaction History */}
-        <Card className="lg:col-span-8 border-primary/20 bg-card/70">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg font-semibold text-primary">
-              General Ledger Records
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Filter:</span>
-              <Select value={filterType} onValueChange={(val: any) => setFilterType(val || 'all')}>
-                <SelectTrigger className="w-[120px] h-8 border-primary/20">
-                  <SelectValue placeholder="All types" />
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">
+                Type
+              </label>
+              <Select value={type} onValueChange={(val: any) => setType(val)}>
+                <SelectTrigger className="w-full border-primary/20">
+                  <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Records</SelectItem>
-                  <SelectItem value="income">Incomes</SelectItem>
-                  <SelectItem value="expense">Expenses</SelectItem>
-                  <SelectItem value="transfer">Transfers</SelectItem>
+                  <SelectItem value="income">Income</SelectItem>
+                  <SelectItem value="expense">Expense</SelectItem>
+                  <SelectItem value="transfer">Cash ↔ Bank Transfer</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center py-10 text-muted-foreground">Loading ledger transactions...</div>
-            ) : filteredTxs.length === 0 ? (
-              <div className="text-center py-10 text-muted-foreground">No transactions recorded.</div>
-            ) : (
-              <div className="overflow-x-auto">
+
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">
+                Source / Account
+              </label>
+              <Select value={source} onValueChange={(val: any) => setSource(val)}>
+                <SelectTrigger className="w-full border-primary/20">
+                  <SelectValue placeholder="Select source" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Cash In-Hand</SelectItem>
+                  <SelectItem value="bank">Bank Account</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {source === 'bank' && (
+              <div className="grid grid-cols-2 gap-2 border p-2 rounded-lg bg-muted/50">
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground mb-1 block">Bank Name</label>
+                  <Input
+                    placeholder="e.g. Dutch Bangla"
+                    value={bankName}
+                    onChange={(e) => setBankName(e.target.value)}
+                    className="h-8 border-primary/20 text-xs"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground mb-1 block">Account No</label>
+                  <Input
+                    placeholder="e.g. 122.100.123"
+                    value={accountNo}
+                    onChange={(e) => setAccountNo(e.target.value)}
+                    className="h-8 border-primary/20 text-xs"
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">
+                Category
+              </label>
+              <Select value={category} onValueChange={(val: any) => setCategory(val || '')}>
+                <SelectTrigger className="w-full border-primary/20">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {type === 'income' && (
+                    <>
+                      <SelectItem value="Silage Sale">Silage Sale</SelectItem>
+                      <SelectItem value="Due Collection">Due Collection</SelectItem>
+                      <SelectItem value="Investment">Director Investment</SelectItem>
+                      <SelectItem value="Other Income">Other Income</SelectItem>
+                    </>
+                  )}
+                  {type === 'expense' && (
+                    <>
+                      <SelectItem value="Raw Materials">Raw Materials (Silage)</SelectItem>
+                      <SelectItem value="Salary">Employee Salary</SelectItem>
+                      <SelectItem value="Dividend">Dividend Released</SelectItem>
+                      <SelectItem value="Rent">Rent &amp; Utilities</SelectItem>
+                      <SelectItem value="Other Expense">Other Expense</SelectItem>
+                    </>
+                  )}
+                  {type === 'transfer' && (
+                    <SelectItem value="Liquidity Transfer">Internal Transfer</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">
+                Amount (BDT)
+              </label>
+              <Input
+                type="number"
+                placeholder="0.00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="border-primary/20"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">
+                Date
+              </label>
+              <Input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="border-primary/20"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">
+                Description
+              </label>
+              <Input
+                placeholder="Memo/Notes"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="border-primary/20"
+              />
+            </div>
+
+            <DialogFooter className="gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setAddOpen(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+              >
+                {submitting ? 'Submitting...' : 'Log Transaction'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Ledger Transaction History */}
+      <Card className="w-full border-primary/20 bg-card/70">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-lg font-semibold text-primary">
+            General Ledger Records
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Filter:</span>
+            <Select value={filterType} onValueChange={(val: any) => setFilterType(val || 'all')}>
+              <SelectTrigger className="w-[120px] h-8 border-primary/20">
+                <SelectValue placeholder="All types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Records</SelectItem>
+                <SelectItem value="income">Incomes</SelectItem>
+                <SelectItem value="expense">Expenses</SelectItem>
+                <SelectItem value="transfer">Transfers</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="text-center py-10 text-muted-foreground">Loading ledger transactions...</div>
+          ) : filteredTxs.length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground">No transactions recorded.</div>
+          ) : (
+            <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -435,10 +465,10 @@ export default function AccountsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredTxs.map((tx, index) => (
+                    {paginatedTxs.map((tx, index) => (
                       <TableRow key={tx._id}>
                         <TableCell className="text-xs text-muted-foreground font-medium">
-                          {index + 1}
+                          {(currentPage - 1) * pageSize + index + 1}
                         </TableCell>
                         <TableCell className="whitespace-nowrap font-medium text-xs">
                           <span className="flex items-center gap-1">
@@ -524,9 +554,22 @@ export default function AccountsPage() {
                 </Table>
               </div>
             )}
+            {totalPages > 1 && (
+              <div className="pt-4">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={(page) => {
+                    const params = new URLSearchParams(searchParams.toString());
+                    if (page > 1) params.set('page', String(page));
+                    else params.delete('page');
+                    router.push(`${pathname}?${params.toString()}`);
+                  }}
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
-      </div>
 
       {/* Edit Transaction Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>

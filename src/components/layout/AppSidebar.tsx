@@ -150,26 +150,7 @@ const data = {
         },
       ],
     },
-    {
-      title: "Product Management",
-      url: "#",
-      icon: ShoppingBag,
-      roles: ['super_admin', 'admin', 'manager'],
-      items: [
-        {
-          title: "All Products",
-          url: "/admin/products",
-        },
-        {
-          title: "Add Product",
-          url: "/admin/products/new",
-        },
-        {
-          title: "Categories",
-          url: "/admin/categories",
-        },
-      ],
-    },
+
     {
       title: "CMS Manager",
       url: "#",

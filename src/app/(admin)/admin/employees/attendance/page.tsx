@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { Pagination } from '@/components/ui/pagination';
 import { getEmployees, logAttendance, getAttendanceByDate } from '@/app/actions/employee';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +11,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   ClipboardCheck,
   Calendar,
@@ -32,6 +40,10 @@ interface AttendanceReport {
 }
 
 export default function AttendancePage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const [employees, setEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -44,17 +56,32 @@ export default function AttendancePage() {
   const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
   const [hasSubmittedOnce, setHasSubmittedOnce] = useState(false);
 
+  const pageSize = 20;
+
+  // Pagination for Ledger Entry
+  const currentLedgerPage = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
+  const totalLedgerPages = Math.ceil(employees.length / pageSize) || 1;
+  const paginatedEmployees = employees.slice((currentLedgerPage - 1) * pageSize, currentLedgerPage * pageSize);
+
+  // Pagination for Report
+  const currentReportPage = Math.max(1, parseInt(searchParams.get('reportPage') || '1', 10) || 1);
+  const totalReportPages = Math.ceil(reportData.length / pageSize) || 1;
+  const paginatedReportData = reportData.slice((currentReportPage - 1) * pageSize, currentReportPage * pageSize);
+
+  const getDefaultStatusForDate = (emp: any, dateStr: string) => {
+    const targetDate = new Date(dateStr);
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const dayOfWeek = dayNames[targetDate.getDay()];
+    const weekends = emp.weekend || ['friday'];
+    return weekends.includes(dayOfWeek) ? 'leave' : 'present';
+  };
+
   const loadData = async () => {
     await Promise.resolve();
     try {
       setLoading(true);
       const list = await getEmployees();
       setEmployees(list);
-      const initialMap: Record<string, AttendanceStatus> = {};
-      list.forEach((emp: any) => {
-        initialMap[emp._id] = 'present';
-      });
-      setStatusMap(initialMap);
     } catch (err: any) {
       toast.error('Failed to load employees: ' + err.message);
     } finally {
@@ -78,6 +105,16 @@ export default function AttendancePage() {
     loadData();
     loadReport(reportDate);
   }, []);
+
+  useEffect(() => {
+    if (employees.length > 0) {
+      const newMap: Record<string, AttendanceStatus> = {};
+      employees.forEach((emp) => {
+        newMap[emp._id] = getDefaultStatusForDate(emp, date);
+      });
+      setStatusMap(newMap);
+    }
+  }, [date, employees]);
 
   const handleStatusChange = (employeeId: string, status: AttendanceStatus) => {
     setStatusMap((prev) => ({ ...prev, [employeeId]: status }));
@@ -107,6 +144,16 @@ export default function AttendancePage() {
       toast.error('Failed to save attendance: ' + err.message);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleUpdateSingleAttendance = async (employeeId: string, status: AttendanceStatus) => {
+    try {
+      await logAttendance([{ employeeId, status }], reportDate);
+      toast.success('Attendance updated successfully');
+      await loadReport(reportDate);
+    } catch (err: any) {
+      toast.error('Failed to update status: ' + err.message);
     }
   };
 
@@ -165,7 +212,7 @@ export default function AttendancePage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {employees.map((emp) => (
+                    {paginatedEmployees.map((emp) => (
                       <TableRow key={emp._id}>
                         <TableCell className="font-semibold text-xs text-primary">
                           {emp.name}
@@ -198,6 +245,20 @@ export default function AttendancePage() {
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+            )}
+            {totalLedgerPages > 1 && (
+              <div className="pt-4">
+                <Pagination
+                  currentPage={currentLedgerPage}
+                  totalPages={totalLedgerPages}
+                  onPageChange={(page) => {
+                    const params = new URLSearchParams(searchParams.toString());
+                    if (page > 1) params.set('page', String(page));
+                    else params.delete('page');
+                    router.push(`${pathname}?${params.toString()}`);
+                  }}
+                />
               </div>
             )}
           </CardContent>
@@ -318,7 +379,7 @@ export default function AttendancePage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {reportData.map((emp, index) => (
+                    {paginatedReportData.map((emp, index) => (
                       <TableRow
                         key={emp._id}
                         className={
@@ -331,15 +392,48 @@ export default function AttendancePage() {
                             : ''
                         }
                       >
-                        <TableCell className="text-xs text-muted-foreground pl-4">{index + 1}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground pl-4">{(currentReportPage - 1) * pageSize + index + 1}</TableCell>
                         <TableCell className="font-semibold text-sm text-zinc-800">{emp.name}</TableCell>
                         <TableCell className="text-xs text-muted-foreground">{emp.phone}</TableCell>
                         <TableCell className="text-xs font-medium text-zinc-600">{emp.designation}</TableCell>
-                        <TableCell className="text-center">{getStatusBadge(emp.status)}</TableCell>
+                        <TableCell className="text-center">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="cursor-pointer focus:outline-none transition-transform active:scale-95 duration-100 hover:opacity-80" title="Click to change attendance status">
+                                {getStatusBadge(emp.status)}
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="center" className="w-32 bg-white/95 backdrop-blur-md border border-zinc-100 shadow-md">
+                              <DropdownMenuItem className="cursor-pointer text-xs font-bold text-green-700 hover:bg-green-50" onClick={() => handleUpdateSingleAttendance(emp._id, 'present')}>
+                                ✓ Present
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="cursor-pointer text-xs font-bold text-red-700 hover:bg-red-50" onClick={() => handleUpdateSingleAttendance(emp._id, 'absent')}>
+                                ✗ Absent
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="cursor-pointer text-xs font-bold text-amber-700 hover:bg-amber-50" onClick={() => handleUpdateSingleAttendance(emp._id, 'leave')}>
+                                ⏸ Leave
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+            )}
+            {totalReportPages > 1 && (
+              <div className="p-4 border-t border-zinc-100">
+                <Pagination
+                  currentPage={currentReportPage}
+                  totalPages={totalReportPages}
+                  onPageChange={(page) => {
+                    const params = new URLSearchParams(searchParams.toString());
+                    if (page > 1) params.set('reportPage', String(page));
+                    else params.delete('reportPage');
+                    router.push(`${pathname}?${params.toString()}`);
+                  }}
+                />
               </div>
             )}
           </CardContent>

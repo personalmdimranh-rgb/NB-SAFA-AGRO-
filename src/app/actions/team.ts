@@ -14,6 +14,8 @@ export async function createTeamMember(data: {
   facebook?: string;
   twitter?: string;
   linkedin?: string;
+  email?: string;
+  whatsapp?: string;
   order: number;
 }) {
   const session = await auth();
@@ -32,6 +34,8 @@ export async function createTeamMember(data: {
     facebook: data.facebook || '',
     twitter: data.twitter || '',
     linkedin: data.linkedin || '',
+    email: data.email || '',
+    whatsapp: data.whatsapp || '',
     order: data.order ?? 0,
     updatedBy: session?.user?.name || 'System',
   });
@@ -52,6 +56,8 @@ export async function updateTeamMember(
     facebook?: string;
     twitter?: string;
     linkedin?: string;
+    email?: string;
+    whatsapp?: string;
     order?: number;
   }
 ) {
@@ -74,6 +80,8 @@ export async function updateTeamMember(
   if ('facebook' in data && data.facebook !== undefined) member.facebook = data.facebook;
   if ('twitter' in data && data.twitter !== undefined) member.twitter = data.twitter;
   if ('linkedin' in data && data.linkedin !== undefined) member.linkedin = data.linkedin;
+  if ('email' in data && data.email !== undefined) member.email = data.email;
+  if ('whatsapp' in data && data.whatsapp !== undefined) member.whatsapp = data.whatsapp;
   member.updatedBy = session?.user?.name || 'System';
 
   await member.save();

@@ -22,6 +22,7 @@ export interface ISale extends Document {
   paymentStatus: 'paid' | 'partially-paid' | 'unpaid';
   paymentMethod: 'cash' | 'bank-transfer' | 'bkash' | 'nagad';
   distributionDistrict: string;
+  status?: 'pending' | 'approved' | 'ready to deliver' | 'release to deliver' | 'delivery complete' | 'cancel';
   date: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -50,6 +51,11 @@ const SaleSchema: Schema<ISale> = new Schema(
     paymentStatus: { type: String, enum: ['paid', 'partially-paid', 'unpaid'], required: true },
     paymentMethod: { type: String, enum: ['cash', 'bank-transfer', 'bkash', 'nagad'], required: true },
     distributionDistrict: { type: String, required: true },
+    status: { 
+      type: String, 
+      enum: ['pending', 'approved', 'ready to deliver', 'release to deliver', 'delivery complete', 'cancel'], 
+      default: 'pending' 
+    },
     date: { type: Date, default: Date.now }
   },
   { timestamps: true }

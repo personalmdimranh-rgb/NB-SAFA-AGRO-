@@ -9,11 +9,19 @@ import { revalidatePath } from 'next/cache';
 export async function registerEmployee(data: {
   name: string;
   phone: string;
+  email?: string;
+  employeeId: string;
+  division?: string;
+  district?: string;
+  thana?: string;
   address?: string;
   designation: string;
   basic: number;
   allowance: number;
   deductions: number;
+  weekend?: string[];
+  allowedAbsent?: number;
+  absentDeductionRate?: number;
   joiningDate?: string;
 }) {
   const session = await auth();
@@ -26,13 +34,21 @@ export async function registerEmployee(data: {
   const employee = new Employee({
     name: data.name,
     phone: data.phone,
-    address: data.address,
+    email: data.email || '',
+    employeeId: data.employeeId,
+    division: data.division || '',
+    district: data.district || '',
+    thana: data.thana || '',
+    address: data.address || '',
     designation: data.designation,
     salaryStructure: {
       basic: data.basic,
       allowance: data.allowance,
       deductions: data.deductions,
     },
+    weekend: data.weekend || ['friday'],
+    allowedAbsent: data.allowedAbsent ?? 1,
+    absentDeductionRate: data.absentDeductionRate ?? 0,
     joiningDate: data.joiningDate ? new Date(data.joiningDate) : new Date(),
     attendanceRecords: [],
     workReports: [],
@@ -52,13 +68,11 @@ export async function logAttendance(records: { employeeId: string; status: 'pres
   await connectToDatabase();
 
   const targetDate = new Date(dateStr);
-  // Normalize date to start of day
   targetDate.setUTCHours(0, 0, 0, 0);
 
   for (const record of records) {
     const employee = await Employee.findById(record.employeeId);
     if (employee) {
-      // Filter out existing record for the same day
       employee.attendanceRecords = employee.attendanceRecords.filter((att) => {
         const attDate = new Date(att.date);
         attDate.setUTCHours(0, 0, 0, 0);
@@ -111,16 +125,44 @@ export async function processPayroll(employeeId: string, monthYearStr: string) {
   if (!employee) throw new Error('Employee not found');
 
   const { basic, allowance, deductions } = employee.salaryStructure;
-  const netSalary = basic + allowance - deductions;
+
+  // Calculate attendance deduction
+  const [monthName, yearStr] = monthYearStr.split(' ');
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const monthIdx = monthNames.indexOf(monthName);
+  if (monthIdx === -1) {
+    throw new Error('Invalid month name specified');
+  }
+  const year = parseInt(yearStr);
+  if (isNaN(year) || year < 2000 || year > 2100) {
+    throw new Error('Invalid year specified');
+  }
+  const startDate = new Date(Date.UTC(year, monthIdx, 1, 0, 0, 0, 0));
+  const endDate = new Date(Date.UTC(year, monthIdx + 1, 0, 23, 59, 59, 999));
+
+  const absentsCount = employee.attendanceRecords.filter((record: any) => {
+    const d = new Date(record.date);
+    return d >= startDate && d <= endDate && record.status === 'absent';
+  }).length;
+
+  let attendanceDeduction = 0;
+  const allowed = employee.allowedAbsent ?? 1;
+  const rate = employee.absentDeductionRate ?? 0;
+  if (absentsCount > allowed) {
+    attendanceDeduction = (absentsCount - allowed) * rate;
+  }
+
+  const totalDeductions = deductions + attendanceDeduction;
+  const netSalary = Math.max(0, basic + allowance - totalDeductions);
 
   // Record payroll expense
   const ledgerTx = new LedgerTransaction({
     date: new Date(),
     type: 'expense',
-    source: 'bank', // salaries paid from bank
+    source: 'bank',
     category: 'Salary',
     amount: netSalary,
-    description: `Salary paid to ${employee.name} (${employee.designation}) for ${monthYearStr}. Basic: ${basic}, Allowance: ${allowance}, Deductions: ${deductions}.`,
+    description: `Salary paid to ${employee.name} (${employee.designation}) for ${monthYearStr}. Basic: ${basic}, Allowance: ${allowance}, Deductions: ${totalDeductions} (Base: ${deductions}, Attendance Penalty: ${attendanceDeduction} for ${absentsCount} total absents, allowed: ${allowed}).`,
     recordedBy: (session.user as any).id,
   });
 
@@ -142,25 +184,40 @@ export async function getAttendanceByDate(dateStr: string) {
   await connectToDatabase();
   const targetDate = new Date(dateStr);
   targetDate.setUTCHours(0, 0, 0, 0);
-  const nextDay = new Date(targetDate);
-  nextDay.setUTCDate(nextDay.getUTCDate() + 1);
 
   const employees = await Employee.find().sort({ joiningDate: -1 });
 
-  const report = employees.map((emp) => {
-    const record = emp.attendanceRecords.find((att: any) => {
-      const attDate = new Date(att.date);
-      attDate.setUTCHours(0, 0, 0, 0);
-      return attDate.getTime() === targetDate.getTime();
-    });
-    return {
-      _id: emp._id.toString(),
-      name: emp.name,
-      phone: emp.phone,
-      designation: emp.designation,
-      status: record ? record.status : null,
-    };
-  });
+  const report = await Promise.all(
+    employees.map(async (emp) => {
+      let record = emp.attendanceRecords.find((att: any) => {
+        const attDate = new Date(att.date);
+        attDate.setUTCHours(0, 0, 0, 0);
+        return attDate.getTime() === targetDate.getTime();
+      });
+
+      if (!record) {
+        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const dayOfWeek = dayNames[targetDate.getUTCDay()];
+        const isWeekend = (emp.weekend || ['friday']).includes(dayOfWeek);
+        const defaultStatus = isWeekend ? 'leave' : 'present';
+
+        emp.attendanceRecords.push({
+          date: targetDate,
+          status: defaultStatus,
+        });
+        await emp.save();
+        record = { date: targetDate, status: defaultStatus };
+      }
+
+      return {
+        _id: emp._id.toString(),
+        name: emp.name,
+        phone: emp.phone,
+        designation: emp.designation,
+        status: record.status,
+      };
+    })
+  );
 
   return JSON.parse(JSON.stringify(report));
 }
@@ -170,11 +227,19 @@ export async function updateEmployee(
   data: {
     name: string;
     phone: string;
+    email?: string;
+    employeeId: string;
+    division?: string;
+    district?: string;
+    thana?: string;
     address?: string;
     designation: string;
     basic: number;
     allowance: number;
     deductions: number;
+    weekend?: string[];
+    allowedAbsent?: number;
+    absentDeductionRate?: number;
     joiningDate?: string;
   }
 ) {
@@ -190,13 +255,21 @@ export async function updateEmployee(
 
   employee.name = data.name;
   employee.phone = data.phone;
-  employee.address = data.address;
+  employee.email = data.email || '';
+  employee.employeeId = data.employeeId;
+  employee.division = data.division || '';
+  employee.district = data.district || '';
+  employee.thana = data.thana || '';
+  employee.address = data.address || '';
   employee.designation = data.designation;
   employee.salaryStructure = {
     basic: data.basic,
     allowance: data.allowance,
     deductions: data.deductions,
   };
+  employee.weekend = data.weekend || ['friday'];
+  employee.allowedAbsent = data.allowedAbsent ?? 1;
+  employee.absentDeductionRate = data.absentDeductionRate ?? 0;
   if (data.joiningDate) {
     employee.joiningDate = new Date(data.joiningDate);
   }
@@ -218,4 +291,32 @@ export async function deleteEmployee(employeeId: string) {
 
   revalidatePath('/admin/employees');
   return { success: true };
+}
+
+export async function getLoggedEmployeeDashboardData() {
+  const session = await auth();
+  if (!session || !session.user) {
+    throw new Error('Unauthorized');
+  }
+
+  await connectToDatabase();
+
+  const userEmail = session.user.email;
+  if (!userEmail) return null;
+
+  // Find employee by email
+  const employee = await Employee.findOne({ email: userEmail });
+  if (!employee) return null;
+
+  // Find all LedgerTransactions where category is 'Salary' and description matches this employee's name
+  const escapedName = employee.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const transactions = await LedgerTransaction.find({
+    category: 'Salary',
+    description: { $regex: new RegExp(`Salary paid to ${escapedName}`, 'i') }
+  }).sort({ date: -1 });
+
+  return {
+    employee: JSON.parse(JSON.stringify(employee)),
+    salaryHistory: JSON.parse(JSON.stringify(transactions))
+  };
 }

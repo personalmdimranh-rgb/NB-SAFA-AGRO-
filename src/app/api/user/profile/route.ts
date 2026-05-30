@@ -19,7 +19,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 });
     }
 
-    return NextResponse.json(user, { status: 200 });
+    const userObj = user as any;
+    if (userObj.role === 'farmer') {
+      const Farmer = (await import('@/models/Farmer')).default;
+      const farmer = await Farmer.findOne({ phone: userObj.phone }).lean();
+      if (farmer) {
+        userObj.farmer = farmer;
+      }
+    }
+
+    return NextResponse.json(userObj, { status: 200 });
   } catch (error) {
     console.error('Error fetching profile:', error);
     return NextResponse.json({ message: 'Failed to fetch profile' }, { status: 500 });

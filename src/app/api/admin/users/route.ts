@@ -13,16 +13,36 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const search = searchParams.get('search') || '';
+    const role = searchParams.get('role') || '';
+    const pageVal = searchParams.get('page');
+    const limit = parseInt(searchParams.get('limit') || '20') || 20;
+
     await connectToDatabase();
 
-    // Aggregate users with their order stats
-    const users = await User.aggregate([
-      { 
-        $match: { 
-          role: { $ne: 'super_admin' }, // Hide super admins
-          email: { $ne: 'imranshuvo101@gmail.com' } // Hide super_admin email explicitly
-        } 
-      },
+    // Base match stage
+    let matchStage: any = {
+      role: { $ne: 'super_admin' }, // Hide super admins
+      email: { $ne: 'imranshuvo101@gmail.com' } // Hide super_admin email explicitly
+    };
+
+    if (role && role !== 'super_admin') {
+      matchStage.role = role;
+    }
+
+    if (search) {
+      const searchRegex = new RegExp(search, 'i');
+      matchStage.$or = [
+        { name: { $regex: searchRegex } },
+        { email: { $regex: searchRegex } },
+        { phone: { $regex: searchRegex } }
+      ];
+    }
+
+    // Build the aggregation pipeline
+    const aggregatePipeline: any[] = [
+      { $match: matchStage },
       {
         $lookup: {
           from: 'orders',
@@ -47,9 +67,35 @@ export async function GET(req: NextRequest) {
         }
       },
       { $sort: { createdAt: -1 } }
-    ]);
+    ];
 
-    return NextResponse.json(users);
+    if (pageVal) {
+      const page = parseInt(pageVal) || 1;
+      const skip = (page - 1) * limit;
+
+      const totalCount = await User.countDocuments(matchStage);
+
+      aggregatePipeline.push(
+        { $skip: skip },
+        { $limit: limit }
+      );
+
+      const users = await User.aggregate(aggregatePipeline);
+      const totalPages = Math.ceil(totalCount / limit) || 1;
+
+      return NextResponse.json({
+        users,
+        pagination: {
+          total: totalCount,
+          totalPages,
+          page,
+          limit
+        }
+      });
+    } else {
+      const users = await User.aggregate(aggregatePipeline);
+      return NextResponse.json(users);
+    }
   } catch (error) {
     console.error('Fetch Users Error:', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });

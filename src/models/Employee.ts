@@ -13,6 +13,11 @@ export interface IWorkReport {
 export interface IEmployee extends Document {
   name: string;
   phone: string;
+  email?: string;
+  employeeId: string;
+  division?: string;
+  district?: string;
+  thana?: string;
   address?: string;
   designation: string;
   salaryStructure: {
@@ -20,6 +25,9 @@ export interface IEmployee extends Document {
     allowance: number;
     deductions: number;
   };
+  weekend: string[];
+  allowedAbsent: number;
+  absentDeductionRate: number;
   attendanceRecords: IAttendanceRecord[];
   workReports: IWorkReport[];
   joiningDate: Date;
@@ -31,6 +39,11 @@ const EmployeeSchema: Schema<IEmployee> = new Schema(
   {
     name: { type: String, required: true },
     phone: { type: String, required: true },
+    email: { type: String, default: '' },
+    employeeId: { type: String, unique: true, required: true },
+    division: { type: String, default: '' },
+    district: { type: String, default: '' },
+    thana: { type: String, default: '' },
     address: String,
     designation: { type: String, required: true },
     salaryStructure: {
@@ -38,6 +51,9 @@ const EmployeeSchema: Schema<IEmployee> = new Schema(
       allowance: { type: Number, default: 0 },
       deductions: { type: Number, default: 0 }
     },
+    weekend: { type: [String], default: ['friday'] },
+    allowedAbsent: { type: Number, default: 1 },
+    absentDeductionRate: { type: Number, default: 0 },
     attendanceRecords: [
       {
         date: { type: Date, required: true },

@@ -127,9 +127,9 @@ export default function ProductionPage() {
         <p className="text-muted-foreground">Log fresh fermentation batches, summarize raw material expenses, and review unit costs</p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-12">
+      <div className="flex flex-col gap-6">
         {/* Production Batch Logger */}
-        <Card className="lg:col-span-6 border-primary/10 bg-white/70">
+        <Card className="border-primary/10 bg-white/70">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-primary flex items-center gap-2">
               <ClipboardList className="h-5 w-5 text-primary" /> Start Production Batch
@@ -229,7 +229,7 @@ export default function ProductionPage() {
         </Card>
 
         {/* History of Production */}
-        <Card className="lg:col-span-6 border-primary/10 bg-white/70">
+        <Card className="border-primary/10 bg-white/70">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-primary flex items-center gap-2">
               <Layers className="h-5 w-5 text-primary" /> Historical Batches

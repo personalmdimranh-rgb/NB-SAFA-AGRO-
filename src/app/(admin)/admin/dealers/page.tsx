@@ -2,6 +2,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { Pagination } from '@/components/ui/pagination';
 import { getDealers, approveDealer, registerDealer, deleteDealer, updateDealer } from '@/app/actions/dealer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,6 +48,15 @@ export default function DealersAdminPage() {
   const availableDistricts = division ? bdDivisions[division] || [] : [];
   const availableThanas = district ? bdLocations[district] || [] : [];
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const currentPage = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
+  const pageSize = 20;
+  const totalPages = Math.ceil(dealers.length / pageSize) || 1;
+  const paginatedDealers = dealers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   const loadData = async () => {
     await Promise.resolve();
     try {
@@ -59,7 +70,22 @@ export default function DealersAdminPage() {
     }
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    const registerParam = searchParams.get('register');
+    if (registerParam === 'true') {
+      const paramName = searchParams.get('name') || '';
+      const paramEmail = searchParams.get('email') || '';
+      const paramPhone = searchParams.get('phone') || '';
+      setName(paramName);
+      setEmail(paramEmail);
+      setPhone(paramPhone);
+      setModalOpen(true);
+    }
+  }, [searchParams]);
 
   const resetForm = () => {
     setName('');
@@ -251,11 +277,11 @@ export default function DealersAdminPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {dealers.map((d, index) => {
+                  {paginatedDealers.map((d, index) => {
                     const u = d.userId || {};
                     return (
                       <TableRow key={d._id}>
-                        <TableCell className="text-xs text-muted-foreground">{index + 1}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{(currentPage - 1) * pageSize + index + 1}</TableCell>
                         <TableCell className="font-semibold text-sm text-primary">
                           {u.name || 'Unknown'}
                           <span className="block text-[10px] text-muted-foreground font-normal italic">
@@ -310,6 +336,20 @@ export default function DealersAdminPage() {
                   })}
                 </TableBody>
               </Table>
+            </div>
+          )}
+          {totalPages > 1 && (
+            <div className="pt-4">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => {
+                  const params = new URLSearchParams(searchParams.toString());
+                  if (page > 1) params.set('page', String(page));
+                  else params.delete('page');
+                  router.push(`${pathname}?${params.toString()}`);
+                }}
+              />
             </div>
           )}
         </CardContent>

@@ -9,6 +9,8 @@ import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 import { Types } from 'mongoose';
 
+import User from '@/models/User';
+
 export async function createSale(data: {
   buyerType: 'dealer' | 'farmer';
   buyerId: string;
@@ -46,6 +48,18 @@ export async function createSale(data: {
     const dealer = await Dealer.findOne({ userId });
     if (!dealer || dealer._id.toString() !== data.buyerId) {
       throw new Error('Forbidden: Dealers can only place orders for their own account.');
+    }
+  } else if (userRole === 'farmer') {
+    // Farmers can only create a sale for themselves (as a farmer buyer)
+    if (data.buyerType !== 'farmer') {
+      throw new Error('Forbidden: Farmers can only create farmer orders.');
+    }
+    // Verify buyerId matches this farmer
+    const currentUser = await User.findById(userId);
+    if (!currentUser) throw new Error('User not found');
+    const farmer = await Farmer.findOne({ phone: currentUser.phone });
+    if (!farmer || farmer._id.toString() !== data.buyerId) {
+      throw new Error('Forbidden: Farmers can only place orders for their own account.');
     }
   } else {
     throw new Error('Forbidden: Insufficient permissions');
@@ -128,8 +142,13 @@ export async function createSale(data: {
   let invoiceNumber = '';
   let isUnique = false;
   let attempts = 0;
-  while (!isUnique && attempts < 10) {
-    invoiceNumber = `INV-${new Types.ObjectId().toHexString().toUpperCase()}`;
+  while (!isUnique && attempts < 20) {
+    const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let code = '';
+    for (let i = 0; i < 4; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    invoiceNumber = `INV-${code}`;
     const existing = await Sale.findOne({ invoiceNumber });
     if (!existing) {
       isUnique = true;
@@ -344,4 +363,104 @@ export async function deleteSale(saleId: string) {
   revalidatePath('/admin/sales');
   return { success: true };
 }
+
+export async function togglePaymentStatus(saleId: string) {
+  const session = await auth();
+  if (!session || !session.user) {
+    throw new Error('Unauthorized');
+  }
+  const role = (session.user as any).role;
+  if (!['super_admin', 'admin', 'manager', 'staff'].includes(role)) {
+    throw new Error('Forbidden: Insufficient permissions');
+  }
+
+  await connectToDatabase();
+
+  const sale = await Sale.findById(saleId);
+  if (!sale) throw new Error('Sale not found');
+
+  // Partially-paid sales must be handled via a dedicated payment path, not this simple toggle.
+  if (sale.paymentStatus === 'partially-paid') {
+    throw new Error(
+      'Cannot toggle a partially-paid sale. Use the dedicated payment update path to mark it as paid or unpaid.'
+    );
+  }
+
+  const oldPaymentStatus = sale.paymentStatus;
+  const newPaymentStatus = oldPaymentStatus === 'paid' ? 'unpaid' : 'paid';
+  const newPaidAmount = newPaymentStatus === 'paid' ? sale.grandTotal : 0;
+  const newDueAmount = newPaymentStatus === 'paid' ? 0 : sale.grandTotal;
+  const diffDue = newDueAmount - sale.dueAmount;
+
+  // Update buyer's currentDues
+  if (sale.buyerType === 'dealer') {
+    await Dealer.findByIdAndUpdate(sale.buyerId, {
+      $inc: { currentDues: diffDue }
+    });
+  } else if (sale.buyerType === 'farmer') {
+    await Farmer.findByIdAndUpdate(sale.buyerId, {
+      $inc: { currentDues: diffDue }
+    });
+  }
+
+  sale.paymentStatus = newPaymentStatus;
+  sale.paidAmount = newPaidAmount;
+  sale.dueAmount = newDueAmount;
+  await sale.save();
+
+  // Also log ledger transaction
+  if (newPaymentStatus === 'paid') {
+    const existingLedger = await LedgerTransaction.findOne({ description: `Payment for invoice ${sale.invoiceNumber}` });
+    if (!existingLedger) {
+      const ledgerTx = new LedgerTransaction({
+        date: new Date(),
+        type: 'income',
+        source: ['cash'].includes(sale.paymentMethod) ? 'cash' : 'bank',
+        category: 'Silage Sale',
+        amount: sale.grandTotal,
+        description: `Payment for invoice ${sale.invoiceNumber}`,
+        recordedBy: (session.user as any).id,
+      });
+      await ledgerTx.save();
+    } else {
+      existingLedger.amount = sale.grandTotal;
+      await existingLedger.save();
+    }
+  } else {
+    await LedgerTransaction.deleteMany({ description: `Payment for invoice ${sale.invoiceNumber}` });
+  }
+
+  revalidatePath('/admin/sales');
+  revalidatePath('/admin/accounts');
+
+  return { success: true, paymentStatus: newPaymentStatus };
+}
+
+export async function updateSaleStatus(saleId: string, status: string) {
+  const session = await auth();
+  if (!session || !session.user) {
+    throw new Error('Unauthorized');
+  }
+  const role = (session.user as any).role;
+  if (!['super_admin', 'admin', 'manager', 'staff'].includes(role)) {
+    throw new Error('Forbidden: Insufficient permissions');
+  }
+
+  await connectToDatabase();
+
+  const sale = await Sale.findById(saleId);
+  if (!sale) throw new Error('Sale not found');
+
+  const allowedStatuses = ['pending', 'processing', 'delivered', 'cancelled'];
+  if (!allowedStatuses.includes(status)) {
+    throw new Error(`Invalid status "${status}". Allowed values: ${allowedStatuses.join(', ')}.`);
+  }
+
+  sale.status = status;
+  await sale.save();
+
+  revalidatePath('/admin/sales');
+  return { success: true, status };
+}
+
 

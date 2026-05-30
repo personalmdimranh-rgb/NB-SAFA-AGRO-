@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Edit, Trash, Loader2, Award, User, Link as LinkIcon } from 'lucide-react';
+import { Plus, Edit, Trash, Loader2, User, Link as LinkIcon, Mail, MessageSquare } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -42,31 +42,17 @@ import {
   deleteTeamMember, 
   getTeamMembers 
 } from '@/app/actions/team';
-
-const PRESET_IMAGES = [
-  "https://i.ibb.co.com/zTBvBXws/lawyer-1.jpg",
-  "https://i.ibb.co.com/9HmBM6CH/lawyer-2.jpg",
-  "https://i.ibb.co.com/jZvGmbv6/lawyer-3.jpg",
-  "https://i.ibb.co.com/MyKFRdNP/lawyer-4.jpg",
-  "https://i.ibb.co.com/7dHGRPKj/lawyer-5.jpg",
-  "https://i.ibb.co.com/mCychrjx/lawyer-6.jpg",
-  "https://i.ibb.co.com/67txMdTT/lawyer-7.jpg",
-  "https://i.ibb.co.com/TB0xjWKk/lawyer-8.jpg",
-  "https://i.ibb.co.com/PzjtJT3K/lawyer-9.jpg",
-  "https://i.ibb.co.com/DDnRCVN7/lawyer-10.jpg",
-  "https://i.ibb.co.com/8Dj17xYJ/lawyer-11.jpg",
-  "https://i.ibb.co.com/0Rq1zXkM/lawyer-12.jpg"
-];
+import { ImageUpload } from '@/components/ui/image-upload';
 
 const teamMemberSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   role: z.string().min(2, { message: 'Role must be at least 2 characters.' }),
-  desc: z.string().optional(),
-  bio: z.string().optional(),
-  image: z.string().url({ message: 'Please select an image or enter a valid URL.' }),
+  desc: z.string().max(150, { message: 'Short Highlight cannot exceed 150 characters.' }).optional(),
+  image: z.string().min(1, { message: 'Profile image is required.' }),
   facebook: z.string().url({ message: 'Please enter a valid Facebook URL.' }).or(z.literal('')).optional(),
-  twitter: z.string().url({ message: 'Please enter a valid Twitter URL.' }).or(z.literal('')).optional(),
   linkedin: z.string().url({ message: 'Please enter a valid LinkedIn URL.' }).or(z.literal('')).optional(),
+  email: z.string().email({ message: 'Please enter a valid email address.' }).or(z.literal('')).optional(),
+  whatsapp: z.string().or(z.literal('')).optional(),
   order: z.number(),
 });
 
@@ -82,7 +68,6 @@ export default function AdminTeamPage() {
   const [open, setOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [customImageUrl, setCustomImageUrl] = useState('');
 
   const form = useForm<TeamMemberFormValues>({
     resolver: zodResolver(teamMemberSchema),
@@ -90,11 +75,11 @@ export default function AdminTeamPage() {
       name: '',
       role: '',
       desc: '',
-      bio: '',
-      image: PRESET_IMAGES[0],
+      image: '',
       facebook: '',
-      twitter: '',
       linkedin: '',
+      email: '',
+      whatsapp: '',
       order: 0,
     },
   });
@@ -128,7 +113,6 @@ export default function AdminTeamPage() {
       fetchMembers();
       form.reset();
       setEditingMember(null);
-      setCustomImageUrl('');
     } catch (error: any) {
       toast.error(error.message || 'Something went wrong');
     } finally {
@@ -142,18 +126,13 @@ export default function AdminTeamPage() {
       name: member.name,
       role: member.role,
       desc: member.desc || '',
-      bio: member.bio || '',
-      image: member.image || PRESET_IMAGES[0],
+      image: member.image || '',
       facebook: member.facebook || '',
-      twitter: member.twitter || '',
       linkedin: member.linkedin || '',
+      email: member.email || '',
+      whatsapp: member.whatsapp || '',
       order: member.order ?? 0,
     });
-    if (!PRESET_IMAGES.includes(member.image)) {
-      setCustomImageUrl(member.image);
-    } else {
-      setCustomImageUrl('');
-    }
     setOpen(true);
   };
 
@@ -199,14 +178,13 @@ export default function AdminTeamPage() {
               name: '',
               role: '',
               desc: '',
-              bio: '',
-              image: PRESET_IMAGES[0],
+              image: '',
               facebook: '',
-              twitter: '',
               linkedin: '',
+              email: '',
+              whatsapp: '',
               order: 0,
             });
-            setCustomImageUrl('');
             setOpen(true);
           }} className="rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/95 shadow-md">
             <Plus className="mr-2 h-4 w-4" /> Add Team Member
@@ -219,7 +197,6 @@ export default function AdminTeamPage() {
         if (!val) {
           setEditingMember(null);
           form.reset();
-          setCustomImageUrl('');
         }
       }}>
         <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto rounded-[2rem]">
@@ -318,12 +295,12 @@ export default function AdminTeamPage() {
 
                 <FormField
                   control={form.control}
-                  name="twitter"
+                  name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="font-bold text-xs uppercase tracking-wider">Twitter/X Link</FormLabel>
+                      <FormLabel className="font-bold text-xs uppercase tracking-wider">Email Address</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://twitter.com/..." className="rounded-xl border-muted-foreground/20 focus-visible:ring-primary" {...field} />
+                        <Input placeholder="example@shafaagro.com" className="rounded-xl border-muted-foreground/20 focus-visible:ring-primary" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -333,12 +310,12 @@ export default function AdminTeamPage() {
 
               <FormField
                 control={form.control}
-                name="desc"
+                name="whatsapp"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-bold text-xs uppercase tracking-wider">Short Highlight</FormLabel>
+                    <FormLabel className="font-bold text-xs uppercase tracking-wider">WhatsApp Number / Link</FormLabel>
                     <FormControl>
-                      <Input placeholder="Brief 1-sentence bio overview." className="rounded-xl border-muted-foreground/20 focus-visible:ring-primary" {...field} />
+                      <Input placeholder="+88017..." className="rounded-xl border-muted-foreground/20 focus-visible:ring-primary" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -347,12 +324,22 @@ export default function AdminTeamPage() {
 
               <FormField
                 control={form.control}
-                name="bio"
+                name="desc"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-bold text-xs uppercase tracking-wider">Detailed Bio Description</FormLabel>
+                    <div className="flex justify-between items-center">
+                      <FormLabel className="font-bold text-xs uppercase tracking-wider">Short Highlight</FormLabel>
+                      <span className="text-[10px] text-muted-foreground font-semibold">
+                        {(field.value || '').length}/150
+                      </span>
+                    </div>
                     <FormControl>
-                      <Textarea placeholder="Expanded history, certifications, or experience info." className="rounded-xl min-h-[80px] border-muted-foreground/20 focus-visible:ring-primary" {...field} />
+                      <Textarea 
+                        maxLength={150}
+                        placeholder="Brief 1-sentence bio overview." 
+                        className="rounded-xl border-muted-foreground/20 focus-visible:ring-primary min-h-[100px] resize-y" 
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -364,44 +351,13 @@ export default function AdminTeamPage() {
                 name="image"
                 render={({ field }) => (
                   <FormItem className="space-y-3">
-                    <FormLabel className="font-bold text-xs uppercase tracking-wider">Select Profile Image</FormLabel>
+                    <FormLabel className="font-bold text-xs uppercase tracking-wider">Profile Photo</FormLabel>
                     <FormControl>
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-6 gap-2 border p-3 rounded-2xl bg-muted/20">
-                          {PRESET_IMAGES.map((imgUrl, i) => (
-                            <button
-                              type="button"
-                              key={i}
-                              aria-label={`Preset Profile Image ${i + 1}`}
-                              aria-pressed={field.value === imgUrl && !customImageUrl}
-                              onClick={() => {
-                                field.onChange(imgUrl);
-                                setCustomImageUrl('');
-                              }}
-                              className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all hover:scale-105 active:scale-95 ${
-                                field.value === imgUrl && !customImageUrl
-                                  ? 'border-primary ring-2 ring-primary/20 scale-105'
-                                  : 'border-border'
-                              }`}
-                            >
-                              <img src={imgUrl} alt="" className="h-full w-full object-cover" />
-                            </button>
-                          ))}
-                        </div>
-                        <div className="space-y-2">
-                          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Or Use Custom Image URL:</span>
-                          <Input
-                            placeholder="https://example.com/custom-profile-image.jpg"
-                            value={customImageUrl}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setCustomImageUrl(val);
-                              field.onChange(val || PRESET_IMAGES[0]);
-                            }}
-                            className="rounded-xl border-muted-foreground/20 focus-visible:ring-primary"
-                          />
-                        </div>
-                      </div>
+                      <ImageUpload
+                        aspect="square"
+                        value={field.value}
+                        onUpload={(url) => field.onChange(url)}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -467,9 +423,13 @@ export default function AdminTeamPage() {
                   <TableCell className="text-center font-semibold text-xs text-slate-600">{member.updatedBy || 'System'}</TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center gap-1.5 text-muted-foreground">
-                      {member.linkedin ? <LinkIcon className="h-3.5 w-3.5 text-blue-500" /> : <span className="opacity-20">•</span>}
-                      {member.facebook ? <LinkIcon className="h-3.5 w-3.5 text-sky-600" /> : <span className="opacity-20">•</span>}
-                      {member.twitter ? <LinkIcon className="h-3.5 w-3.5 text-cyan-500" /> : <span className="opacity-20">•</span>}
+                      {member.linkedin ? <span title="LinkedIn"><LinkIcon className="h-3.5 w-3.5 text-blue-500" /></span> : null}
+                      {member.facebook ? <span title="Facebook"><LinkIcon className="h-3.5 w-3.5 text-sky-600" /></span> : null}
+                      {member.email ? <span title="Email"><Mail className="h-3.5 w-3.5 text-red-500" /></span> : null}
+                      {member.whatsapp ? <span title="WhatsApp"><MessageSquare className="h-3.5 w-3.5 text-emerald-500" /></span> : null}
+                      {!member.linkedin && !member.facebook && !member.email && !member.whatsapp ? (
+                        <span className="opacity-20">—</span>
+                      ) : null}
                     </div>
                   </TableCell>
                   {!isReadOnly && (

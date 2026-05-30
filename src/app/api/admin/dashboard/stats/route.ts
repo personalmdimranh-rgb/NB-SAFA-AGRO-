@@ -53,6 +53,7 @@ export async function GET(req: NextRequest) {
     let totalSalesRevenue = 0;
     let salesCount = 0;
     let totalDueAmount = 0;
+    let pendingOrdersCount = 0;
     let recentSales: any[] = [];
     let topDealers: any[] = [];
     let salesChartData: any[] = [];
@@ -101,6 +102,13 @@ export async function GET(req: NextRequest) {
         { $project: { _id: 0, date: '$_id', revenue: 1, salesCount: 1, collected: 1 } },
         { $sort: { date: 1 } }
       ]);
+      pendingOrdersCount = await Sale.countDocuments({
+        $or: [
+          { status: 'pending' },
+          { status: { $exists: false } },
+          { status: '' }
+        ]
+      });
     }
 
     // 2. Cash & Bank Ledger Summary
@@ -225,6 +233,7 @@ export async function GET(req: NextRequest) {
         totalEmployees,
         activeDealers,
         totalFarmers,
+        pendingOrdersCount,
       },
       recentSales,
       recentTransactions,

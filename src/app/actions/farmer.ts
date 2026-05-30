@@ -116,3 +116,37 @@ export async function deleteFarmer(farmerId: string) {
   revalidatePath('/admin/farmers');
   return { success: true };
 }
+
+export async function getFarmerDashboardSummary(userId: string) {
+  const session = await auth();
+  if (!session || !session.user) {
+    throw new Error('Unauthorized');
+  }
+
+  const userRole = (session.user as any).role;
+  const isSelf = (session.user as any).id === userId;
+  const isAdmin = ['super_admin', 'admin', 'manager', 'staff'].includes(userRole);
+  if (!isSelf && !isAdmin) {
+    throw new Error('Forbidden: Insufficient permissions');
+  }
+
+  await connectToDatabase();
+  
+  const User = (await import('@/models/User')).default;
+  const user = await User.findById(userId).lean();
+  if (!user) throw new Error('User not found');
+
+  const userPhone = (user as any).phone;
+  if (!userPhone) return null; // No phone on record — cannot match a farmer safely
+
+  const farmer = await Farmer.findOne({ phone: userPhone }).lean();
+  if (!farmer) return null;
+
+  const Sale = (await import('@/models/Sale')).default;
+  const sales = await Sale.find({ buyerId: (farmer as any)._id, buyerType: 'farmer' }).sort({ date: -1 }).limit(10).lean();
+
+  return {
+    farmer: JSON.parse(JSON.stringify(farmer)),
+    recentSales: JSON.parse(JSON.stringify(sales)),
+  };
+}

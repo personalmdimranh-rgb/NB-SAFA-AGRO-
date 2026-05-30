@@ -8,7 +8,8 @@ import {
     User as UserIcon, 
     Settings, 
     LogOut,
-    Loader2
+    Loader2,
+    Plus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -86,6 +87,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 >
                   <ShoppingBag className="mr-3 h-4 w-4" /> My Orders
                 </Link>
+                {session?.user && (session.user as any).role === 'farmer' && (
+                  <Link 
+                    href="/dashboard/order-new" 
+                    className={cn(
+                      buttonVariants({ variant: 'ghost' }),
+                      "justify-start px-6 h-12 rounded-none border-l-4 w-full",
+                      pathname === '/dashboard/order-new' ? 'border-primary bg-muted/50' : 'border-transparent'
+                    )}
+                  >
+                    <Plus className="mr-3 h-4 w-4" /> Place Order
+                  </Link>
+                )}
                 <Link 
                   href="/dashboard/profile" 
                   className={cn(

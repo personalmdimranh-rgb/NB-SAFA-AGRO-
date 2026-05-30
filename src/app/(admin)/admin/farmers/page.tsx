@@ -2,6 +2,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { Pagination } from '@/components/ui/pagination';
 import { getFarmers, createFarmer, updateFarmer, deleteFarmer } from '@/app/actions/farmer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,6 +44,15 @@ export default function FarmersPage() {
 
   const availableDistricts = division ? bdDivisions[division] || [] : [];
   const availableThanas = district ? bdLocations[district] || [] : [];
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const currentPage = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
+  const pageSize = 20;
+  const totalPages = Math.ceil(farmers.length / pageSize) || 1;
+  const paginatedFarmers = farmers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const loadData = async () => {
     await Promise.resolve();
@@ -209,9 +220,9 @@ export default function FarmersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {farmers.map((f, index) => (
+                  {paginatedFarmers.map((f, index) => (
                     <TableRow key={f._id}>
-                      <TableCell className="text-xs text-muted-foreground">{index + 1}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{(currentPage - 1) * pageSize + index + 1}</TableCell>
                       <TableCell className="font-semibold text-sm text-primary">{f.name}</TableCell>
                       <TableCell className="text-xs">
                         <span className="flex items-center gap-1">
@@ -258,6 +269,20 @@ export default function FarmersPage() {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+          )}
+          {totalPages > 1 && (
+            <div className="pt-4">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => {
+                  const params = new URLSearchParams(searchParams.toString());
+                  if (page > 1) params.set('page', String(page));
+                  else params.delete('page');
+                  router.push(`${pathname}?${params.toString()}`);
+                }}
+              />
             </div>
           )}
         </CardContent>

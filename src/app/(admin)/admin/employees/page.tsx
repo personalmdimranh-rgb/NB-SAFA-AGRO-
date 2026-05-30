@@ -2,6 +2,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { Pagination } from '@/components/ui/pagination';
 import { getEmployees, registerEmployee, updateEmployee, deleteEmployee, processPayroll } from '@/app/actions/employee';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,38 +17,76 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { divisions, bdDivisions, bdLocations } from '@/lib/bd-locations';
 import { Users, PlusCircle, Calendar, Briefcase, MoreVertical, Edit, Trash2, FileText, BanknoteIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 
 export default function EmployeesPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const [employees, setEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
 
+  const currentPage = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
+  const pageSize = 20;
+  const totalPages = Math.ceil(employees.length / pageSize) || 1;
+  const paginatedEmployees = employees.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const weekDays = ['friday', 'saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday'];
+
   // Create form states
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [employeeId, setEmployeeId] = useState('');
+  const [email, setEmail] = useState('');
+  const [division, setDivision] = useState('');
+  const [district, setDistrict] = useState('');
+  const [thana, setThana] = useState('');
   const [address, setAddress] = useState('');
   const [designation, setDesignation] = useState('');
   const [basic, setBasic] = useState('');
   const [allowance, setAllowance] = useState('0');
   const [deductions, setDeductions] = useState('0');
   const [joiningDate, setJoiningDate] = useState(new Date().toISOString().split('T')[0]);
+  const [weekend, setWeekend] = useState<string[]>(['friday']);
+  const [allowedAbsent, setAllowedAbsent] = useState('1');
+  const [absentDeductionRate, setAbsentDeductionRate] = useState('0');
 
   // Edit modal states
   const [editOpen, setEditOpen] = useState(false);
   const [editEmp, setEditEmp] = useState<any>(null);
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
+  const [editEmployeeId, setEditEmployeeId] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editDivision, setEditDivision] = useState('');
+  const [editDistrict, setEditDistrict] = useState('');
+  const [editThana, setEditThana] = useState('');
   const [editAddress, setEditAddress] = useState('');
   const [editDesignation, setEditDesignation] = useState('');
   const [editBasic, setEditBasic] = useState('');
   const [editAllowance, setEditAllowance] = useState('0');
   const [editDeductions, setEditDeductions] = useState('0');
   const [editJoiningDate, setEditJoiningDate] = useState('');
+  const [editWeekend, setEditWeekend] = useState<string[]>(['friday']);
+  const [editAllowedAbsent, setEditAllowedAbsent] = useState('1');
+  const [editAbsentDeductionRate, setEditAbsentDeductionRate] = useState('0');
   const [updating, setUpdating] = useState(false);
+
+  const availableDistricts = division ? bdDivisions[division] || [] : [];
+  const availableThanas = district ? bdLocations[district] || [] : [];
+
+  const editAvailableDistricts = editDivision ? bdDivisions[editDivision] || [] : [];
+  const editAvailableThanas = editDistrict ? bdLocations[editDistrict] || [] : [];
 
   const handleDownloadNiyogpatra = async (employee: any) => {
     try {
@@ -77,12 +117,14 @@ export default function EmployeesPage() {
     setName(''); setPhone(''); setAddress(''); setDesignation('');
     setBasic(''); setAllowance('0'); setDeductions('0');
     setJoiningDate(new Date().toISOString().split('T')[0]);
+    setEmployeeId(''); setEmail(''); setDivision(''); setDistrict(''); setThana('');
+    setWeekend(['friday']); setAllowedAbsent('1'); setAbsentDeductionRate('0');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !phone || !designation || !basic) {
-      toast.error('Name, Phone, Designation, and Basic Salary are required.');
+    if (!name || !phone || !designation || !basic || !employeeId) {
+      toast.error('Name, Phone, Employee ID, Designation, and Basic Salary are required.');
       return;
     }
     try {
@@ -93,6 +135,14 @@ export default function EmployeesPage() {
         allowance: parseFloat(allowance) || 0,
         deductions: parseFloat(deductions) || 0,
         joiningDate,
+        employeeId,
+        email,
+        division,
+        district,
+        thana,
+        weekend,
+        allowedAbsent: parseInt(allowedAbsent) || 0,
+        absentDeductionRate: parseFloat(absentDeductionRate) || 0,
       });
       toast.success('Employee registered successfully!');
       setAddModalOpen(false);
@@ -115,13 +165,21 @@ export default function EmployeesPage() {
     setEditAllowance(String(emp.salaryStructure.allowance));
     setEditDeductions(String(emp.salaryStructure.deductions));
     setEditJoiningDate(new Date(emp.joiningDate).toISOString().split('T')[0]);
+    setEditEmployeeId(emp.employeeId || '');
+    setEditEmail(emp.email || '');
+    setEditDivision(emp.division || '');
+    setEditDistrict(emp.district || '');
+    setEditThana(emp.thana || '');
+    setEditWeekend(emp.weekend || ['friday']);
+    setEditAllowedAbsent(String(emp.allowedAbsent ?? 1));
+    setEditAbsentDeductionRate(String(emp.absentDeductionRate ?? 0));
     setEditOpen(true);
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editName || !editPhone || !editDesignation || !editBasic) {
-      toast.error('Name, Phone, Designation, and Basic Salary are required.');
+    if (!editName || !editPhone || !editDesignation || !editBasic || !editEmployeeId) {
+      toast.error('Name, Phone, Employee ID, Designation, and Basic Salary are required.');
       return;
     }
     try {
@@ -135,6 +193,14 @@ export default function EmployeesPage() {
         allowance: parseFloat(editAllowance) || 0,
         deductions: parseFloat(editDeductions) || 0,
         joiningDate: editJoiningDate,
+        employeeId: editEmployeeId,
+        email: editEmail,
+        division: editDivision,
+        district: editDistrict,
+        thana: editThana,
+        weekend: editWeekend,
+        allowedAbsent: parseInt(editAllowedAbsent) || 0,
+        absentDeductionRate: parseFloat(editAbsentDeductionRate) || 0,
       });
       toast.success('Employee updated successfully!');
       setEditOpen(false);
@@ -185,6 +251,14 @@ export default function EmployeesPage() {
       if (res.success) toast.success(`Payroll of ৳${res.amount.toLocaleString()} processed for ${emp.name}!`);
     } catch (err: any) {
       toast.error(err.message || 'Payroll failed');
+    }
+  };
+
+  const toggleWeekendDay = (day: string, current: string[], setter: React.Dispatch<React.SetStateAction<string[]>>) => {
+    if (current.includes(day)) {
+      setter(current.filter(d => d !== day));
+    } else {
+      setter([...current, day]);
     }
   };
 
@@ -240,14 +314,15 @@ export default function EmployeesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {employees.map((emp, index) => {
+                  {paginatedEmployees.map((emp, index) => {
                     const { basic = 0, allowance = 0, deductions = 0 } = emp.salaryStructure || {};
                     const net = basic + allowance - deductions;
                     return (
                       <TableRow key={emp._id}>
-                        <TableCell className="text-xs text-muted-foreground">{index + 1}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{(currentPage - 1) * pageSize + index + 1}</TableCell>
                         <TableCell className="font-semibold text-sm text-primary">
                           {emp.name}
+                          <span className="block text-[10px] text-muted-foreground font-mono font-normal">ID: {emp.employeeId || '—'}</span>
                           <span className="block text-[10px] text-muted-foreground font-normal">{emp.phone}</span>
                         </TableCell>
                         <TableCell className="text-xs font-semibold">
@@ -299,40 +374,162 @@ export default function EmployeesPage() {
               </Table>
             </div>
           )}
+          {totalPages > 1 && (
+            <div className="pt-4">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => {
+                  const params = new URLSearchParams(searchParams.toString());
+                  if (page > 1) params.set('page', String(page));
+                  else params.delete('page');
+                  router.push(`${pathname}?${params.toString()}`);
+                }}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* ── Add Employee Modal ── */}
       <Dialog open={addModalOpen} onOpenChange={(o) => { if (!o) { setAddModalOpen(false); resetAddForm(); } else setAddModalOpen(true); }}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-primary flex items-center gap-2">
               <PlusCircle className="h-5 w-5" /> Register New Employee
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-3 pt-2">
+          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
             <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
+              <div>
                 <label htmlFor="employee-name" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Full Name *</label>
                 <Input id="employee-name" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Employee full name" className="border-primary/20" />
+              </div>
+              <div>
+                <label htmlFor="employee-id" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Employee ID *</label>
+                <Input id="employee-id" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} required placeholder="e.g. EMP-101" className="border-primary/20" />
               </div>
               <div>
                 <label htmlFor="employee-phone" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Phone *</label>
                 <Input id="employee-phone" value={phone} onChange={(e) => setPhone(e.target.value)} required placeholder="01XXXXXXXXX" className="border-primary/20" />
               </div>
               <div>
+                <label htmlFor="employee-email" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Email</label>
+                <Input id="employee-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@example.com" className="border-primary/20" />
+              </div>
+              <div>
                 <label htmlFor="employee-joiningDate" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Joining Date</label>
                 <Input id="employee-joiningDate" type="date" value={joiningDate} onChange={(e) => setJoiningDate(e.target.value)} className="border-primary/20" />
               </div>
+              <div>
+                <label htmlFor="employee-designation" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Designation *</label>
+                <Input id="employee-designation" value={designation} onChange={(e) => setDesignation(e.target.value)} required placeholder="e.g. Silage Operator" className="border-primary/20" />
+              </div>
             </div>
+
+            {/* Division, District, Thana Dropdowns */}
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Division</label>
+                <Select
+                  value={division}
+                  onValueChange={(val) => {
+                    setDivision(val || '');
+                    setDistrict('');
+                    setThana('');
+                  }}
+                >
+                  <SelectTrigger className="border-primary/20">
+                    <SelectValue placeholder="Select Division" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {divisions.map((div) => (
+                      <SelectItem key={div} value={div}>
+                        {div}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">District</label>
+                <Select
+                  value={district}
+                  disabled={!division}
+                  onValueChange={(val) => {
+                    setDistrict(val || '');
+                    setThana('');
+                  }}
+                >
+                  <SelectTrigger className="border-primary/20">
+                    <SelectValue placeholder="Select District" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableDistricts.map((dist) => (
+                      <SelectItem key={dist} value={dist}>
+                        {dist}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Thana</label>
+                <Select
+                  value={thana}
+                  disabled={!district}
+                  onValueChange={(val) => setThana(val || '')}
+                >
+                  <SelectTrigger className="border-primary/20">
+                    <SelectValue placeholder="Select Thana" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableThanas.map((th) => (
+                      <SelectItem key={th} value={th}>
+                        {th}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div>
-              <label htmlFor="employee-designation" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Designation *</label>
-              <Input id="employee-designation" value={designation} onChange={(e) => setDesignation(e.target.value)} required placeholder="e.g. Silage Operator" className="border-primary/20" />
+              <label htmlFor="employee-address" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Address Line (Road / House / Area)</label>
+              <Input id="employee-address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="House #, Road #, Area" className="border-primary/20" />
             </div>
+
+            {/* Weekend Multi-select Checkboxes */}
             <div>
-              <label htmlFor="employee-address" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1">Address</label>
-              <Input id="employee-address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Village, Thana, District" className="border-primary/20" />
+              <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1.5">Weekend Days (Default: Friday)</label>
+              <div className="grid grid-cols-4 gap-2 border rounded-lg p-2.5 bg-muted/40">
+                {weekDays.map((day) => (
+                  <div key={day} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`weekend-${day}`}
+                      checked={weekend.includes(day)}
+                      onCheckedChange={() => toggleWeekendDay(day, weekend, setWeekend)}
+                    />
+                    <label htmlFor={`weekend-${day}`} className="text-xs capitalize font-medium cursor-pointer text-zinc-700">{day}</label>
+                  </div>
+                ))}
+              </div>
             </div>
+
+            {/* Allowed Absents & Penalty Rate */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="employee-allowed-absent" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Allowed Absents per month</label>
+                <Input id="employee-allowed-absent" type="number" min="0" value={allowedAbsent} onChange={(e) => setAllowedAbsent(e.target.value)} className="border-primary/20" />
+              </div>
+              <div>
+                <label htmlFor="employee-deduction-rate" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Absent Deduction Rate (৳/day)</label>
+                <Input id="employee-deduction-rate" type="number" min="0" value={absentDeductionRate} onChange={(e) => setAbsentDeductionRate(e.target.value)} className="border-primary/20" />
+              </div>
+            </div>
+
             <div>
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1">Salary Structure</label>
               <div className="grid grid-cols-3 gap-2 border rounded-lg p-2 bg-muted/40">
@@ -350,6 +547,7 @@ export default function EmployeesPage() {
                 </div>
               </div>
             </div>
+
             <DialogFooter className="gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => { setAddModalOpen(false); resetAddForm(); }} className="border-primary/20">
                 Cancel
@@ -364,32 +562,144 @@ export default function EmployeesPage() {
 
       {/* ── Edit Employee Modal ── */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-primary">
               <Edit className="h-5 w-5" /> Edit Employee Profile
             </DialogTitle>
           </DialogHeader>
           {editEmp && (
-            <form onSubmit={handleUpdate} className="space-y-3 pt-2">
+            <form onSubmit={handleUpdate} className="space-y-4 pt-2">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label htmlFor="edit-employee-name" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Full Name *</label>
                   <Input id="edit-employee-name" value={editName} onChange={(e) => setEditName(e.target.value)} required className="border-primary/20" />
                 </div>
                 <div>
+                  <label htmlFor="edit-employee-id" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Employee ID *</label>
+                  <Input id="edit-employee-id" value={editEmployeeId} onChange={(e) => setEditEmployeeId(e.target.value)} required className="border-primary/20" />
+                </div>
+                <div>
                   <label htmlFor="edit-employee-phone" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Phone *</label>
                   <Input id="edit-employee-phone" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} required className="border-primary/20" />
                 </div>
+                <div>
+                  <label htmlFor="edit-employee-email" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Email</label>
+                  <Input id="edit-employee-email" type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="border-primary/20" />
+                </div>
+                <div>
+                  <label htmlFor="edit-employee-joiningDate" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1">Joining Date</label>
+                  <Input id="edit-employee-joiningDate" type="date" value={editJoiningDate} onChange={(e) => setEditJoiningDate(e.target.value)} className="border-primary/20" />
+                </div>
+                <div>
+                  <label htmlFor="edit-employee-designation" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Designation *</label>
+                  <Input id="edit-employee-designation" value={editDesignation} onChange={(e) => setEditDesignation(e.target.value)} required className="border-primary/20" />
+                </div>
               </div>
+
+              {/* Division, District, Thana Dropdowns */}
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Division</label>
+                  <Select
+                    value={editDivision}
+                    onValueChange={(val) => {
+                      setEditDivision(val || '');
+                      setEditDistrict('');
+                      setEditThana('');
+                    }}
+                  >
+                    <SelectTrigger className="border-primary/20">
+                      <SelectValue placeholder="Select Division" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {divisions.map((div) => (
+                        <SelectItem key={div} value={div}>
+                          {div}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">District</label>
+                  <Select
+                    value={editDistrict}
+                    disabled={!editDivision}
+                    onValueChange={(val) => {
+                      setEditDistrict(val || '');
+                      setEditThana('');
+                    }}
+                  >
+                    <SelectTrigger className="border-primary/20">
+                      <SelectValue placeholder="Select District" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {editAvailableDistricts.map((dist) => (
+                        <SelectItem key={dist} value={dist}>
+                          {dist}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Thana</label>
+                  <Select
+                    value={editThana}
+                    disabled={!editDistrict}
+                    onValueChange={(val) => setEditThana(val || '')}
+                  >
+                    <SelectTrigger className="border-primary/20">
+                      <SelectValue placeholder="Select Thana" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {editAvailableThanas.map((th) => (
+                        <SelectItem key={th} value={th}>
+                          {th}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div>
-                <label htmlFor="edit-employee-designation" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Designation *</label>
-                <Input id="edit-employee-designation" value={editDesignation} onChange={(e) => setEditDesignation(e.target.value)} required className="border-primary/20" />
+                <label htmlFor="edit-employee-address" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Address Line (Road / House / Area)</label>
+                <Input id="edit-employee-address" value={editAddress} onChange={(e) => setEditAddress(e.target.value)} placeholder="House #, Road #, Area" className="border-primary/20" />
               </div>
+
+              {/* Weekend Multi-select Checkboxes */}
               <div>
-                <label htmlFor="edit-employee-address" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1">Address</label>
-                <Input id="edit-employee-address" value={editAddress} onChange={(e) => setEditAddress(e.target.value)} className="border-primary/20" />
+                <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1.5">Weekend Days</label>
+                <div className="grid grid-cols-4 gap-2 border rounded-lg p-2.5 bg-muted/40">
+                  {weekDays.map((day) => (
+                    <div key={day} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`edit-weekend-${day}`}
+                        checked={editWeekend.includes(day)}
+                        onCheckedChange={() => toggleWeekendDay(day, editWeekend, setEditWeekend)}
+                      />
+                      <label htmlFor={`edit-weekend-${day}`} className="text-xs capitalize font-medium cursor-pointer text-zinc-700">{day}</label>
+                    </div>
+                  ))}
+                </div>
               </div>
+
+              {/* Allowed Absents & Penalty Rate */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="edit-employee-allowed-absent" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Allowed Absents per month</label>
+                  <Input id="edit-employee-allowed-absent" type="number" min="0" value={editAllowedAbsent} onChange={(e) => setEditAllowedAbsent(e.target.value)} className="border-primary/20" />
+                </div>
+                <div>
+                  <label htmlFor="edit-employee-deduction-rate" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Absent Deduction Rate (৳/day)</label>
+                  <Input id="edit-employee-deduction-rate" type="number" min="0" value={editAbsentDeductionRate} onChange={(e) => setEditAbsentDeductionRate(e.target.value)} className="border-primary/20" />
+                </div>
+              </div>
+
               <div>
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1">Salary Structure</label>
                 <div className="grid grid-cols-3 gap-2 border rounded-lg p-2 bg-muted/40">
@@ -407,10 +717,7 @@ export default function EmployeesPage() {
                   </div>
                 </div>
               </div>
-              <div>
-                <label htmlFor="edit-employee-joiningDate" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1">Joining Date</label>
-                <Input id="edit-employee-joiningDate" type="date" value={editJoiningDate} onChange={(e) => setEditJoiningDate(e.target.value)} className="border-primary/20" />
-              </div>
+
               <DialogFooter className="gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => setEditOpen(false)} className="border-primary/20">Cancel</Button>
                 <Button type="submit" disabled={updating} className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">

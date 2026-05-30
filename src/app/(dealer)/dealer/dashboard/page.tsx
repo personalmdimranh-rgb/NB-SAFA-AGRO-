@@ -132,7 +132,8 @@ export default function DealerDashboard() {
                     <TableHead>Commission Discount</TableHead>
                     <TableHead>Grand Total</TableHead>
                     <TableHead>Due Balance</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Payment</TableHead>
+                    <TableHead>Order Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -162,6 +163,16 @@ export default function DealerDashboard() {
                         {sale.paymentStatus === 'unpaid' && (
                           <Badge className="bg-rose-50 text-rose-700">Unpaid</Badge>
                         )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`capitalize ${
+                          sale.status === 'delivery complete' ? 'bg-primary/10 text-primary border-primary/20' :
+                          sale.status === 'cancel' ? 'bg-destructive/10 text-destructive border-destructive/20' :
+                          sale.status === 'pending' ? 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20' :
+                          'bg-blue-500/10 text-blue-600 border-blue-500/20'
+                        }`}>
+                          {sale.status || 'pending'}
+                        </Badge>
                       </TableCell>
                     </TableRow>
                   ))}

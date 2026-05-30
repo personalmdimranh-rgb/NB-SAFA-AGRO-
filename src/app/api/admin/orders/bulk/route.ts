@@ -68,7 +68,6 @@ export async function PATCH(req: NextRequest) {
 
     let modifiedCount = 0;
     try {
-      const Product = (await import('@/models/Product')).default;
       const becomesValid = ['Confirmed', 'Paid', 'Delivered'].includes(status || '');
 
       for (const id of ids) {
@@ -86,14 +85,6 @@ export async function PATCH(req: NextRequest) {
           );
 
           if (order) {
-            // Only increment if we successfully flipped the isSalesCounted flag
-            for (const item of order.items) {
-              await Product.updateOne(
-                { _id: item.product },
-                { $inc: { totalSales: item.quantity } },
-                { session: dbSession }
-              );
-            }
             modifiedCount++;
           } else {
             // Fallback: update status/paymentStatus even if sales were already counted

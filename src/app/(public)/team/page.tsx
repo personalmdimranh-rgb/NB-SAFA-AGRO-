@@ -5,13 +5,14 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { 
   Users, 
-  Share2, 
   MessageCircle, 
   ArrowRight, 
   Award, 
+  Loader2,
+  Mail,
+  Share2,
   Globe,
-  PhoneCall,
-  Loader2
+  PhoneCall
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getTeamMembers } from '@/app/actions/team';
@@ -26,6 +27,8 @@ type TeamMemberType = {
   linkedin?: string;
   twitter?: string;
   facebook?: string;
+  email?: string;
+  whatsapp?: string;
 };
 
 const defaultTeam: TeamMemberType[] = [
@@ -218,19 +221,24 @@ export default function TeamPage() {
                         
                         {/* Hover Social Overlay */}
                         <div className="absolute inset-0 bg-background/70 backdrop-blur-xs flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                          {member.linkedin && member.linkedin !== '#' && (
-                            <Link href={member.linkedin} target="_blank" rel="noopener noreferrer" className="p-2.5 rounded-lg bg-card border border-border hover:bg-primary hover:text-primary-foreground text-muted-foreground transition-all duration-300">
+                          {member.linkedin && member.linkedin !== '' && member.linkedin !== '#' && (
+                            <Link href={member.linkedin} target="_blank" rel="noopener noreferrer" className="p-2.5 rounded-lg bg-card border border-border hover:bg-primary hover:text-primary-foreground text-muted-foreground transition-all duration-300" title="LinkedIn">
                               <Share2 className="h-4 w-4" />
                             </Link>
                           )}
-                          {member.twitter && member.twitter !== '#' && (
-                            <Link href={member.twitter} target="_blank" rel="noopener noreferrer" className="p-2.5 rounded-lg bg-card border border-border hover:bg-primary hover:text-primary-foreground text-muted-foreground transition-all duration-300">
-                              <MessageCircle className="h-4 w-4" />
+                          {member.facebook && member.facebook !== '' && member.facebook !== '#' && (
+                            <Link href={member.facebook} target="_blank" rel="noopener noreferrer" className="p-2.5 rounded-lg bg-card border border-border hover:bg-primary hover:text-primary-foreground text-muted-foreground transition-all duration-300" title="Facebook">
+                              <Globe className="h-4 w-4" />
                             </Link>
                           )}
-                          {member.facebook && member.facebook !== '#' && (
-                            <Link href={member.facebook} target="_blank" rel="noopener noreferrer" className="p-2.5 rounded-lg bg-card border border-border hover:bg-primary hover:text-primary-foreground text-muted-foreground transition-all duration-300">
-                              <Globe className="h-4 w-4" />
+                          {member.email && member.email !== '' && (
+                            <Link href={`mailto:${member.email}`} className="p-2.5 rounded-lg bg-card border border-border hover:bg-primary hover:text-primary-foreground text-muted-foreground transition-all duration-300" title="Email">
+                              <Mail className="h-4 w-4" />
+                            </Link>
+                          )}
+                          {member.whatsapp && member.whatsapp !== '' && (
+                            <Link href={member.whatsapp.startsWith('http') ? member.whatsapp : `https://wa.me/${member.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="p-2.5 rounded-lg bg-card border border-border hover:bg-primary hover:text-primary-foreground text-muted-foreground transition-all duration-300" title="WhatsApp">
+                              <MessageCircle className="h-4 w-4" />
                             </Link>
                           )}
                         </div>
@@ -248,12 +256,6 @@ export default function TeamPage() {
                       {member.desc && (
                         <p className="text-xs text-muted-foreground leading-relaxed">
                           {member.desc}
-                        </p>
-                      )}
-
-                      {member.bio && (
-                        <p className="text-[11px] text-muted-foreground/80 leading-relaxed border-t border-border/40 pt-3">
-                          {member.bio}
                         </p>
                       )}
                     </div>

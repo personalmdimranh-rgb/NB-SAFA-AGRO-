@@ -202,7 +202,13 @@ export default function NewOrderPage() {
                 ) : (
                   <Select value={buyerId} onValueChange={(val) => setBuyerId(val || '')}>
                     <SelectTrigger className="border-border">
-                      <SelectValue placeholder={`Select registered ${buyerType}...`} />
+                      <SelectValue placeholder={`Select registered ${buyerType}...`}>
+                        {activeBuyer 
+                          ? (buyerType === 'dealer' 
+                              ? `${activeBuyer.userId?.name} (${activeBuyer.shopName})` 
+                              : activeBuyer.name)
+                          : undefined}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {buyerType === 'dealer'
