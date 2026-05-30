@@ -17,9 +17,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { useAppDispatch } from '@/store/hooks';
 import { addToCart } from '@/store/slices/cartSlice';
-import { toggleWishlist } from '@/store/slices/wishlistSlice';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
 import ReviewsSection from '@/components/storefront/ReviewsSection';
@@ -48,8 +47,6 @@ interface ProductDetailsClientProps {
 export default function ProductDetailsClient({ product }: ProductDetailsClientProps) {
   const dispatch = useAppDispatch();
   const { data: session } = useSession();
-  const wishlist = useAppSelector((state) => state.wishlist.items);
-  const isInWishlist = wishlist.includes(product?._id);
   const router = useRouter();
   const isAdmin = (session?.user as any)?.role === 'admin';
 
@@ -158,43 +155,6 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
       size: selectedSize || undefined
     }));
     toast.success(`Added ${finalQuantity} ${product.name} to cart`);
-  };
-
-  const handleFavorite = async () => {
-    if (!product?._id) return;
-
-    if (!session) {
-      toast.error('Please login to add to wishlist');
-      return;
-    }
-
-    // Toggle locally (optimistic update)
-    dispatch(toggleWishlist(product._id));
-
-    // Determine the message based on the NEW state
-    const willBeInWishlist = !isInWishlist;
-    const successMsg = willBeInWishlist ? 'Added to wishlist' : 'Removed from wishlist';
-
-    // If authenticated, update database and wait for response
-    try {
-      const res = await fetch('/api/wishlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: product._id }),
-      });
-
-      if (!res.ok) {
-        throw new Error('Failed to update wishlist server-side');
-      }
-
-      // Only show success toast after server confirmation
-      toast.success(successMsg);
-    } catch (err) {
-      console.error('API toggle error:', err);
-      // Rollback optimistic update
-      dispatch(toggleWishlist(product._id));
-      toast.error('Failed to sync wishlist. Please try again.');
-    }
   };
 
   const handleDeleteProduct = async () => {
@@ -503,16 +463,8 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
           >
             <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
           </Button>
-          <Button
-            size="icon"
-            variant="outline"
-            className="h-12 w-12 rounded-full transition-all hover:scale-110 active:scale-95"
-            onClick={handleFavorite}
-            aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
-          >
-            <Heart className={`h-5 w-5 transition-colors ${isInWishlist ? 'fill-destructive text-destructive' : 'text-muted-foreground'}`} />
-          </Button>
         </div>
+
 
 
       </div>
