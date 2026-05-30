@@ -451,12 +451,13 @@ export async function updateSaleStatus(saleId: string, status: string) {
   const sale = await Sale.findById(saleId);
   if (!sale) throw new Error('Sale not found');
 
-  const allowedStatuses = ['pending', 'processing', 'delivered', 'cancelled'];
-  if (!allowedStatuses.includes(status)) {
+  const allowedStatuses = ['pending', 'approved', 'ready to deliver', 'release to deliver', 'delivery complete', 'cancel'] as const;
+  type SaleStatus = typeof allowedStatuses[number];
+  if (!(allowedStatuses as readonly string[]).includes(status)) {
     throw new Error(`Invalid status "${status}". Allowed values: ${allowedStatuses.join(', ')}.`);
   }
 
-  sale.status = status;
+  sale.status = status as SaleStatus;
   await sale.save();
 
   revalidatePath('/admin/sales');
