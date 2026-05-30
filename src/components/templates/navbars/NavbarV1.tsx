@@ -8,7 +8,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   ShoppingCart,
-  Heart,
   User,
   Search,
   Menu,
@@ -70,7 +69,6 @@ export default function Navbar() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { totalQuantity: cartCount, totalAmount } = useAppSelector((state) => state.cart);
-  const { items: wishlistItems } = useAppSelector((state) => state.wishlist);
   const settings = useSettings();
 
   const [categories, setCategories] = useState<any[]>([]);
@@ -324,28 +322,6 @@ export default function Navbar() {
                   <AIChatbot />
                 </div>
               )}
-
-              {/* Wishlist */}
-              <Link
-                href="/dashboard/wishlist"
-                className="hidden sm:flex h-10 w-10 items-center justify-center rounded-xl transition-all cursor-pointer hover:text-primary hover:scale-110"
-                aria-label="Wishlist"
-                onClick={(e) => {
-                  if (status !== 'authenticated') {
-                    e.preventDefault();
-                    toast.error('Please login to view your wishlist');
-                  }
-                }}
-              >
-                <div className="relative">
-                  <Heart className="h-5 w-5" />
-                  {wishlistItems.length > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 bg-primary text-[8px] font-bold text-white flex items-center justify-center rounded-full shadow-sm animate-in fade-in zoom-in duration-300">
-                      {wishlistItems.length}
-                    </span>
-                  )}
-                </div>
-              </Link>
 
               {/* Cart */}
               <CartDrawer>

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { addToCart } from '@/store/slices/cartSlice';
-import { toggleWishlist } from '@/store/slices/wishlistSlice';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
 import ReviewsSection from '@/components/storefront/ReviewsSection';
@@ -40,10 +39,7 @@ interface ProductDetailsV2ClientProps {
 
 export default function ProductDetailsV2Client({ product }: ProductDetailsV2ClientProps) {
   const dispatch = useAppDispatch();
-  const { data: session } = useSession();
-  const wishlist = useAppSelector((state) => state.wishlist.items);
-  const isInWishlist = wishlist.includes(product?._id);
-  const router = useRouter();
+  const { data: session } = useSession();  const router = useRouter();
   const isAdmin = (session?.user as any)?.role === 'admin';
 
   const [quantity, setQuantity] = useState(1);

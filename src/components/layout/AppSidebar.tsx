@@ -227,15 +227,18 @@ const data = {
         {
           title: "Coupons",
           url: "/admin/coupons",
+          superOnly: true
         },
         {
           title: "General Settings",
           url: "/admin/settings",
+          superOnly: true
         },
         {
           title: "Subscribers",
           url: "/admin/subscribers",
           icon: Mail,
+          superOnly: true
         },
         {
           title: "Infrastructure & Marketing",

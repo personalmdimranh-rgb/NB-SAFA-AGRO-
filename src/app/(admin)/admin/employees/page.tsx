@@ -23,6 +23,7 @@ export default function EmployeesPage() {
   const [employees, setEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [addModalOpen, setAddModalOpen] = useState(false);
 
   // Create form states
   const [name, setName] = useState('');
@@ -70,9 +71,13 @@ export default function EmployeesPage() {
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
+
+  const resetAddForm = () => {
+    setName(''); setPhone(''); setAddress(''); setDesignation('');
+    setBasic(''); setAllowance('0'); setDeductions('0');
+    setJoiningDate(new Date().toISOString().split('T')[0]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +85,6 @@ export default function EmployeesPage() {
       toast.error('Name, Phone, Designation, and Basic Salary are required.');
       return;
     }
-
     try {
       setSubmitting(true);
       await registerEmployee({
@@ -90,11 +94,9 @@ export default function EmployeesPage() {
         deductions: parseFloat(deductions) || 0,
         joiningDate,
       });
-
       toast.success('Employee registered successfully!');
-      setName(''); setPhone(''); setAddress(''); setDesignation('');
-      setBasic(''); setAllowance('0'); setDeductions('0');
-      setJoiningDate(new Date().toISOString().split('T')[0]);
+      setAddModalOpen(false);
+      resetAddForm();
       loadData();
     } catch (err: any) {
       toast.error('Failed to register employee: ' + err.message);
@@ -153,7 +155,6 @@ export default function EmployeesPage() {
       confirmButtonColor: '#ef4444',
       cancelButtonColor: '#6b7280',
       confirmButtonText: 'Yes, Remove!',
-      cancelButtonText: 'Cancel',
     });
     if (!result.isConfirmed) return;
     try {
@@ -169,7 +170,6 @@ export default function EmployeesPage() {
     const now = new Date();
     const monthYear = now.toLocaleString('default', { month: 'long', year: 'numeric' });
     const net = emp.salaryStructure.basic + emp.salaryStructure.allowance - emp.salaryStructure.deductions;
-
     const result = await Swal.fire({
       title: 'Process Monthly Payroll?',
       html: `<p class="text-sm text-gray-600">Pay <strong>৳${net.toLocaleString()}</strong> to <strong>${emp.name}</strong> for <strong>${monthYear}</strong>?<br/>This will be logged as an expense in the ledger.</p>`,
@@ -180,12 +180,9 @@ export default function EmployeesPage() {
       confirmButtonText: 'Confirm Payment',
     });
     if (!result.isConfirmed) return;
-
     try {
       const res = await processPayroll(emp._id, monthYear);
-      if (res.success) {
-        toast.success(`Payroll of ৳${res.amount.toLocaleString()} processed for ${emp.name}!`);
-      }
+      if (res.success) toast.success(`Payroll of ৳${res.amount.toLocaleString()} processed for ${emp.name}!`);
     } catch (err: any) {
       toast.error(err.message || 'Payroll failed');
     }
@@ -193,211 +190,230 @@ export default function EmployeesPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-primary">Employee Directory</h1>
-        <p className="text-muted-foreground">Register new operational workforce and configure official payroll structures</p>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-primary">Employee Directory</h1>
+          <p className="text-muted-foreground text-sm">Register workforce, configure payroll structures, and manage HR operations</p>
+        </div>
+        <Button
+          onClick={() => { resetAddForm(); setAddModalOpen(true); }}
+          className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold gap-2 shadow-md"
+          id="add-employee-btn"
+        >
+          <PlusCircle className="h-4 w-4" />
+          Add Employee
+        </Button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-12">
-        {/* Registration Form */}
-        <Card className="lg:col-span-4 border-primary/10 bg-card/70">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold flex items-center gap-2 text-primary">
-              <PlusCircle className="h-5 w-5 text-primary" /> Register Employee
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">Full Name</label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} required className="border-primary/20" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">Phone Number</label>
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} required className="border-primary/20" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">Address</label>
-                <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Village, Thana" className="border-primary/20" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">Designation</label>
-                <Input value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="e.g. Silage Operator" required className="border-primary/20" />
-              </div>
+      {/* Full-width Employee Table */}
+      <Card className="border-primary/10 bg-card/70">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold text-primary flex items-center gap-2">
+            <Users className="h-5 w-5" /> Workforce Database
+            <span className="ml-auto text-xs font-normal text-muted-foreground">{employees.length} employees</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="text-center py-16 text-muted-foreground">Loading directory...</div>
+          ) : employees.length === 0 ? (
+            <div className="text-center py-16 text-muted-foreground">
+              <Users className="h-12 w-12 mx-auto mb-3 opacity-20" />
+              <p className="font-medium">No employees registered yet.</p>
+              <p className="text-xs mt-1">Click &quot;Add Employee&quot; to register the first worker.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[40px]">#</TableHead>
+                    <TableHead>Employee Name</TableHead>
+                    <TableHead>Designation</TableHead>
+                    <TableHead className="text-right">Basic</TableHead>
+                    <TableHead className="text-right">Allowance</TableHead>
+                    <TableHead className="text-right">Deduction</TableHead>
+                    <TableHead className="text-right font-semibold">Net Salary</TableHead>
+                    <TableHead>Joined</TableHead>
+                    <TableHead className="text-center w-[60px]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {employees.map((emp, index) => {
+                    const { basic = 0, allowance = 0, deductions = 0 } = emp.salaryStructure || {};
+                    const net = basic + allowance - deductions;
+                    return (
+                      <TableRow key={emp._id}>
+                        <TableCell className="text-xs text-muted-foreground">{index + 1}</TableCell>
+                        <TableCell className="font-semibold text-sm text-primary">
+                          {emp.name}
+                          <span className="block text-[10px] text-muted-foreground font-normal">{emp.phone}</span>
+                        </TableCell>
+                        <TableCell className="text-xs font-semibold">
+                          <span className="flex items-center gap-1 text-primary">
+                            <Briefcase className="h-3.5 w-3.5" /> {emp.designation}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right text-xs">৳{basic.toLocaleString()}</TableCell>
+                        <TableCell className="text-right text-xs text-primary">+৳{allowance.toLocaleString()}</TableCell>
+                        <TableCell className="text-right text-xs text-destructive">-৳{deductions.toLocaleString()}</TableCell>
+                        <TableCell className="text-right font-bold text-xs text-primary">৳{net.toLocaleString()}</TableCell>
+                        <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {new Date(emp.joiningDate).toLocaleDateString()}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-muted" id={`emp-action-${emp._id}`}>
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
+                              <DropdownMenuItem className="cursor-pointer text-xs gap-2" onClick={() => handleOpenEdit(emp)}>
+                                <Edit className="h-3.5 w-3.5 text-primary" /> Edit Profile
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="cursor-pointer text-xs gap-2" onClick={() => handleDownloadNiyogpatra(emp)}>
+                                <FileText className="h-3.5 w-3.5 text-primary" /> নিয়োগপত্র
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="cursor-pointer text-xs gap-2" onClick={() => handleProcessPayroll(emp)}>
+                                <BanknoteIcon className="h-3.5 w-3.5 text-primary" /> Process Payroll
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="cursor-pointer text-xs gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
+                                onClick={() => handleDelete(emp)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" /> Remove
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-              <div className="grid grid-cols-3 gap-2 border p-2 rounded-lg bg-muted/50">
+      {/* ── Add Employee Modal ── */}
+      <Dialog open={addModalOpen} onOpenChange={(o) => { if (!o) { setAddModalOpen(false); resetAddForm(); } else setAddModalOpen(true); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-primary flex items-center gap-2">
+              <PlusCircle className="h-5 w-5" /> Register New Employee
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-3 pt-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <label htmlFor="employee-name" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Full Name *</label>
+                <Input id="employee-name" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Employee full name" className="border-primary/20" />
+              </div>
+              <div>
+                <label htmlFor="employee-phone" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Phone *</label>
+                <Input id="employee-phone" value={phone} onChange={(e) => setPhone(e.target.value)} required placeholder="01XXXXXXXXX" className="border-primary/20" />
+              </div>
+              <div>
+                <label htmlFor="employee-joiningDate" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Joining Date</label>
+                <Input id="employee-joiningDate" type="date" value={joiningDate} onChange={(e) => setJoiningDate(e.target.value)} className="border-primary/20" />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="employee-designation" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Designation *</label>
+              <Input id="employee-designation" value={designation} onChange={(e) => setDesignation(e.target.value)} required placeholder="e.g. Silage Operator" className="border-primary/20" />
+            </div>
+            <div>
+              <label htmlFor="employee-address" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1">Address</label>
+              <Input id="employee-address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Village, Thana, District" className="border-primary/20" />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1">Salary Structure</label>
+              <div className="grid grid-cols-3 gap-2 border rounded-lg p-2 bg-muted/40">
                 <div>
-                  <label className="text-[10px] font-semibold text-muted-foreground block mb-0.5">Basic (BDT)</label>
-                  <Input type="number" value={basic} onChange={(e) => setBasic(e.target.value)} className="h-8 text-xs border-primary/20" required />
+                  <label htmlFor="employee-basic" className="text-[10px] font-semibold text-muted-foreground block mb-0.5">Basic (৳) *</label>
+                  <Input id="employee-basic" type="number" value={basic} onChange={(e) => setBasic(e.target.value)} required className="h-8 text-xs border-primary/20" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-semibold text-muted-foreground block mb-0.5">Allowance</label>
-                  <Input type="number" value={allowance} onChange={(e) => setAllowance(e.target.value)} className="h-8 text-xs border-primary/20" />
+                  <label htmlFor="employee-allowance" className="text-[10px] font-semibold text-muted-foreground block mb-0.5">Allowance (৳)</label>
+                  <Input id="employee-allowance" type="number" value={allowance} onChange={(e) => setAllowance(e.target.value)} className="h-8 text-xs border-primary/20" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-semibold text-muted-foreground block mb-0.5">Deduction</label>
-                  <Input type="number" value={deductions} onChange={(e) => setDeductions(e.target.value)} className="h-8 text-xs border-primary/20" />
+                  <label htmlFor="employee-deductions" className="text-[10px] font-semibold text-muted-foreground block mb-0.5">Deduction (৳)</label>
+                  <Input id="employee-deductions" type="number" value={deductions} onChange={(e) => setDeductions(e.target.value)} className="h-8 text-xs border-primary/20" />
                 </div>
               </div>
-
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">Joining Date</label>
-                <Input type="date" value={joiningDate} onChange={(e) => setJoiningDate(e.target.value)} required className="border-primary/20" />
-              </div>
-
-              <Button type="submit" disabled={submitting} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
-                {submitting ? 'Registering...' : 'Register Worker'}
+            </div>
+            <DialogFooter className="gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => { setAddModalOpen(false); resetAddForm(); }} className="border-primary/20">
+                Cancel
               </Button>
-            </form>
-          </CardContent>
-        </Card>
+              <Button type="submit" disabled={submitting} className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
+                {submitting ? 'Registering...' : 'Register Employee'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-        {/* Directory List */}
-        <Card className="lg:col-span-8 border-primary/10 bg-card/70">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-primary flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" /> Workforce Database
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center py-10 text-muted-foreground">Loading directory database...</div>
-            ) : employees.length === 0 ? (
-              <div className="text-center py-10 text-muted-foreground">No employees registered.</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[40px]">#</TableHead>
-                      <TableHead>Employee Name</TableHead>
-                      <TableHead>Designation</TableHead>
-                      <TableHead className="text-right">Basic</TableHead>
-                      <TableHead className="text-right">Allowance</TableHead>
-                      <TableHead className="text-right">Deduction</TableHead>
-                      <TableHead className="text-right font-semibold">Net Salary</TableHead>
-                      <TableHead>Joined</TableHead>
-                      <TableHead className="text-center w-[60px]">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {employees.map((emp, index) => {
-                      const { basic, allowance, deductions } = emp.salaryStructure;
-                      const net = basic + allowance - deductions;
-                      return (
-                        <TableRow key={emp._id}>
-                          <TableCell className="text-xs text-muted-foreground font-medium">{index + 1}</TableCell>
-                          <TableCell className="font-semibold text-xs text-primary">
-                            {emp.name}
-                            <span className="block text-[10px] text-muted-foreground font-normal italic">{emp.phone}</span>
-                          </TableCell>
-                          <TableCell className="text-xs font-semibold">
-                            <span className="flex items-center gap-1 text-primary">
-                              <Briefcase className="h-3.5 w-3.5" />
-                              {emp.designation}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-right text-xs">৳{basic.toLocaleString()}</TableCell>
-                          <TableCell className="text-right text-xs text-primary">+৳{allowance.toLocaleString()}</TableCell>
-                          <TableCell className="text-right text-xs text-destructive">-৳{deductions.toLocaleString()}</TableCell>
-                          <TableCell className="text-right font-bold text-xs text-primary">৳{net.toLocaleString()}</TableCell>
-                          <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {new Date(emp.joiningDate).toLocaleDateString()}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-muted" id={`emp-action-${emp._id}`}>
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-44">
-                                <DropdownMenuItem className="cursor-pointer text-xs gap-2" onClick={() => handleOpenEdit(emp)}>
-                                  <Edit className="h-3.5 w-3.5 text-primary" />
-                                  <span>Edit Profile</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="cursor-pointer text-xs gap-2" onClick={() => handleDownloadNiyogpatra(emp)}>
-                                  <FileText className="h-3.5 w-3.5 text-primary" />
-                                  <span>নিয়োগপত্র</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="cursor-pointer text-xs gap-2" onClick={() => handleProcessPayroll(emp)}>
-                                  <BanknoteIcon className="h-3.5 w-3.5 text-primary" />
-                                  <span>Process Payroll</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  className="cursor-pointer text-xs gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
-                                  onClick={() => handleDelete(emp)}
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                  <span>Remove</span>
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Edit Employee Dialog */}
+      {/* ── Edit Employee Modal ── */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-primary">
               <Edit className="h-5 w-5" /> Edit Employee Profile
             </DialogTitle>
           </DialogHeader>
           {editEmp && (
-            <form onSubmit={handleUpdate} className="space-y-4 pt-2">
+            <form onSubmit={handleUpdate} className="space-y-3 pt-2">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">Full Name</label>
-                  <Input value={editName} onChange={(e) => setEditName(e.target.value)} required className="border-primary/20" />
+                  <label htmlFor="edit-employee-name" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Full Name *</label>
+                  <Input id="edit-employee-name" value={editName} onChange={(e) => setEditName(e.target.value)} required className="border-primary/20" />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">Phone</label>
-                  <Input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} required className="border-primary/20" />
+                  <label htmlFor="edit-employee-phone" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Phone *</label>
+                  <Input id="edit-employee-phone" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} required className="border-primary/20" />
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">Designation</label>
-                <Input value={editDesignation} onChange={(e) => setEditDesignation(e.target.value)} required className="border-primary/20" />
+                <label htmlFor="edit-employee-designation" className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Designation *</label>
+                <Input id="edit-employee-designation" value={editDesignation} onChange={(e) => setEditDesignation(e.target.value)} required className="border-primary/20" />
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">Address</label>
-                <Input value={editAddress} onChange={(e) => setEditAddress(e.target.value)} className="border-primary/20" />
+                <label htmlFor="edit-employee-address" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1">Address</label>
+                <Input id="edit-employee-address" value={editAddress} onChange={(e) => setEditAddress(e.target.value)} className="border-primary/20" />
               </div>
-              <div className="grid grid-cols-3 gap-2 border p-2 rounded-lg bg-muted/50">
-                <div>
-                  <label className="text-[10px] font-semibold text-muted-foreground block mb-0.5">Basic (BDT)</label>
-                  <Input type="number" value={editBasic} onChange={(e) => setEditBasic(e.target.value)} className="h-8 text-xs border-primary/20" required />
-                </div>
-                <div>
-                  <label className="text-[10px] font-semibold text-muted-foreground block mb-0.5">Allowance</label>
-                  <Input type="number" value={editAllowance} onChange={(e) => setEditAllowance(e.target.value)} className="h-8 text-xs border-primary/20" />
-                </div>
-                <div>
-                  <label className="text-[10px] font-semibold text-muted-foreground block mb-0.5">Deduction</label>
-                  <Input type="number" value={editDeductions} onChange={(e) => setEditDeductions(e.target.value)} className="h-8 text-xs border-primary/20" />
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1">Salary Structure</label>
+                <div className="grid grid-cols-3 gap-2 border rounded-lg p-2 bg-muted/40">
+                  <div>
+                    <label htmlFor="edit-employee-basic" className="text-[10px] text-muted-foreground block mb-0.5">Basic (৳)</label>
+                    <Input id="edit-employee-basic" type="number" value={editBasic} onChange={(e) => setEditBasic(e.target.value)} required className="h-8 text-xs border-primary/20" />
+                  </div>
+                  <div>
+                    <label htmlFor="edit-employee-allowance" className="text-[10px] text-muted-foreground block mb-0.5">Allowance (৳)</label>
+                    <Input id="edit-employee-allowance" type="number" value={editAllowance} onChange={(e) => setEditAllowance(e.target.value)} className="h-8 text-xs border-primary/20" />
+                  </div>
+                  <div>
+                    <label htmlFor="edit-employee-deductions" className="text-[10px] text-muted-foreground block mb-0.5">Deduction (৳)</label>
+                    <Input id="edit-employee-deductions" type="number" value={editDeductions} onChange={(e) => setEditDeductions(e.target.value)} className="h-8 text-xs border-primary/20" />
+                  </div>
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">Joining Date</label>
-                <Input type="date" value={editJoiningDate} onChange={(e) => setEditJoiningDate(e.target.value)} className="border-primary/20" />
+                <label htmlFor="edit-employee-joiningDate" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1">Joining Date</label>
+                <Input id="edit-employee-joiningDate" type="date" value={editJoiningDate} onChange={(e) => setEditJoiningDate(e.target.value)} className="border-primary/20" />
               </div>
               <DialogFooter className="gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => setEditOpen(false)} className="flex-1">Cancel</Button>
-                <Button type="submit" disabled={updating} className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
+                <Button type="button" variant="outline" onClick={() => setEditOpen(false)} className="border-primary/20">Cancel</Button>
+                <Button type="submit" disabled={updating} className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
                   {updating ? 'Saving...' : 'Save Changes'}
                 </Button>
               </DialogFooter>

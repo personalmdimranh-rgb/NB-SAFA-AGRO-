@@ -5,6 +5,7 @@ export interface IFarmer extends Document {
   phone: string;
   address: {
     village?: string;
+    division?: string;
     thana?: string;
     district?: string;
   };
@@ -23,6 +24,7 @@ const FarmerSchema: Schema<IFarmer> = new Schema(
     phone: { type: String, required: true, unique: true },
     address: {
       village: String,
+      division: String,
       thana: String,
       district: String
     },

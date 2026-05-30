@@ -99,8 +99,31 @@ export function UserMenu({ user }: { user: any }) {
               </div>
             </div>
           </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-
+          <DropdownMenuSeparator />          {['super_admin', 'admin', 'manager', 'staff'].includes(role) && (user?.id || user?._id) && (
+            <>
+              <DropdownMenuItem asChild>
+                <Link href={`/admin/users/${user.id || user._id}`} className="cursor-pointer font-semibold text-primary">
+                  <span className="flex items-center">
+                    <svg
+                      className="mr-2 h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
+                    My Profile
+                  </span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          )}
           {/* Super Admin Options */}
           {role === 'super_admin' && (
             <>
@@ -128,16 +151,6 @@ export function UserMenu({ user }: { user: any }) {
               <DropdownMenuItem asChild>
                 <Link href="/admin/dashboard" className="cursor-pointer">
                   <LayoutDashboard className="mr-2 h-4 w-4" /> Admin Dashboard
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/admin/sales" className="cursor-pointer">
-                  <Truck className="mr-2 h-4 w-4" /> Manage Orders
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/admin/settings" className="cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" /> Settings
                 </Link>
               </DropdownMenuItem>
             </>

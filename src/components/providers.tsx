@@ -8,7 +8,6 @@ import { store } from '@/store/store';
 
 import { AnimationProvider } from './animation-provider';
 import { CartHydrator } from './CartHydrator';
-import { WishlistHydrator } from './WishlistHydrator';
 
 import { SettingsProvider } from './SettingsProvider';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -33,9 +32,7 @@ export function Providers({
             <TooltipProvider>
               <AnimationProvider>
                 <CartHydrator>
-                  <WishlistHydrator>
-                    {children}
-                  </WishlistHydrator>
+                  {children}
                 </CartHydrator>
               </AnimationProvider>
             </TooltipProvider>
@@ -45,4 +42,3 @@ export function Providers({
     </SessionProvider>
   );
 }
-

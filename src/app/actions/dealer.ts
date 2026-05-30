@@ -14,8 +14,8 @@ export async function registerDealer(data: {
   phone: string;
   password?: string;
   shopName: string;
-  village?: string;
-  union?: string;
+  addressLine?: string;
+  division?: string;
   thana?: string;
   district?: string;
   tradeLicense?: string;
@@ -39,6 +39,14 @@ export async function registerDealer(data: {
     role: 'dealer',
     password: passwordHash,
     status: 'inactive', // inactive until approved by admin
+    addresses: [{
+      street: data.addressLine || '',
+      division: data.division || '',
+      state: data.district || '',
+      city: data.thana || '',
+      country: 'Bangladesh',
+      isDefault: true
+    }]
   });
   await user.save();
 
@@ -47,10 +55,9 @@ export async function registerDealer(data: {
     userId: user._id,
     shopName: data.shopName,
     address: {
-      village: data.village,
-      union: data.union,
-      thana: data.thana,
-      district: data.district,
+      village: data.addressLine || '', // village is stored as addressLine
+      thana: data.thana || '',
+      district: data.district || '',
     },
     tradeLicense: data.tradeLicense,
     nidNumber: data.nidNumber,
@@ -63,6 +70,7 @@ export async function registerDealer(data: {
   await dealer.save();
 
   revalidatePath('/admin/users');
+  revalidatePath('/admin/dealers');
   return { success: true, dealer: JSON.parse(JSON.stringify(dealer)) };
 }
 
@@ -110,6 +118,74 @@ export async function updateDealerSettings(
   );
 
   revalidatePath('/admin/users');
+  revalidatePath('/admin/dealers');
+  return { success: true, dealer: JSON.parse(JSON.stringify(dealer)) };
+}
+
+export async function updateDealer(
+  dealerId: string,
+  data: {
+    name: string;
+    email: string;
+    phone: string;
+    shopName: string;
+    addressLine?: string;
+    division?: string;
+    thana?: string;
+    district?: string;
+    tradeLicense?: string;
+    nidNumber?: string;
+    commissionRate: number;
+    creditLimit: number;
+  }
+) {
+  const session = await auth();
+  if (!session || !['super_admin', 'admin', 'manager'].includes((session.user as any).role)) {
+    throw new Error('Unauthorized');
+  }
+
+  await connectToDatabase();
+
+  const dealer = await Dealer.findById(dealerId);
+  if (!dealer) throw new Error('Dealer not found');
+
+  // Check if email already exists on another user
+  const existingUser = await User.findOne({ email: data.email, _id: { $ne: dealer.userId } });
+  if (existingUser) {
+    throw new Error('Email already registered by another user.');
+  }
+
+  // Update associated user
+  await User.findByIdAndUpdate(dealer.userId, {
+    name: data.name,
+    email: data.email,
+    phone: data.phone,
+    addresses: [{
+      street: data.addressLine || '',
+      division: data.division || '',
+      state: data.district || '',
+      city: data.thana || '',
+      country: 'Bangladesh',
+      isDefault: true
+    }]
+  });
+
+  // Update dealer profile
+  dealer.shopName = data.shopName;
+  dealer.address = {
+    village: data.addressLine || '',
+    thana: data.thana || '',
+    district: data.district || '',
+  };
+  dealer.tradeLicense = data.tradeLicense || '';
+  dealer.nidNumber = data.nidNumber || '';
+  dealer.commissionRate = data.commissionRate;
+  dealer.creditLimit = data.creditLimit;
+
+  await dealer.save();
+
+  revalidatePath('/admin/users');
+  revalidatePath('/admin/dealers');
   return { success: true, dealer: JSON.parse(JSON.stringify(dealer)) };
 }
 

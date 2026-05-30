@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import Link from 'next/link';
@@ -7,7 +7,6 @@ import { ShoppingCart, Heart, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { addToCart, clearCart } from '@/store/slices/cartSlice';
-import { toggleWishlist } from '@/store/slices/wishlistSlice';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
@@ -45,10 +44,7 @@ interface ProductCardProps {
 export default function ProductCardV6({ product, isFlashSale, priority }: ProductCardProps) {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const { data: session, status } = useSession();
-  const wishlist = useAppSelector((state) => state.wishlist.items);
-  const isInWishlist = wishlist.includes(product._id);
-  const hasVariants = product.variants && product.variants.length > 0;
+  const { data: session, status } = useSession();  const hasVariants = product.variants && product.variants.length > 0;
 
   const [showQuickViewModal, setShowQuickViewModal] = useState(false);
 

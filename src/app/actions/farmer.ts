@@ -8,7 +8,8 @@ import { revalidatePath } from 'next/cache';
 export async function createFarmer(data: {
   name: string;
   phone: string;
-  village?: string;
+  addressLine?: string;
+  division?: string;
   thana?: string;
   district?: string;
   cattleCount: number;
@@ -30,9 +31,10 @@ export async function createFarmer(data: {
     name: data.name,
     phone: data.phone,
     address: {
-      village: data.village,
-      thana: data.thana,
-      district: data.district,
+      village: data.addressLine || '',
+      division: data.division || '',
+      thana: data.thana || '',
+      district: data.district || '',
     },
     cattleCount: data.cattleCount,
     creditLimit: data.creditLimit,
@@ -51,7 +53,8 @@ export async function updateFarmer(
   data: {
     name: string;
     phone: string;
-    village?: string;
+    addressLine?: string;
+    division?: string;
     thana?: string;
     district?: string;
     cattleCount: number;
@@ -76,9 +79,10 @@ export async function updateFarmer(
   farmer.name = data.name;
   farmer.phone = data.phone;
   farmer.address = {
-    village: data.village,
-    thana: data.thana,
-    district: data.district,
+    village: data.addressLine || '',
+    division: data.division || '',
+    thana: data.thana || '',
+    district: data.district || '',
   };
   farmer.cattleCount = data.cattleCount;
   farmer.creditLimit = data.creditLimit;
@@ -112,4 +116,3 @@ export async function deleteFarmer(farmerId: string) {
   revalidatePath('/admin/farmers');
   return { success: true };
 }
-

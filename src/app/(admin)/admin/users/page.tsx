@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import {
   Table,
   TableBody,
@@ -16,17 +17,12 @@ import {
   MoreHorizontal, 
   Loader2, 
   User as UserIcon, 
-  Eye, 
+  Eye,
   ShieldAlert, 
-  Calendar,
-  Phone,
-  MapPin,
-  ShoppingBag,
-  CreditCard,
-  ArrowRight,
   ShieldCheck,
   UserCog,
-  Trash2
+  Trash2,
+  ArrowRight,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -38,7 +34,6 @@ import {
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import { toast } from 'sonner';
-import Image from 'next/image';
 import Swal from 'sweetalert2';
 import {
   Dialog,
@@ -65,8 +60,6 @@ interface UserData {
 export default function UsersPage() {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isAssignAdminOpen, setIsAssignAdminOpen] = useState(false);
   const [adminEmail, setAdminEmail] = useState('');
   const [isAssigning, setIsAssigning] = useState(false);
@@ -91,11 +84,6 @@ export default function UsersPage() {
   useEffect(() => {
     fetchUsers();
   }, []);
-
-  const openUserDetails = (user: UserData) => {
-    setSelectedUser(user);
-    setIsDetailsOpen(true);
-  };
 
   const handleUpdateRole = async (userId: string, newRole: string) => {
     const result = await Swal.fire({
@@ -273,12 +261,13 @@ export default function UsersPage() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <button 
-                      onClick={() => openUserDetails(user)}
-                      className="font-semibold text-slate-900 hover:text-primary transition-colors text-left"
+                    <Link
+                      href={`/admin/users/${user._id}`}
+                      className="font-semibold text-slate-900 hover:text-primary transition-colors flex items-center gap-1 group"
                     >
                       {user.name}
-                    </button>
+                      <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                    </Link>
                   </TableCell>
                   <TableCell className="text-slate-600">{user.email}</TableCell>
                   <TableCell>
@@ -315,11 +304,13 @@ export default function UsersPage() {
                       <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuGroup>
                           <DropdownMenuLabel className="text-[10px] font-black uppercase text-muted-foreground px-2 py-1.5">User Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => openUserDetails(user)} className="cursor-pointer">
-                            <Eye className="mr-2 h-4 w-4" /> View Details
+                          <DropdownMenuItem asChild className="cursor-pointer">
+                            <Link href={`/admin/users/${user._id}`} className="flex items-center">
+                              <Eye className="mr-2 h-4 w-4" /> View Profile
+                            </Link>
                           </DropdownMenuItem>
                         </DropdownMenuGroup>
-                        
+
                         <DropdownMenuSeparator />
                         
                         <DropdownMenuGroup>
@@ -362,116 +353,7 @@ export default function UsersPage() {
         </Table>
       </div>
 
-      {/* User Details Modal */}
-      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-black tracking-tighter flex items-center gap-2">
-              User Profile
-              <Badge className="bg-primary/10 text-primary border-none">{selectedUser?.role}</Badge>
-            </DialogTitle>
-          </DialogHeader>
 
-          {selectedUser && (
-            <div className="flex flex-col gap-6 pt-4">
-              {/* Header Info */}
-              <div className="flex flex-col md:flex-row items-center gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                <div className="relative h-24 w-24 rounded-full overflow-hidden border-4 border-white shadow-xl flex-shrink-0 bg-primary/10 flex items-center justify-center">
-                  {selectedUser.image ? (
-                    <img 
-                      src={selectedUser.image} 
-                      alt={selectedUser.name} 
-                      className="h-full w-full object-cover"
-                      onError={(e) => { (e.target as any).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser.name)}&background=random`; }}
-                    />
-                  ) : (
-                    <UserIcon className="h-10 w-10 text-primary" />
-                  )}
-                </div>
-                <div className="text-center md:text-left space-y-1">
-                  <h2 className="font-black text-2xl tracking-tight text-slate-900">{selectedUser.name}</h2>
-                  <p className="text-muted-foreground font-medium">{selectedUser.email}</p>
-                  <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-2">
-                    <Badge className="bg-primary/10 text-primary border-none font-bold">{selectedUser.role}</Badge>
-                    <Badge variant="outline" className="font-bold">ID: {selectedUser._id.slice(-6).toUpperCase()}</Badge>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Contact Section */}
-                <div className="space-y-4">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Contact Information</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-4 p-4 rounded-2xl border bg-white hover:border-primary/30 transition-colors">
-                      <div className="p-2.5 bg-blue-50 rounded-xl">
-                        <Phone className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Phone Number</p>
-                        <p className="text-sm font-bold text-slate-700">{selectedUser.phone || 'N/A'}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-4 p-4 rounded-2xl border bg-white hover:border-primary/30 transition-colors">
-                      <div className="p-2.5 bg-emerald-50 rounded-xl">
-                        <MapPin className="h-5 w-5 text-emerald-600" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Shipping Address</p>
-                        <p className="text-sm font-bold text-slate-700 leading-snug">
-                          {selectedUser.addresses && selectedUser.addresses.length > 0 
-                            ? `${selectedUser.addresses[0].street || ''}, ${selectedUser.addresses[0].city || ''}, ${selectedUser.addresses[0].state || ''}`
-                            : 'No address saved yet'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Stats Section */}
-                <div className="space-y-4">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Order Statistics</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100 flex flex-col items-center text-center">
-                      <ShoppingBag className="h-6 w-6 text-orange-500 mb-2" />
-                      <span className="text-2xl font-black text-orange-600">{selectedUser.totalOrders}</span>
-                      <span className="text-[10px] font-bold uppercase text-orange-400">Total Orders</span>
-                    </div>
-                    <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 flex flex-col items-center text-center">
-                      <CreditCard className="h-6 w-6 text-primary mb-2" />
-                      <span className="text-xl font-black text-primary">৳{selectedUser.totalSpent.toLocaleString()}</span>
-                      <span className="text-[10px] font-bold uppercase text-primary/60">Total Spent</span>
-                    </div>
-                  </div>
-                  
-                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col gap-2">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-bold text-slate-400">LAST VISIT</span>
-                      <span className="font-black text-slate-700">
-                        {selectedUser.lastActive ? new Date(selectedUser.lastActive).toLocaleDateString() : 'Never'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-bold text-slate-400">LAST ORDER</span>
-                      <span className="font-black text-slate-700">
-                        {selectedUser.lastOrderDate ? new Date(selectedUser.lastOrderDate).toLocaleDateString() : 'No orders'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <Button className="w-full h-14 rounded-2xl font-black text-sm shadow-xl shadow-primary/20 group">
-                  VIEW FULL ORDER HISTORY
-                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Assign Admin Modal */}
       <Dialog open={isAssignAdminOpen} onOpenChange={setIsAssignAdminOpen}>

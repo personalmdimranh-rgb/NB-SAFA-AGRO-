@@ -8,7 +8,6 @@ import { useRouter, usePathname } from 'next/navigation';
 import {
   Search,
   ShoppingCart,
-  Heart,
   LogOut,
   LayoutDashboard,
   Settings,
@@ -61,7 +60,6 @@ export default function NavbarV2() {
 
   const cartCount = useAppSelector((state) => state.cart.totalQuantity);
   const totalAmount = useAppSelector((state) => state.cart.totalAmount);
-  const wishlistCount = useAppSelector((state) => state.wishlist.items.length);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -210,17 +208,6 @@ export default function NavbarV2() {
                 <ModeToggle />
                 {settings?.aiConfig?.openRouterApiKey && <AIChatbot />}
               </div>
-
-              <Link href="/dashboard/wishlist">
-                <Button variant="ghost" size="icon" className={`rounded-full relative group ${!isHomePage || isScrolled ? 'text-foreground hover:bg-muted' : 'text-white hover:bg-white/10'}`}>
-                  <Heart className={`h-5 w-5 transition-all ${wishlistCount > 0 ? 'fill-primary text-primary' : ((!isHomePage || isScrolled) ? 'group-hover:text-primary' : 'group-hover:text-white')}`} />
-                  {wishlistCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-primary text-[9px] font-black text-white rounded-full flex items-center justify-center animate-in zoom-in">
-                      {wishlistCount}
-                    </span>
-                  )}
-                </Button>
-              </Link>
 
               <CartDrawer>
                 <div className="relative group cursor-pointer">

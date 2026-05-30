@@ -24,7 +24,6 @@ export interface IUser extends Document {
     country?: string;
     isDefault?: boolean;
   }[];
-  wishlist: mongoose.Types.ObjectId[];
   cart: {
     productId: mongoose.Types.ObjectId;
     name: string;
@@ -71,7 +70,6 @@ const UserSchema: Schema<IUser> = new Schema(
         isDefault: { type: Boolean, default: false },
       },
     ],
-    wishlist: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
     cart: [
       {
         productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },

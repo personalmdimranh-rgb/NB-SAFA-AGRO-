@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Heart, ShoppingCart, User, LogOut, LayoutDashboard, Truck, Settings, Package } from 'lucide-react';
+import { ShoppingCart, User, LogOut, LayoutDashboard, Truck, Settings, Package } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/store/hooks';
@@ -35,7 +35,6 @@ export function MobileNavbar({ navItems, categories }: MobileNavbarProps) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { totalQuantity: cartCount } = useAppSelector((state) => state.cart);
-  const { items: wishlistItems } = useAppSelector((state) => state.wishlist);
   const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
@@ -65,28 +64,6 @@ export function MobileNavbar({ navItems, categories }: MobileNavbarProps) {
 
         {/* Right: Icons */}
         <div className="flex items-center gap-1">
-
-          {/* Wishlist */}
-          <Link
-            href="/dashboard/wishlist"
-            className="h-10 w-10 flex items-center justify-center rounded-xl transition-all hover:text-primary"
-            aria-label="Wishlist"
-            onClick={(e) => {
-              if (status !== 'authenticated') {
-                e.preventDefault();
-                toast.error('Please login to view your wishlist');
-              }
-            }}
-          >
-            <div className="relative">
-              <Heart className="h-5 w-5" />
-              {wishlistItems.length > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 bg-primary text-[8px] font-bold text-white flex items-center justify-center rounded-full">
-                  {wishlistItems.length}
-                </span>
-              )}
-            </div>
-          </Link>
 
           {/* Cart */}
           <CartDrawer>
