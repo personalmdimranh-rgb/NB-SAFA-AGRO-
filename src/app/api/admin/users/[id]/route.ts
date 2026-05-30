@@ -34,6 +34,23 @@ export async function GET(
     }
 
     const userObj = user as any;
+
+    const viewerRole = (session.user as any).role;
+    const viewerId = (session.user as any).id || (session.user as any)._id;
+    const viewerEmail = session.user.email;
+    const isSelf = viewerId === id || viewerEmail === userObj.email;
+
+    if (userObj.role === 'staff') {
+      const isAuthorizedViewer = ['super_admin', 'admin', 'manager'].includes(viewerRole) || isSelf;
+      if (!isAuthorizedViewer) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    } else {
+      if (viewerRole === 'staff' && !isSelf) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
+
     let extra: any = null;
 
     // Fetch role-specific extra data

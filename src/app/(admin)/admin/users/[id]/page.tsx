@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -72,6 +72,107 @@ function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label:
       <p className="text-xl font-black">{value}</p>
       <p className="text-[10px] font-bold uppercase tracking-wider opacity-70">{label}</p>
     </div>
+  );
+}
+
+function AttendanceCard({ attendanceRecords }: { attendanceRecords: any[] }) {
+  const now = new Date();
+  const firstDayCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+  const lastDayCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+
+  const [startDate, setStartDate] = useState(firstDayCurrentMonth);
+  const [endDate, setEndDate] = useState(lastDayCurrentMonth);
+
+  const filteredRecords = useMemo(() => {
+    return attendanceRecords.filter((rec: any) => {
+      const recDateStr = new Date(rec.date).toISOString().split('T')[0];
+      return recDateStr >= startDate && recDateStr <= endDate;
+    }).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [attendanceRecords, startDate, endDate]);
+
+  const stats = useMemo(() => {
+    let present = 0;
+    let absent = 0;
+    let leave = 0;
+    filteredRecords.forEach((rec: any) => {
+      if (rec.status === 'present') present++;
+      else if (rec.status === 'absent') absent++;
+      else if (rec.status === 'leave') leave++;
+    });
+    return { present, absent, leave };
+  }, [filteredRecords]);
+
+  return (
+    <Card className="border-cyan-200 bg-cyan-50/10">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-bold text-cyan-700 flex items-center gap-2">
+          <Clock className="h-4 w-4" /> Attendance Details
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Date Filter Inputs */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Start Date</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full text-sm p-2 rounded-xl border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+          <div>
+            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">End Date</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full text-sm p-2 rounded-xl border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+        </div>
+
+        {/* Stats Summary */}
+        <div className="grid grid-cols-3 gap-2.5">
+          <div className="flex flex-col items-center justify-center p-3 rounded-2xl border border-emerald-100 bg-emerald-50/20 text-emerald-700">
+            <span className="text-xl font-black">{stats.present}</span>
+            <span className="text-[9px] font-bold uppercase tracking-wider opacity-85">Present</span>
+          </div>
+          <div className="flex flex-col items-center justify-center p-3 rounded-2xl border border-rose-100 bg-rose-50/20 text-rose-700">
+            <span className="text-xl font-black">{stats.absent}</span>
+            <span className="text-[9px] font-bold uppercase tracking-wider opacity-85">Absent</span>
+          </div>
+          <div className="flex flex-col items-center justify-center p-3 rounded-2xl border border-amber-100 bg-amber-50/20 text-amber-700">
+            <span className="text-xl font-black">{stats.leave}</span>
+            <span className="text-[9px] font-bold uppercase tracking-wider opacity-85">Leave</span>
+          </div>
+        </div>
+
+        {/* Individual Records List */}
+        <div>
+          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Detailed Log ({filteredRecords.length})</h3>
+          {filteredRecords.length === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-4 bg-muted/20 rounded-xl border border-dashed">No attendance records found for this period.</p>
+          ) : (
+            <div className="max-h-[220px] overflow-y-auto space-y-1.5 pr-1">
+              {filteredRecords.map((rec: any, idx: number) => {
+                let badgeClass = "bg-emerald-50 text-emerald-700 border-emerald-100";
+                if (rec.status === 'absent') badgeClass = "bg-rose-50 text-rose-700 border-rose-100";
+                if (rec.status === 'leave') badgeClass = "bg-amber-50 text-amber-700 border-amber-100";
+                return (
+                  <div key={idx} className="flex items-center justify-between p-2 rounded-lg border bg-background/50 hover:bg-background/80 transition-colors text-xs">
+                    <span className="font-semibold">{new Date(rec.date).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                    <Badge variant="outline" className={`capitalize font-bold text-[10px] px-2 py-0.5 border ${badgeClass}`}>
+                      {rec.status}
+                    </Badge>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -245,22 +346,26 @@ export default function UserProfilePage() {
 
           {/* ── STAFF / MANAGER Panel ── */}
           {(role === 'staff' || role === 'manager') && extra?.employee && (
-            <Card className="border-cyan-200 bg-cyan-50/30">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-bold text-cyan-700 flex items-center gap-2">
-                  <Briefcase className="h-4 w-4" /> Employee Record
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <StatCard icon={<Banknote className="h-5 w-5 text-cyan-600" />} label="Basic Salary" value={`৳${extra.employee.salaryStructure?.basic?.toLocaleString() || 0}`} color="bg-cyan-50 border-cyan-200 text-cyan-700" />
-                  <StatCard icon={<TrendingUp className="h-5 w-5 text-emerald-600" />} label="Allowance" value={`+৳${extra.employee.salaryStructure?.allowance?.toLocaleString() || 0}`} color="bg-emerald-50 border-emerald-200 text-emerald-700" />
-                  <StatCard icon={<CreditCard className="h-5 w-5 text-rose-600" />} label="Deduction" value={`-৳${extra.employee.salaryStructure?.deductions?.toLocaleString() || 0}`} color="bg-rose-50 border-rose-200 text-rose-700" />
-                </div>
-                <InfoRow icon={<Briefcase className="h-3.5 w-3.5" />} label="Designation" value={extra.employee.designation || 'N/A'} />
-                <InfoRow icon={<Calendar className="h-3.5 w-3.5" />} label="Joining Date" value={extra.employee.joiningDate ? new Date(extra.employee.joiningDate).toLocaleDateString() : 'N/A'} />
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              <Card className="border-cyan-200 bg-cyan-50/30">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-bold text-cyan-700 flex items-center gap-2">
+                    <Briefcase className="h-4 w-4" /> Employee Record
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <StatCard icon={<Banknote className="h-5 w-5 text-cyan-600" />} label="Basic Salary" value={`৳${extra.employee.salaryStructure?.basic?.toLocaleString() || 0}`} color="bg-cyan-50 border-cyan-200 text-cyan-700" />
+                    <StatCard icon={<TrendingUp className="h-5 w-5 text-emerald-600" />} label="Allowance" value={`+৳${extra.employee.salaryStructure?.allowance?.toLocaleString() || 0}`} color="bg-emerald-50 border-emerald-200 text-emerald-700" />
+                    <StatCard icon={<CreditCard className="h-5 w-5 text-rose-600" />} label="Deduction" value={`-৳${extra.employee.salaryStructure?.deductions?.toLocaleString() || 0}`} color="bg-rose-50 border-rose-200 text-rose-700" />
+                  </div>
+                  <InfoRow icon={<Briefcase className="h-3.5 w-3.5" />} label="Designation" value={extra.employee.designation || 'N/A'} />
+                  <InfoRow icon={<Calendar className="h-3.5 w-3.5" />} label="Joining Date" value={extra.employee.joiningDate ? new Date(extra.employee.joiningDate).toLocaleDateString() : 'N/A'} />
+                </CardContent>
+              </Card>
+
+              <AttendanceCard attendanceRecords={extra.employee.attendanceRecords || []} />
+            </div>
           )}
 
           {/* ── FARMER Panel ── */}

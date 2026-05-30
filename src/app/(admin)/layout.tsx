@@ -1,8 +1,21 @@
 import { AppSidebar } from '@/components/layout/AppSidebar';
 import AdminTopbar from '@/components/layout/AdminTopbar';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { auth } from '@/auth';
+import { redirect } from 'next/navigation';
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+  if (!session?.user) {
+    redirect('/login');
+  }
+
+  const role = (session.user as any).role;
+  const allowedRoles = ['super_admin', 'admin', 'manager', 'staff'];
+  if (!allowedRoles.includes(role)) {
+    redirect('/');
+  }
+
   return (
     <SidebarProvider>
       <AppSidebar />

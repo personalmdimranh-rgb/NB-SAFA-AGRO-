@@ -49,6 +49,9 @@ export const proxy = auth(async (req) => {
       return NextResponse.redirect(new URL("/login", nextUrl));
     }
 
+    const userId = (req.auth?.user as any)?.id || (req.auth?.user as any)?._id;
+    const isOwnStaffProfile = role === "staff" && nextUrl.pathname === `/admin/users/${userId}`;
+
     // Check if director-only sub-route
     const isDirectorRoute = nextUrl.pathname.startsWith("/admin/director");
     if (isDirectorRoute) {
@@ -56,8 +59,10 @@ export const proxy = auth(async (req) => {
         return NextResponse.redirect(new URL("/login", nextUrl));
       }
     } else {
-      // Allow super_admin, admin, manager, staff on other admin routes
-      if (role !== "admin" && role !== "super_admin" && role !== "manager" && role !== "staff") {
+      // Allow super_admin, admin, manager on other admin routes
+      // Allow staff ONLY on their own profile page
+      const isAllowedAdminUser = ["admin", "super_admin", "manager"].includes(role || "") || isOwnStaffProfile;
+      if (!isAllowedAdminUser) {
         if (role === "director") {
           return NextResponse.redirect(new URL("/admin/director", nextUrl));
         }

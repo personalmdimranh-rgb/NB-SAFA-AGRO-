@@ -5,6 +5,7 @@
 | নাম | রোল (Role) | ইমেইল (Email) | পাসওয়ার্ড (Password) | অতিরিক্ত প্রোফাইল |
 | :--- | :--- | :--- | :--- | :--- |
 | **Demo Admin** | Admin | `admin@mail.com` | `123@Test` | - |
+| **Demo Manager** | Manager | `manager@mail.com` | `123@Test` | Employee Profile (Manager) তৈরি করা হয়েছে |
 | **Demo Staff Operator** | Staff | `staff@mail.com` | `123@Test` | Employee Profile তৈরি করা হয়েছে |
 | **Demo Director** | Director | `director@mail.com` | `123@Test` | - |
 | **Demo Dealer Primary** | Dealer | `dealer@mail.com` | `123@Test` | Dealer Profile তৈরি করা হয়েছে |

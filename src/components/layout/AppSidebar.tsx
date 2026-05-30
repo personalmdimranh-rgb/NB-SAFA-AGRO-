@@ -58,7 +58,7 @@ const data = {
       title: "Accounts & P&L",
       url: "#",
       icon: FileText,
-      roles: ['super_admin', 'admin', 'manager', 'staff'],
+      roles: ['super_admin', 'admin', 'manager'],
       items: [
         {
           title: "General Ledger",
@@ -74,7 +74,7 @@ const data = {
       title: "Sales & Dealers",
       url: "#",
       icon: Store,
-      roles: ['super_admin', 'admin', 'manager', 'staff'],
+      roles: ['super_admin', 'admin', 'manager'],
       items: [
         {
           title: "New Order",
@@ -94,7 +94,7 @@ const data = {
       title: "Farmer CRM",
       url: "#",
       icon: Users,
-      roles: ['super_admin', 'admin', 'manager', 'staff'],
+      roles: ['super_admin', 'admin', 'manager'],
       items: [
         {
           title: "Farmers List",
@@ -106,7 +106,7 @@ const data = {
       title: "Production & Inventory",
       url: "#",
       icon: ShoppingBag,
-      roles: ['super_admin', 'admin', 'manager', 'staff'],
+      roles: ['super_admin', 'admin', 'manager'],
       items: [
         {
           title: "Silage Production",
@@ -122,7 +122,7 @@ const data = {
       title: "Employee Portal",
       url: "#",
       icon: Users,
-      roles: ['super_admin', 'admin', 'manager', 'staff'],
+      roles: ['super_admin', 'admin', 'manager'],
       items: [
         {
           title: "Employees Directory",
@@ -174,7 +174,7 @@ const data = {
       title: "CMS Manager",
       url: "#",
       icon: ImageIcon,
-      roles: ['super_admin', 'admin', 'manager', 'staff'],
+      roles: ['super_admin', 'admin', 'manager'],
       items: [
         {
           title: "Banners",
@@ -187,6 +187,10 @@ const data = {
         {
           title: "FAQs",
           url: "/admin/cms/faqs",
+        },
+        {
+          title: "Team Members",
+          url: "/admin/team",
         },
       ],
     },
