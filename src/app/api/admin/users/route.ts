@@ -21,10 +21,9 @@ export async function GET(req: NextRequest) {
 
     await connectToDatabase();
 
-    // Base match stage
+    // Base match stage — super_admin role exclusion covers all system super-admin accounts
     let matchStage: any = {
-      role: { $ne: 'super_admin' }, // Hide super admins
-      email: { $ne: 'imranshuvo101@gmail.com' } // Hide super_admin email explicitly
+      role: { $ne: 'super_admin' },
     };
 
     if (role && role !== 'super_admin') {
