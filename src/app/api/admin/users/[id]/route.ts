@@ -3,12 +3,11 @@ import { auth } from '@/auth';
 import connectToDatabase from '@/lib/db';
 import User from '@/models/User';
 import Dealer from '@/models/Dealer';
-import Farmer from '@/models/Farmer';
 import Employee from '@/models/Employee';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -22,9 +21,11 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    const { id } = await params;
+
     await connectToDatabase();
 
-    const user = await User.findById(params.id)
+    const user = await User.findById(id)
       .select('-password -resetPasswordToken -resetPasswordExpires')
       .lean();
 
@@ -38,7 +39,7 @@ export async function GET(
     // Fetch role-specific extra data
     if (userObj.role === 'dealer') {
       const Sale = (await import('@/models/Sale')).default;
-      const dealer = await Dealer.findOne({ userId: params.id }).lean();
+      const dealer = await Dealer.findOne({ userId: id }).lean();
       if (dealer) {
         const d = dealer as any;
         const recentSales = await Sale.find({ buyerId: d._id, buyerType: 'dealer' })
@@ -56,12 +57,12 @@ export async function GET(
     let orderSummary = { totalOrders: 0, totalSpent: 0, lastOrderDate: null };
     try {
       const Sale = (await import('@/models/Sale')).default;
-      const totalOrders = await Sale.countDocuments({ buyerType: 'farmer', buyerId: params.id });
-      const lastOrderDoc = await Sale.findOne({ buyerType: 'farmer', buyerId: params.id })
+      const totalOrders = await Sale.countDocuments({ buyerType: 'farmer', buyerId: id });
+      const lastOrderDoc = await Sale.findOne({ buyerType: 'farmer', buyerId: id })
         .sort({ date: -1 })
         .select('date')
         .lean();
-      const orders = await Sale.find({ buyerType: 'farmer', buyerId: params.id })
+      const orders = await Sale.find({ buyerType: 'farmer', buyerId: id })
         .select('grandTotal')
         .lean();
       const totalSpent = orders.reduce((s: number, o: any) => s + (o.grandTotal || 0), 0);
