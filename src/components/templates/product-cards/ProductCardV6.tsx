@@ -1,11 +1,11 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingCart, Heart, Search } from 'lucide-react';
+import { ShoppingCart, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { useAppDispatch } from '@/store/hooks';
 import { addToCart, clearCart } from '@/store/slices/cartSlice';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
@@ -44,7 +44,8 @@ interface ProductCardProps {
 export default function ProductCardV6({ product, isFlashSale, priority }: ProductCardProps) {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const { data: session, status } = useSession();  const hasVariants = product.variants && product.variants.length > 0;
+  const { data: session } = useSession();
+  const hasVariants = product.variants && product.variants.length > 0;
 
   const [showQuickViewModal, setShowQuickViewModal] = useState(false);
 
@@ -118,33 +119,6 @@ export default function ProductCardV6({ product, isFlashSale, priority }: Produc
     router.push('/checkout');
   };
 
-  const handleWishlist = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (status === 'unauthenticated') {
-      toast.error('Please login to add to wishlist');
-      return;
-    }
-    dispatch(toggleWishlist(product._id));
-    
-    if (!isInWishlist) {
-      // Track AddToWishlist
-      fbEvent('AddToWishlist', {
-        content_name: product.name,
-        content_category: product.categories?.[0]?.name || 'Uncategorized',
-        content_ids: [product._id],
-        content_type: 'product',
-        value: product.salePrice || product.price,
-        currency: 'BDT'
-      }, {
-        em: session?.user?.email || undefined,
-        ph: (session?.user as any)?.phone || undefined,
-        fn: session?.user?.name || undefined
-      });
-    }
-
-    toast.success(isInWishlist ? 'Removed from wishlist' : 'Added to wishlist');
-  };
-
   const discount = product.salePrice ? Math.round(((product.price - product.salePrice) / product.price) * 100) : 0;
 
   return (
@@ -198,23 +172,6 @@ export default function ProductCardV6({ product, isFlashSale, priority }: Produc
               </TooltipTrigger>
               <TooltipContent>
                 <p>Quick View</p>
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  className={`h-12 w-12 rounded-full bg-white shadow-xl transition-all hover:scale-110 ${isInWishlist ? 'text-primary' : 'text-black hover:bg-primary hover:text-white'}`}
-                  onClick={handleWishlist}
-                  aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
-                >
-                  <Heart className={`h-5 w-5 ${isInWishlist ? 'fill-current' : ''}`} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

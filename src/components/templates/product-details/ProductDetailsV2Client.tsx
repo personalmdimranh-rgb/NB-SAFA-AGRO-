@@ -1,8 +1,8 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { ShoppingCart, Heart, Minus, Plus, Star, MoreVertical, Edit, Trash2, Settings, PlusCircle, ShieldCheck, Truck, RefreshCw, Share2 } from 'lucide-react';
+import { ShoppingCart, Minus, Plus, Star, MoreVertical, Edit, Trash2, Settings, PlusCircle, ShieldCheck, Truck, RefreshCw, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -127,32 +127,6 @@ export default function ProductDetailsV2Client({ product }: ProductDetailsV2Clie
     return true;
   };
 
-  const handleFavorite = async () => {
-    if (!session) return toast.error('Please login to save masterpiece');
-    
-    // Optimistic update
-    dispatch(toggleWishlist(product._id));
-    const willBeInWishlist = !isInWishlist;
-
-    try {
-      const res = await fetch('/api/wishlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: product._id }),
-      });
-      
-      if (!res.ok) {
-        throw new Error('Failed to update wishlist on server');
-      }
-      
-      toast.success(willBeInWishlist ? 'Added to wishlist' : 'Removed from wishlist');
-    } catch (err) {
-      console.error('Wishlist sync error:', err);
-      // Rollback
-      dispatch(toggleWishlist(product._id));
-      toast.error('Sync failed. Please try again.');
-    }
-  };
 
   const handleShare = async () => {
     const shareData = { title: product.name, url: window.location.href };
@@ -321,11 +295,8 @@ export default function ProductDetailsV2Client({ product }: ProductDetailsV2Clie
                    {displayStock > 0 ? 'Inquire & Add' : 'Sold Out'}
                 </Button>
              </div>
-             <div className="grid grid-cols-2 gap-4">
-                <Button variant="outline" className="h-14 rounded-2xl gap-2 font-black uppercase text-[10px] tracking-widest" onClick={handleFavorite}>
-                   <Heart className={`h-4 w-4 ${isInWishlist ? 'fill-primary text-primary' : ''}`} /> Wishlist
-                </Button>
-                <Button variant="outline" className="h-14 rounded-2xl gap-2 font-black uppercase text-[10px] tracking-widest" onClick={handleShare}>
+             <div className="flex gap-4">
+                <Button variant="outline" className="h-14 flex-1 rounded-2xl gap-2 font-black uppercase text-[10px] tracking-widest" onClick={handleShare}>
                    <Share2 className="h-4 w-4" /> Share
                 </Button>
              </div>
