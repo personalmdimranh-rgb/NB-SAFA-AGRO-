@@ -36,9 +36,7 @@ import { PWARegistry } from "@/components/pwa-registry";
 import GoogleTagManager from "./components/GoogleTagManager";
 import { SmoothScroll } from "@/components/layout/SmoothScroll";
 import { ScrollProgress } from "@/components/layout/ScrollProgress";
-import { generateOrganizationSchema } from "@/lib/seo";
 import FacebookPixel from "./components/FacebookPixel";
-import { headers } from "next/headers";
 import { getCachedSettings } from "@/lib/data-fetching";
 
 
@@ -176,66 +174,52 @@ const jost = Jost({
 
 export const dynamic = 'force-dynamic';
 
-export async function generateMetadata(): Promise<Metadata> {
-  const headersList = await headers();
-  const hostname = headersList.get('host') || 'localhost';
-  const baseUrl = `https://${hostname}`;
-
-  try {
-    const settings = await getCachedSettings();
-
-    if (!settings) throw new Error("No settings found");
-
-    return {
-      metadataBase: new URL(baseUrl),
-      title: {
-        default: settings.metaTitle || settings.brandName || "NB SAFA AGRO",
-        template: `%s | ${settings.brandName || "NB SAFA AGRO"}`,
-      },
-      description: settings.metaDescription || settings.brandName || "NB SAFA AGRO - Premium Maize Silage Production Farm",
-      manifest: '/manifest.json',
-      icons: {
-        icon: settings.logoUrl || '/favicon.ico',
-        shortcut: settings.logoUrl || '/favicon.ico',
-        apple: settings.logoUrl || '/icon-512x512.png',
-      },
-      appleWebApp: {
-        capable: true,
-        statusBarStyle: 'default',
-        title: settings.brandName || "NB SAFA AGRO",
-      },
-      formatDetection: {
-        telephone: false,
-      },
-      openGraph: {
-        title: settings.metaTitle || settings.brandName || "NB SAFA AGRO",
-        description: settings.metaDescription || settings.brandName || "NB SAFA AGRO - Premium Maize Silage Production Farm",
-        url: baseUrl,
-        siteName: settings.brandName || "NB SAFA AGRO",
-        type: 'website',
-      },
-      twitter: {
-        card: 'summary_large_image',
-        title: settings.metaTitle || settings.brandName || "NB SAFA AGRO",
-        description: settings.metaDescription || settings.brandName || "NB SAFA AGRO - Premium Maize Silage Production Farm",
-      },
-      verification: {},
-      alternates: {
-        canonical: './',
-      },
-      other: {
-        ...(settings.facebookDomainVerification
-          ? { "facebook-domain-verification": settings.facebookDomainVerification }
-          : {}),
-      },
-    };
-  } catch (error) {
-    return {
-      title: "NB SAFA AGRO",
-      description: "NB SAFA AGRO - Premium Maize Silage Production Farm",
-    };
-  }
-}
+export const metadata: Metadata = {
+  metadataBase: new URL('https://shafaagro.com'),
+  title: {
+    default: "NB SAFA AGRO - Premium Maize Silage & Livestock Farm Management",
+    template: "%s | NB SAFA AGRO",
+  },
+  description: "NB SAFA AGRO is a premium high-starch corn silage producer in Bogura, Bangladesh. Formulated for maximum dairy milk yields and healthy livestock weight gain.",
+  manifest: '/manifest.json',
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/icon-512x512.png',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: "NB SAFA AGRO",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  openGraph: {
+    title: "NB SAFA AGRO - Premium Maize Silage & Livestock Farm",
+    description: "Premium high-starch corn silage producer in Bogura, Bangladesh. Optimized for maximum dairy milk yields and healthy livestock weight gain.",
+    url: "https://shafaagro.com",
+    siteName: "NB SAFA AGRO",
+    type: 'website',
+    images: [
+      {
+        url: '/assets/images/Banner/Banner.webp',
+        width: 1200,
+        height: 630,
+        alt: 'NB SAFA AGRO Silage Farm',
+      }
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "NB SAFA AGRO - Premium Maize Silage & Livestock Farm",
+    description: "Premium high-starch corn silage producer in Bogura, Bangladesh. Optimized for maximum dairy milk yields and healthy livestock weight gain.",
+    images: ['/assets/images/Banner/Banner.webp'],
+  },
+  alternates: {
+    canonical: 'https://shafaagro.com',
+  },
+};
 
 export default async function RootLayout({
   children,
@@ -244,14 +228,30 @@ export default async function RootLayout({
 }>) {
   const settings = await getCachedSettings();
 
-  let jsonLd = null;
-  try {
-    if (settings) {
-      jsonLd = await generateOrganizationSchema(settings);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "NB SAFA AGRO",
+    "url": "https://shafaagro.com",
+    "logo": "https://shafaagro.com/favicon.ico",
+    "description": "Premium high-starch corn silage producer in Bogura, Bangladesh. Formulated for maximum dairy milk yields and healthy livestock weight gain.",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Bogura Sadar",
+      "addressLocality": "Bogura",
+      "addressRegion": "Bogura",
+      "postalCode": "5800",
+      "addressCountry": "BD"
+    },
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+880 1700-000000",
+      "contactType": "sales",
+      "email": "sales@shafaagro.com",
+      "areaServed": "BD",
+      "availableLanguage": ["Bengali", "English"]
     }
-  } catch (e) {
-    console.error("Error generating JSON-LD structured data", e);
-  }
+  };
 
   const theme = settings?.uiTemplates?.theme;
   const themeClass = (theme && theme !== 'default') ? `theme-${theme.toLowerCase()}` : '';
@@ -274,13 +274,11 @@ export default async function RootLayout({
         suppressHydrationWarning
       >
         <PWARegistry />
-        {jsonLd && (
-          <Script
-            id="json-ld"
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-          />
-        )}
+        <Script
+          id="json-ld"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <Providers settings={settings}>
           {settings?.googleTagManagerId && (
             <GoogleTagManager gtmId={settings.googleTagManagerId} />

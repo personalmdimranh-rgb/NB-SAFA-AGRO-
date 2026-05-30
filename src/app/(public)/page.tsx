@@ -8,6 +8,7 @@ import OperationalStats from '@/components/storefront/landing/OperationalStats';
 import TraceabilityFeed from '@/components/storefront/landing/TraceabilityFeed';
 import DistributorTiers from '@/components/storefront/landing/DistributorTiers';
 import FarmerCareHub from '@/components/storefront/landing/FarmerCareHub';
+import QuickOrderSection from '@/components/storefront/landing/QuickOrderSection';
 import CorporateGovernance from '@/components/storefront/landing/CorporateGovernance';
 import HarvestingJourney from '@/components/storefront/landing/HarvestingJourney';
 import SafetyStandards from '@/components/storefront/landing/SafetyStandards';
@@ -74,6 +75,7 @@ export default function ShafaAgroLandingPage() {
       <TraceabilityFeed />
       <DistributorTiers />
       <FarmerCareHub />
+      <QuickOrderSection />
       <CorporateGovernance />
       <HarvestingJourney />
       <SafetyStandards />
