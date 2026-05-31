@@ -114,15 +114,6 @@ export function CategoryShowcaseSkeleton() {
   );
 }
 
-export function BannerSkeleton() {
-  return (
-    <section className="py-12 bg-background">
-      <div className="container mx-auto px-4">
-        <Skeleton className="h-[300px] w-full rounded-2xl" />
-      </div>
-    </section>
-  );
-}
 
 export function BlogRecentSkeleton() {
   return (
@@ -174,24 +165,6 @@ export function FAQSectionSkeleton() {
         <div className="max-w-3xl mx-auto space-y-4">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-16 w-full rounded-2xl" />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-export function TestimonialsSkeleton() {
-  return (
-    <section className="py-20 bg-muted/10">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16 space-y-4">
-          <Skeleton className="h-6 w-32 mx-auto rounded-full" />
-          <Skeleton className="h-12 w-96 mx-auto" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-64 w-full rounded-3xl" />
           ))}
         </div>
       </div>

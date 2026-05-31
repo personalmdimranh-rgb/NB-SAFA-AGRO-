@@ -6,7 +6,7 @@ import DeveloperLogo from '@/components/ui/developerlogo';
 export default function PublicFooter() {
   return (
     <footer className="relative bg-card text-card-foreground border-t border-border py-10 mt-auto">
-      <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="container mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
         <div className="space-y-3">
           <h3 className="text-foreground font-extrabold text-lg font-logo">NB SAFA AGRO</h3>
           <p className="text-xs text-muted-foreground leading-relaxed">
@@ -19,8 +19,14 @@ export default function PublicFooter() {
           <div className="flex flex-col space-y-1.5 text-xs text-muted-foreground">
             <Link href="/login" className="hover:text-primary hover:underline">Office Management Login</Link>
             <Link href="/login" className="hover:text-primary hover:underline">Dealer Register Portal</Link>
-            <Link href="/faq" className="hover:text-primary hover:underline">Support & FAQs</Link>
             <Link href="/team" className="hover:text-primary hover:underline">Our Team</Link>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <h4 className="text-foreground font-bold text-sm">Support</h4>
+          <div className="flex flex-col space-y-1.5 text-xs text-muted-foreground">
+            <Link href="/faq" className="hover:text-primary hover:underline">Support & FAQs</Link>
             <Link href="/contact" className="hover:text-primary hover:underline">Contact Us</Link>
             <Link href="/terms" className="hover:text-primary hover:underline">Terms & Conditions</Link>
             <Link href="/privacy" className="hover:text-primary hover:underline">Privacy Policy</Link>

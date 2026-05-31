@@ -109,8 +109,7 @@ export async function POST(req: NextRequest) {
       'lowStockThreshold',
       'theme',
       'logoUrl',
-      'footerNavigation',
-      'testimonials'
+      'footerNavigation'
     ];
 
     // Restricted fields - ONLY for super_admin

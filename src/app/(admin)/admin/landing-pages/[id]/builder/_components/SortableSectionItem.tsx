@@ -42,7 +42,6 @@ export default function SortableSectionItem({
       case 'order_form': return 'Checkout Form';
       case 'features': return 'Features Grid';
       case 'video': return 'Video Player';
-      case 'testimonials': return 'Customer Reviews';
       case 'faq': return 'FAQ Accordion';
       case 'content_block': return 'Rich Text';
       default: return 'Generic Section';

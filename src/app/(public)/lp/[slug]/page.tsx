@@ -9,7 +9,6 @@ import HeroSection from '@/app/(public)/lp/[slug]/_components/HeroSection';
 import ProductShowcase from '@/app/(public)/lp/[slug]/_components/ProductShowcase';
 import FeaturesGrid from '@/app/(public)/lp/[slug]/_components/FeaturesGrid';
 import OrderForm from '@/app/(public)/lp/[slug]/_components/OrderForm';
-import TestimonialsSection from '@/app/(public)/lp/[slug]/_components/TestimonialsSection';
 import VideoSection from '@/app/(public)/lp/[slug]/_components/VideoSection';
 import FAQSection from '@/app/(public)/lp/[slug]/_components/FAQSection';
 import ContentBlock from '@/app/(public)/lp/[slug]/_components/ContentBlock';
@@ -74,7 +73,6 @@ function getComponent(type: string) {
     case 'product_showcase': return ProductShowcase;
     case 'features': return FeaturesGrid;
     case 'order_form': return OrderForm;
-    case 'testimonials': return TestimonialsSection;
     case 'video': return VideoSection;
     case 'faq': return FAQSection;
     case 'content_block': return ContentBlock;

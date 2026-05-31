@@ -26,7 +26,6 @@ export async function POST(req: NextRequest) {
     if (!tag && !path) {
       revalidateTag('products', 'max');
       revalidateTag('categories', 'max');
-      revalidateTag('banners', 'max');
       revalidateTag('faqs', 'max');
       revalidateTag('settings', 'max');
       revalidatePath('/', 'layout');

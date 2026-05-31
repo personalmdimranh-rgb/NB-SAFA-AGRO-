@@ -30,6 +30,7 @@ export interface IEmployee extends Document {
   absentDeductionRate: number;
   attendanceRecords: IAttendanceRecord[];
   workReports: IWorkReport[];
+  paidMonths: string[];
   joiningDate: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -54,6 +55,7 @@ const EmployeeSchema: Schema<IEmployee> = new Schema(
     weekend: { type: [String], default: ['friday'] },
     allowedAbsent: { type: Number, default: 1 },
     absentDeductionRate: { type: Number, default: 0 },
+    paidMonths: { type: [String], default: [] },
     attendanceRecords: [
       {
         date: { type: Date, required: true },

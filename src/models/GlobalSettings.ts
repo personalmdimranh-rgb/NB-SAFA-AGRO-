@@ -94,13 +94,6 @@ export interface IGlobalSettings extends Document {
     label: string;
     href: string;
   }[];
-  testimonials?: {
-    name: string;
-    role: string;
-    content: string;
-    image: string;
-    rating: number;
-  }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -146,15 +139,6 @@ const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
       {
         label: { type: String },
         href: { type: String },
-      }
-    ],
-    testimonials: [
-      {
-        name: { type: String },
-        role: { type: String },
-        content: { type: String },
-        image: { type: String },
-        rating: { type: Number, default: 5 },
       }
     ],
   },

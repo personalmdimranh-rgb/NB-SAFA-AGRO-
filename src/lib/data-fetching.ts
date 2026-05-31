@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { unstable_cache } from 'next/cache';
 import connectToDatabase from './db';
-import Banner from '@/models/Banner';
 import Blog from '@/models/Blog';
 import FAQ from '@/models/FAQ';
 import GlobalSettings from '@/models/GlobalSettings';
@@ -14,27 +13,10 @@ const serialize = (data: any) => JSON.parse(JSON.stringify(data));
  * CACHE_TAGS constants for consistency
  */
 export const CACHE_TAGS = {
-  banners: 'banners',
   blogs: 'blogs',
   faqs: 'faqs',
   settings: 'settings',
   coupons: 'coupons',
-};
-
-// --- BANNERS ---
-
-export const getCachedBanners = () => {
-  return unstable_cache(
-    async () => {
-      await connectToDatabase();
-      const banners = await Banner.find({ isActive: true })
-        .sort({ order: 1 })
-        .lean();
-      return serialize(banners);
-    },
-    ['banners-list'],
-    { revalidate: 60, tags: [CACHE_TAGS.banners] }
-  )();
 };
 
 // --- BLOGS ---

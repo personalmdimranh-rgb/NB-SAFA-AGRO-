@@ -3,7 +3,6 @@ export type SectionType =
   | 'hero' 
   | 'product_showcase' 
   | 'features' 
-  | 'testimonials' 
   | 'faq' 
   | 'video' 
   | 'order_form' 
@@ -101,19 +100,6 @@ export const SECTION_TEMPLATES: SectionTemplate[] = [
       title: 'আমাদের পণ্য সম্পর্কে আরও জানুন',
       videoUrl: '',
       thumbnail: '',
-    }
-  },
-  {
-    type: 'testimonials',
-    label: 'Testimonials',
-    description: 'What your customers say',
-    icon: 'message-square',
-    defaultContent: {
-      title: 'আমাদের কাস্টমারদের মতামত',
-      reviews: [
-        { name: 'আরিফ আহমেদ', role: 'নিয়মিত গ্রাহক', content: 'অসাধারণ পণ্য! আমি গত ২ মাস ধরে ব্যবহার করছি এবং খুব ভালো ফলাফল পেয়েছি।', rating: 5 },
-        { name: 'সাদিয়া ইসলাম', role: 'গৃহিণী', content: 'খুবই দ্রুত ডেলিভারি পেয়েছি। পণ্যের গুণগত মান নিয়ে কোনো সন্দেহ নেই।', rating: 5 },
-      ]
     }
   },
   {
