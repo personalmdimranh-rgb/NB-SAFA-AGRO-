@@ -45,8 +45,8 @@ const fallbackReviews = [
 
 export function Testimonials() {
   const settings = useSettings();
-  const reviews = settings?.testimonials && settings.testimonials.length > 0 
-    ? settings.testimonials 
+  const reviews = settings?.testimonials && settings.testimonials.length > 0
+    ? settings.testimonials
     : fallbackReviews;
 
   return (

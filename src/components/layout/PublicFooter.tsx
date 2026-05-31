@@ -21,6 +21,9 @@ export default function PublicFooter() {
             <Link href="/login" className="hover:text-primary hover:underline">Dealer Register Portal</Link>
             <Link href="/faq" className="hover:text-primary hover:underline">Support & FAQs</Link>
             <Link href="/team" className="hover:text-primary hover:underline">Our Team</Link>
+            <Link href="/contact" className="hover:text-primary hover:underline">Contact Us</Link>
+            <Link href="/terms" className="hover:text-primary hover:underline">Terms & Conditions</Link>
+            <Link href="/privacy" className="hover:text-primary hover:underline">Privacy Policy</Link>
           </div>
         </div>
 

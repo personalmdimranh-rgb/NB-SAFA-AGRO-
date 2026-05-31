@@ -3,11 +3,11 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { 
-  Users, 
-  MessageCircle, 
-  ArrowRight, 
-  Award, 
+import {
+  Users,
+  MessageCircle,
+  ArrowRight,
+  Award,
   Loader2,
   Mail,
   Share2,
@@ -139,12 +139,12 @@ export default function TeamPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/30 selection:text-foreground">
-      
+
       {/* 1. HERO SECTION */}
       <section className="relative bg-card text-card-foreground border-b border-border py-16 md:py-24 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-background opacity-60 pointer-events-none" />
         <div className="absolute -top-10 left-10 w-72 h-72 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
-        
+
         <div className="container mx-auto px-4 relative z-10 text-center space-y-4 max-w-2xl">
           <motion.div
             initial={{ opacity: 0, y: -15 }}
@@ -154,7 +154,7 @@ export default function TeamPage() {
           >
             <Users className="h-3.5 w-3.5" /> Corporate Leadership
           </motion.div>
-          
+
           <motion.h1
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
@@ -163,7 +163,7 @@ export default function TeamPage() {
           >
             Our Specialist Team
           </motion.h1>
-          
+
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -177,14 +177,14 @@ export default function TeamPage() {
 
       {/* 2. TEAM MEMBERS GRID */}
       <section className="py-20">
-        <div className="container mx-auto px-4 max-w-5xl">
+        <div className="container mx-auto px-4">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground font-semibold">Loading team members...</p>
             </div>
           ) : (
-            <motion.div 
+            <motion.div
               initial="hidden"
               animate="visible"
               variants={staggerContainer}
@@ -208,9 +208,9 @@ export default function TeamPage() {
                       {/* Photo Container */}
                       <div className="relative aspect-square rounded-xl bg-muted/60 border border-border flex items-center justify-center overflow-hidden transition-all duration-500 group-hover:bg-primary/5">
                         {member.image ? (
-                          <img 
-                            src={member.image} 
-                            alt={member.name} 
+                          <img
+                            src={member.image}
+                            alt={member.name}
                             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                           />
                         ) : (
@@ -218,7 +218,7 @@ export default function TeamPage() {
                             {initials}
                           </span>
                         )}
-                        
+
                         {/* Hover Social Overlay */}
                         <div className="absolute inset-0 bg-background/70 backdrop-blur-xs flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
                           {member.linkedin && member.linkedin !== '' && member.linkedin !== '#' && (
@@ -275,7 +275,7 @@ export default function TeamPage() {
       {/* 3. CTA ENTRANCE */}
       <section className="py-12 bg-card border-t border-border">
         <div className="container mx-auto px-4 max-w-4xl">
-          <motion.div 
+          <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}

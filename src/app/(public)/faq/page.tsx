@@ -3,16 +3,16 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  HelpCircle, 
-  ChevronDown, 
-  Sparkles, 
-  PhoneCall, 
-  Mail, 
-  MapPin, 
-  Activity, 
-  Truck, 
-  ShieldCheck, 
+import {
+  HelpCircle,
+  ChevronDown,
+  Sparkles,
+  PhoneCall,
+  Mail,
+  MapPin,
+  Activity,
+  Truck,
+  ShieldCheck,
   ArrowRight,
   Database,
   Award,
@@ -134,12 +134,12 @@ export default function FAQPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/30 selection:text-foreground">
-      
+
       {/* 1. FAQ HERO HEADER */}
       <section className="relative bg-card text-card-foreground border-b border-border py-16 md:py-24 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-background opacity-60 pointer-events-none" />
         <div className="absolute -top-10 left-10 w-72 h-72 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
-        
+
         <div className="container mx-auto px-4 relative z-10 text-center space-y-4 max-w-2xl">
           <motion.div
             initial={{ opacity: 0, y: -15 }}
@@ -149,7 +149,7 @@ export default function FAQPage() {
           >
             <HelpCircle className="h-3.5 w-3.5" /> Shafa Agro Help Center
           </motion.div>
-          
+
           <motion.h1
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
@@ -158,7 +158,7 @@ export default function FAQPage() {
           >
             Frequently Asked Questions
           </motion.h1>
-          
+
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -172,11 +172,11 @@ export default function FAQPage() {
 
       {/* 2. FAQ INTERACTIVE CONTENT GRID */}
       <section className="py-16 md:py-24">
-        <div className="container mx-auto px-4 max-w-5xl">
+        <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-12 gap-8 items-start">
-            
+
             {/* Category Selection Sidebar */}
-            <motion.div 
+            <motion.div
               initial="hidden"
               animate="visible"
               variants={staggerContainer}
@@ -193,11 +193,10 @@ export default function FAQPage() {
                       setActiveCategory(cat.id);
                       setOpenFAQIndex(0); // open first FAQ when switching category
                     }}
-                    className={`flex items-center gap-3 p-4 rounded-xl border text-xs font-bold transition-all duration-300 text-left w-full ${
-                      activeCategory === cat.id
+                    className={`flex items-center gap-3 p-4 rounded-xl border text-xs font-bold transition-all duration-300 text-left w-full ${activeCategory === cat.id
                         ? 'border-primary bg-primary/5 text-primary shadow-sm'
                         : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/40'
-                    }`}
+                      }`}
                   >
                     <div className={`p-2 rounded-lg shrink-0 ${activeCategory === cat.id ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
                       <Icon className="h-4 w-4" />
@@ -208,7 +207,7 @@ export default function FAQPage() {
               })}
 
               {/* Sidebar Helpline widget */}
-              <motion.div 
+              <motion.div
                 variants={scaleIn}
                 className="mt-6 p-6 bg-card border border-border rounded-xl space-y-4 text-left relative overflow-hidden"
               >
@@ -258,9 +257,8 @@ export default function FAQPage() {
                       <motion.div
                         key={index}
                         variants={fadeUp}
-                        className={`border rounded-xl bg-card overflow-hidden hover:border-primary/20 transition-colors duration-300 ${
-                          isOpen ? 'border-primary/40 shadow-sm' : 'border-border'
-                        }`}
+                        className={`border rounded-xl bg-card overflow-hidden hover:border-primary/20 transition-colors duration-300 ${isOpen ? 'border-primary/40 shadow-sm' : 'border-border'
+                          }`}
                       >
                         {/* Header Accordion trigger */}
                         <button
@@ -268,10 +266,9 @@ export default function FAQPage() {
                           className="flex justify-between items-center w-full p-5 text-left font-bold text-sm text-foreground focus:outline-none"
                         >
                           <span className="pr-4">{item.question}</span>
-                          <ChevronDown 
-                            className={`h-4 w-4 text-primary shrink-0 transition-transform duration-300 ${
-                              isOpen ? 'transform rotate-180' : ''
-                            }`} 
+                          <ChevronDown
+                            className={`h-4 w-4 text-primary shrink-0 transition-transform duration-300 ${isOpen ? 'transform rotate-180' : ''
+                              }`}
                           />
                         </button>
 
@@ -297,7 +294,7 @@ export default function FAQPage() {
               </AnimatePresence>
 
               {/* Call-to-action bottom panel */}
-              <motion.div 
+              <motion.div
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}

@@ -53,10 +53,10 @@ export function UserMenu({ user }: { user: any }) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          className="flex items-center gap-2 px-2 py-1.5 rounded-xl transition-all cursor-pointer outline-none group hover:scale-105 bg-muted/40 hover:bg-muted/80 border border-border/50"
+          className="flex items-center gap-2 transition-all cursor-pointer outline-none group hover:scale-105 bg-transparent p-0 border-0"
           aria-label="Account menu"
         >
-          <div className="h-8 w-8 rounded-full border-2 border-primary/20 overflow-hidden group-hover:border-primary transition-all">
+          <div className="h-8 w-8 rounded-full border-2 border-primary overflow-hidden transition-all">
             <img
               src={
                 user?.image ||
