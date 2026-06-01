@@ -30,10 +30,10 @@ export default function PublicHeader({ session }: PublicHeaderProps) {
         {/* Left Side: Mobile Hamburger Drawer + Brand Logo */}
         <div className="flex items-center gap-1.5 z-10">
           <MobileMenu navItems={navItems} categories={[]} session={session} />
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 md:static md:transform-none">
-            <Logo 
-              textClassName="text-sm sm:text-base md:text-xl text-primary font-bold tracking-tight uppercase" 
-              imageClassName="size-7 sm:size-8 md:size-12" 
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 md:relative md:left-auto md:top-auto md:translate-x-0 md:translate-y-0 md:transform-none">
+            <Logo
+              textClassName="text-sm sm:text-base md:text-xl text-primary font-bold tracking-tight uppercase"
+              imageClassName="size-7 sm:size-8 md:size-12"
             />
           </div>
         </div>
@@ -65,8 +65,8 @@ export default function PublicHeader({ session }: PublicHeaderProps) {
           {session ? (
             <UserMenu user={session.user} />
           ) : (
-            <Link 
-              href="/login" 
+            <Link
+              href="/login"
               className="bg-transparent text-primary md:bg-primary md:text-primary-foreground md:hover:bg-primary/90 p-0 md:px-3.5 md:py-2 rounded-lg flex items-center gap-1 transition-all"
               title="Log In"
             >
