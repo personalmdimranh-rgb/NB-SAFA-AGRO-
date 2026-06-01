@@ -175,12 +175,12 @@ const jost = Jost({
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://shafaagro.com'),
+  metadataBase: new URL('https://www.nbsafaagro.com'),
   title: {
     default: "NB SAFA AGRO - Premium Maize Silage & Livestock Farm Management",
     template: "%s | NB SAFA AGRO",
   },
-  description: "NB SAFA AGRO is a premium high-starch corn silage producer in Bogura, Bangladesh. Formulated for maximum dairy milk yields and healthy livestock weight gain.",
+  description: "NB SAFA AGRO is a premium high-starch corn silage producer in Dhaka, Bangladesh. Formulated for maximum dairy milk yields and healthy livestock weight gain.",
   manifest: '/manifest.json',
   icons: {
     icon: '/favicon.ico',
@@ -197,8 +197,8 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "NB SAFA AGRO - Premium Maize Silage & Livestock Farm",
-    description: "Premium high-starch corn silage producer in Bogura, Bangladesh. Optimized for maximum dairy milk yields and healthy livestock weight gain.",
-    url: "https://shafaagro.com",
+    description: "Premium high-starch corn silage producer in Dhaka, Bangladesh. Optimized for maximum dairy milk yields and healthy livestock weight gain.",
+    url: "https://www.nbsafaagro.com",
     siteName: "NB SAFA AGRO",
     type: 'website',
     images: [
@@ -213,11 +213,11 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: "NB SAFA AGRO - Premium Maize Silage & Livestock Farm",
-    description: "Premium high-starch corn silage producer in Bogura, Bangladesh. Optimized for maximum dairy milk yields and healthy livestock weight gain.",
+    description: "Premium high-starch corn silage producer in Dhaka, Bangladesh. Optimized for maximum dairy milk yields and healthy livestock weight gain.",
     images: ['/assets/images/Banner/Banner.webp'],
   },
   alternates: {
-    canonical: 'https://shafaagro.com',
+    canonical: 'https://www.nbsafaagro.com',
   },
 };
 
@@ -232,22 +232,22 @@ export default async function RootLayout({
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "NB SAFA AGRO",
-    "url": "https://shafaagro.com",
-    "logo": "https://shafaagro.com/favicon.ico",
-    "description": "Premium high-starch corn silage producer in Bogura, Bangladesh. Formulated for maximum dairy milk yields and healthy livestock weight gain.",
+    "url": "https://www.nbsafaagro.com",
+    "logo": "https://www.nbsafaagro.com/favicon.ico",
+    "description": "Premium high-starch corn silage producer in Dhaka, Bangladesh. Formulated for maximum dairy milk yields and healthy livestock weight gain.",
     "address": {
       "@type": "PostalAddress",
-      "streetAddress": "Bogura Sadar",
-      "addressLocality": "Bogura",
-      "addressRegion": "Bogura",
-      "postalCode": "5800",
+      "streetAddress": "Dhaka cantonment",
+      "addressLocality": "Dhaka",
+      "addressRegion": "Dhaka",
+      "postalCode": "1206",
       "addressCountry": "BD"
     },
     "contactPoint": {
       "@type": "ContactPoint",
-      "telephone": "+880 1700-000000",
+      "telephone": "+880 1711-583424",
       "contactType": "sales",
-      "email": "sales@shafaagro.com",
+      "email": "sales@nbsafaagro.com",
       "areaServed": "BD",
       "availableLanguage": ["Bengali", "English"]
     }

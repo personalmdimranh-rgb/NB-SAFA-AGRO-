@@ -161,7 +161,7 @@ export default function SafetyStandards() {
           <div className="flex flex-col sm:flex-row gap-4 items-center shrink-0 w-full md:w-auto">
             <div className="flex items-center justify-center gap-2 text-xs font-bold text-foreground bg-background border border-border px-4 py-3 rounded-lg w-full sm:w-auto">
               <PhoneCall className="h-4 w-4 text-primary animate-bounce" />
-              <span>Hotline: +880 1700-000000</span>
+              <span>Hotline: +880 1711-583424</span>
             </div>
             <Button asChild className="bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs py-5 px-5 rounded-lg shadow-md w-full sm:w-auto">
               <Link href="/login">Office Portal Login</Link>

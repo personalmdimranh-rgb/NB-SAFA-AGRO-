@@ -1,7 +1,6 @@
-'use client';
-
 import React from 'react';
 import { format } from 'date-fns';
+import { contactConfig } from '@/lib/contact-config';
 
 interface InvoiceProps {
   order: any;
@@ -10,6 +9,8 @@ interface InvoiceProps {
 const PrintableInvoice: React.FC<InvoiceProps> = ({ order }) => {
   if (!order) return null;
 
+  const { address, phone, email } = contactConfig;
+
   return (
     <div className="bg-white p-8 text-black print:p-0 w-full max-w-4xl mx-auto border print:border-none my-8 print:my-0 shadow-sm print:shadow-none font-sans">
       {/* Header */}
@@ -17,10 +18,9 @@ const PrintableInvoice: React.FC<InvoiceProps> = ({ order }) => {
         <div>
           <h1 className="text-4xl font-black tracking-tighter text-emerald-700 mb-2">NB SAFA AGRO</h1>
           <div className="text-sm text-gray-500 space-y-1">
-            <p>Bogura Sadar, Bogura</p>
-            <p>Bangladesh</p>
-            <p>Phone: +880 1700-000000</p>
-            <p>Email: support@nbsafaagro.com</p>
+            <p>{address}</p>
+            <p>Phone: {phone}</p>
+            <p>Email: {email}</p>
           </div>
         </div>
         <div className="text-right">

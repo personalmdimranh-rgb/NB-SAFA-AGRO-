@@ -7,9 +7,9 @@ export async function generateAppointmentLetterPDF(employee: any, settings: any)
   const doc = new jsPDF();
 
   const brandName = settings?.brandName || "SHAFA AGRO";
-  const brandEmail = settings?.contact?.email || "info@shafaagro.com";
-  const brandPhone = settings?.contact?.phone || "+880 1700-000000";
-  const brandAddress = settings?.contact?.address || "Mymensingh, Bangladesh";
+  const brandEmail = settings?.contact?.email || "info@nbsafaagro.com";
+  const brandPhone = settings?.contact?.phone || "+880 1711-583424";
+  const brandAddress = settings?.contact?.address || "Dhaka Cantonment, Dhaka, Bangladesh";
 
   // Brand Colors (Emerald/Green/Earth themed)
   const primaryColor: [number, number, number] = [21, 128, 61]; // #15803d (Emerald 700)

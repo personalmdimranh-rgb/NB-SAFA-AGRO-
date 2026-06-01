@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion, Variants } from 'framer-motion';
+import { useSession } from 'next-auth/react';
 import { TrendingUp, UserPlus, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -17,6 +18,7 @@ const scaleIn: Variants = {
 };
 
 export default function RoiCalculator() {
+  const { data: session } = useSession();
   const [herdSize, setHerdSize] = useState<number>(50);
   const [milkYield, setMilkYield] = useState<number>(18);
 
@@ -24,6 +26,8 @@ export default function RoiCalculator() {
   const totalDailyIncrease = herdSize * dailyIncreasePerCow;
   const monthlyRevenueGain = totalDailyIncrease * 30 * 75; // 75 BDT per Liter
   const recommendedBags = Math.round((herdSize * 15 * 30) / 40); // 15kg/day per cow, 40kg bag
+
+  const orderTargetUrl = session ? "/dashboard/order-new" : "/login?callbackUrl=/dashboard/order-new";
 
   return (
     <section className="py-12 md:py-16 bg-card border-b border-border">
@@ -142,8 +146,8 @@ export default function RoiCalculator() {
             </div>
 
             <Button asChild className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs py-5 rounded-lg shadow-md transition-all duration-300">
-              <Link href="/login" className="flex items-center justify-center gap-1.5">
-                <UserPlus className="h-4 w-4" /> Place Distributor Order <ChevronRight className="h-4 w-4" />
+              <Link href={orderTargetUrl} className="flex items-center justify-center gap-1.5">
+                <UserPlus className="h-4 w-4" /> Place Order <ChevronRight className="h-4 w-4" />
               </Link>
             </Button>
           </div>

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { contactConfig } from '@/lib/contact-config';
 import {
   HelpCircle,
   ChevronDown,
@@ -221,15 +222,15 @@ export default function FAQPage() {
                 <div className="space-y-2.5 text-xs text-muted-foreground font-medium">
                   <div className="flex items-center gap-2">
                     <PhoneCall className="h-4 w-4 text-primary shrink-0" />
-                    <span>+880 1700-000000</span>
+                    <span>{contactConfig.phone}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4 text-primary shrink-0" />
-                    <span>support@shafaagro.com</span>
+                    <span>{contactConfig.email}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-primary shrink-0" />
-                    <span>Bogura HQ, Bogura, Bangladesh</span>
+                    <span>{contactConfig.address}</span>
                   </div>
                 </div>
               </motion.div>

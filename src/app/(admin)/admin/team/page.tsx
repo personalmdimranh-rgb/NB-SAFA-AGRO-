@@ -300,7 +300,7 @@ export default function AdminTeamPage() {
                     <FormItem>
                       <FormLabel className="font-bold text-xs uppercase tracking-wider">Email Address</FormLabel>
                       <FormControl>
-                        <Input placeholder="example@shafaagro.com" className="rounded-xl border-muted-foreground/20 focus-visible:ring-primary" {...field} />
+                        <Input placeholder="example@nbsafaagro.com" className="rounded-xl border-muted-foreground/20 focus-visible:ring-primary" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

@@ -47,38 +47,38 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative min-h-[90vh] flex items-center bg-card text-card-foreground border-b border-border overflow-hidden py-16 md:py-20">
+    <section className="relative min-h-fit md:min-h-[90vh] flex items-center bg-card text-card-foreground border-b border-border overflow-hidden py-8 md:py-20">
       {/* Animated Background Gradients */}
       <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-background to-background pointer-events-none" />
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[120px] animate-pulse pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[150px] animate-pulse pointer-events-none" style={{ animationDuration: '8s' }} />
 
-      <div className="container mx-auto px-4 relative z-10 grid lg:grid-cols-12 gap-12 items-center">
+      <div className="container mx-auto px-4 relative z-10 grid lg:grid-cols-12 gap-6 md:gap-12 items-center">
         {/* Hero Left Content */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="lg:col-span-6 space-y-6 text-left"
+          className="lg:col-span-6 space-y-4 md:space-y-6 text-left"
         >
 
-          <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-none text-foreground font-heading">
+          <h1 className="text-2xl sm:text-4xl md:text-6xl font-black tracking-tight leading-tight md:leading-none text-foreground font-heading">
             Nurturing Gold, <br />
             <span className="bg-gradient-to-r from-primary via-primary/80 to-foreground bg-clip-text text-transparent">
               Standardizing Growth
             </span>
           </h1>
-          <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-xl">
+          <p className="text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed max-w-xl">
             NB Safa Agro engineers premium fermented maize silage bags packed with high-value starches, probiotics, and nutrients. Empowering elite dairy farms and dealer networks with high-fidelity supply transparency.
           </p>
 
-          <div className="flex flex-wrap gap-4 pt-4">
-            <Button asChild size="lg" className="bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-sm px-6 rounded-lg shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-300">
-              <Link href="/login" className="flex items-center gap-2">
-                <UserPlus className="h-4 w-4" /> Dealer Registration <ArrowRight className="h-4 w-4" />
+          <div className="flex flex-wrap gap-3 pt-2 md:pt-4">
+            <Button asChild size="sm" className="bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs md:text-sm px-4 md:px-6 py-2 md:py-2.5 rounded-lg shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-300">
+              <Link href="/login" className="flex items-center gap-1.5">
+                <UserPlus className="h-3.5 w-3.5" /> Dealer Registration <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="border-border hover:bg-muted text-foreground font-semibold rounded-lg transition-all duration-300">
+            <Button asChild variant="outline" size="sm" className="border-border hover:bg-muted text-foreground text-xs md:text-sm font-semibold px-4 rounded-lg transition-all duration-300">
               <Link href="/login">Corporate Board Access</Link>
             </Button>
           </div>

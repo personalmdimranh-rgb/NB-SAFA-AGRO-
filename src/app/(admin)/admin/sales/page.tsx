@@ -62,7 +62,7 @@ export default function SalesPage() {
       doc.setFontSize(9);
       doc.setTextColor(100, 100, 100);
       doc.text('Livestock Silage Production & Distribution', 14, 25);
-      doc.text('Phone: +880 1700-000000 | Email: contact@shafaagro.com', 14, 29);
+      doc.text('Phone: +880 1711-583424 | Email: contact@nbsafaagro.com', 14, 29);
 
       // Invoice info
       doc.setFontSize(11);

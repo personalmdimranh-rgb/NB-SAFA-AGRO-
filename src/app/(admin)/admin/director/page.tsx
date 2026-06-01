@@ -411,7 +411,7 @@ export default function DirectorPanelPage() {
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-primary block mb-1">Document Attachment Link (Optional)</label>
-                  <Input value={resFileUrl} onChange={(e) => setResFileUrl(e.target.value)} placeholder="e.g. https://shafaagro.com/docs/resolution-q3.pdf" className="border-border" />
+                  <Input value={resFileUrl} onChange={(e) => setResFileUrl(e.target.value)} placeholder="e.g. https://nbsafaagro.com/docs/resolution-q3.pdf" className="border-border" />
                 </div>
               </div>
 

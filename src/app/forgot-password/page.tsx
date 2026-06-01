@@ -60,36 +60,9 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="relative min-h-screen">
-      {/* Left Side: Image Banner */}
-      <motion.div
-        initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="fixed inset-y-0 left-0 hidden w-1/2 bg-muted lg:block"
-      >
-        <img
-          src="/assets/forgetpassrod.webp"
-          alt="Forgot Password Banner"
-          className="absolute inset-0 h-full w-full object-cover brightness-[0.8] contrast-[1.1]"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
-          >
-            <h2 className="text-4xl font-bold text-white mb-4 font-serif">Secure Your Account</h2>
-            <p className="text-lg text-white/80 max-w-md">
-              Don't worry, it happens to the best of us. Let's get you back into your account.
-            </p>
-          </motion.div>
-        </div>
-      </motion.div>
-
-      {/* Right Side: Forgot Password Form */}
-      <div className="flex flex-col p-6 md:p-10 bg-background lg:ml-[50%] min-h-screen">
-        <div className="flex justify-center gap-2 md:justify-start mb-8">
+    <main className="relative min-h-screen flex flex-col justify-center items-center p-6 md:p-10 bg-background">
+      <div className="w-full max-w-md space-y-8">
+        <div className="flex justify-center mb-4">
           <Logo />
         </div>
 
@@ -97,11 +70,11 @@ export default function ForgotPasswordPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="flex flex-1 items-center justify-center"
+          className="w-full"
         >
-          <div className="w-full max-w-sm space-y-8">
+          <div className="space-y-8 bg-card border border-border p-6 md:p-8 rounded-2xl shadow-md">
             <div className="space-y-2 text-center">
-              <h1 className="text-3xl font-bold tracking-tight">Forgot password?</h1>
+              <h1 className="text-3xl font-bold tracking-tight text-primary">Forgot password?</h1>
               <p className="text-sm text-muted-foreground text-balance">
                 Enter your email address and we'll send you a link to reset your password
               </p>
@@ -155,14 +128,13 @@ export default function ForgotPasswordPage() {
           </div>
         </motion.div>
 
-        <div className="mt-auto pt-6 text-center text-xs text-muted-foreground">
+        <div className="mt-8 text-center text-xs text-muted-foreground">
           Need help? Contact our{' '}
           <Link href="/support" className="underline underline-offset-4 hover:text-primary">
             Support Team
           </Link>.
         </div>
-      </div>
-    </div>
+    </main>
   );
 }
 

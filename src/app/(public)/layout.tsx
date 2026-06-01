@@ -5,19 +5,19 @@ import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://shafaagro.com'),
+  metadataBase: new URL('https://www.nbsafaagro.com'),
   title: {
     default: "NB SAFA AGRO - Premium Maize Silage & Livestock Farm Management",
     template: "%s | NB SAFA AGRO",
   },
-  description: "NB SAFA AGRO is a premium high-starch corn silage producer in Bogura, Bangladesh. Formulated for maximum dairy milk yields and healthy livestock weight gain.",
+  description: "NB SAFA AGRO is a premium high-starch corn silage producer in Dhaka, Bangladesh. Formulated for maximum dairy milk yields and healthy livestock weight gain.",
   alternates: {
-    canonical: 'https://shafaagro.com',
+    canonical: 'https://www.nbsafaagro.com',
   },
   openGraph: {
     title: "NB SAFA AGRO - Premium Maize Silage & Livestock Farm",
-    description: "Premium high-starch corn silage producer in Bogura, Bangladesh. Optimized for maximum dairy milk yields and healthy livestock weight gain.",
-    url: "https://shafaagro.com",
+    description: "Premium high-starch corn silage producer in Dhaka, Bangladesh. Optimized for maximum dairy milk yields and healthy livestock weight gain.",
+    url: "https://www.nbsafaagro.com",
     siteName: "NB SAFA AGRO",
     type: 'website',
     images: [
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: "NB SAFA AGRO - Premium Maize Silage & Livestock Farm",
-    description: "Premium high-starch corn silage producer in Bogura, Bangladesh. Optimized for maximum dairy milk yields and healthy livestock weight gain.",
+    description: "Premium high-starch corn silage producer in Dhaka, Bangladesh. Optimized for maximum dairy milk yields and healthy livestock weight gain.",
     images: ['/assets/images/Banner/Banner.webp'],
   },
 };
