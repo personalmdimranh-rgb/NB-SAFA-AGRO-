@@ -35,7 +35,7 @@ export const proxy = auth(async (req) => {
       return NextResponse.redirect(new URL("/admin/dashboard", nextUrl));
     }
     if (role === "director") {
-      return NextResponse.redirect(new URL("/admin/director", nextUrl));
+      return NextResponse.redirect(new URL("/director/dashboard", nextUrl));
     }
     if (role === "dealer") {
       return NextResponse.redirect(new URL("/dealer/dashboard", nextUrl));
@@ -92,6 +92,17 @@ export const proxy = auth(async (req) => {
     }
   }
 
+  // 3.5. Protection for Director routes
+  const isDirectorPortalRoute = nextUrl.pathname.startsWith("/director");
+  if (isDirectorPortalRoute) {
+    if (!isLoggedIn) {
+      return NextResponse.redirect(new URL("/login", nextUrl));
+    }
+    if (role !== "director") {
+      return NextResponse.redirect(new URL("/login", nextUrl));
+    }
+  }
+
   // 4. Protection and Redirection for Customer Dashboard routes
   const isDashboardRoute = nextUrl.pathname === "/dashboard" || nextUrl.pathname.startsWith("/dashboard/");
   if (isDashboardRoute) {
@@ -104,9 +115,7 @@ export const proxy = auth(async (req) => {
       return NextResponse.redirect(new URL("/admin/dashboard", nextUrl));
     }
     if (role === "director") {
-      if (nextUrl.pathname !== "/dashboard/director") {
-        return NextResponse.redirect(new URL("/admin/director", nextUrl));
-      }
+      return NextResponse.redirect(new URL("/director/dashboard", nextUrl));
     }
     if (role === "dealer") {
       return NextResponse.redirect(new URL("/dealer/dashboard", nextUrl));
