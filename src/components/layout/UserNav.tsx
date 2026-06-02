@@ -34,6 +34,17 @@ export function SignOutButton() {
   );
 }
 
+export function SignOutButtonWhite() {
+  return (
+    <button
+      className="text-xs font-bold text-white hover:bg-white/10 px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
+      onClick={() => signOut({ callbackUrl: '/' })}
+    >
+      <LogOut className="h-3.5 w-3.5 mr-1" /> Log Out
+    </button>
+  );
+}
+
 export function UserMenu({ user }: { user: any }) {
   const role = user?.role;
 

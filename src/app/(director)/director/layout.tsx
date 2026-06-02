@@ -5,7 +5,7 @@ import connectToDatabase from '@/lib/db';
 import User from '@/models/User';
 import Link from 'next/link';
 import { Home, User as UserIcon, Settings, Coins, LogOut, Shield } from 'lucide-react';
-import { SignOutButton } from '@/components/layout/UserNav';
+import { SignOutButtonWhite } from '@/components/layout/UserNav';
 
 export default async function DirectorLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -31,9 +31,9 @@ export default async function DirectorLayout({ children }: { children: React.Rea
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50/50 flex flex-col md:flex-row animate-in fade-in duration-300">
+    <div className="min-h-screen md:h-screen bg-zinc-50/50 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden animate-in fade-in duration-300">
       {/* Director Sidebar */}
-      <aside className="w-full md:w-64 bg-primary text-primary-foreground flex flex-col justify-between shrink-0 p-4">
+      <aside className="w-full md:w-64 md:h-full bg-primary text-primary-foreground flex flex-col justify-between shrink-0 p-4 md:overflow-y-auto">
         <div className="space-y-6">
           <div className="p-2 border-b border-primary-foreground/20">
             <h2 className="text-lg font-black tracking-wider text-white">SHAFA AGRO</h2>
@@ -56,14 +56,14 @@ export default async function DirectorLayout({ children }: { children: React.Rea
 
         <div className="pt-4 border-t border-primary-foreground/20">
           <div className="flex items-center justify-between text-xs p-2">
-            <span className="text-primary-foreground/70">Logged as {dbUser.name}</span>
-            <SignOutButton />
+            <span className="text-primary-foreground/70 truncate mr-2">Logged as {dbUser.name.split(' ')[0]}</span>
+            <SignOutButtonWhite />
           </div>
         </div>
       </aside>
 
       {/* Main Panel */}
-      <main className="flex-1 p-6 md:p-8 overflow-y-auto dashboard-main">
+      <main className="flex-1 md:h-full md:overflow-y-auto p-6 md:p-8">
         {children}
       </main>
     </div>
