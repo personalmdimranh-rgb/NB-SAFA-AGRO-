@@ -71,43 +71,43 @@ export default function FarmerDashboard() {
       </div>
 
       {/* Credit & Dues Widgets */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-3">
         <Card className="border-primary/20 bg-white/50 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Current Dues</CardTitle>
-            <DollarSign className="h-4 w-4 text-primary" />
+          <CardHeader className="flex flex-row items-center justify-between pb-1.5 p-3 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-muted-foreground truncate">Current Dues</CardTitle>
+            <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold text-rose-700">
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-base sm:text-xl font-bold text-rose-700 truncate">
               ৳{farmer.currentDues.toLocaleString()}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-1">Pending payments to clear</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1 truncate">Pending payments to clear</p>
           </CardContent>
         </Card>
 
         <Card className="border-primary/20 bg-white/50 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Credit Limit</CardTitle>
-            <ShieldCheck className="h-4 w-4 text-primary" />
+          <CardHeader className="flex flex-row items-center justify-between pb-1.5 p-3 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-muted-foreground truncate">Credit Limit</CardTitle>
+            <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold text-zinc-700">
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-base sm:text-xl font-bold text-zinc-700 truncate">
               ৳{farmer.creditLimit.toLocaleString()}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-1">Maximum allowed credit line</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1 truncate">Maximum allowed credit line</p>
           </CardContent>
         </Card>
 
-        <Card className="border-primary/20 bg-primary/5 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Available Credit</CardTitle>
-            <Wallet className="h-4 w-4 text-primary" />
+        <Card className="border-primary/20 bg-primary/5 backdrop-blur-sm col-span-2 md:col-span-1">
+          <CardHeader className="flex flex-row items-center justify-between pb-1.5 p-3 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-muted-foreground truncate">Available Credit</CardTitle>
+            <Wallet className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold text-primary">
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-base sm:text-xl font-bold text-primary truncate">
               ৳{availableCredit.toLocaleString()}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-1">Available credit for placing orders</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1 truncate">Available credit to order</p>
           </CardContent>
         </Card>
       </div>

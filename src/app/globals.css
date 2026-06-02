@@ -92,3 +92,18 @@ html.lenis {
   }
 }
 
+/* Dashboard Mobile Padding Control */
+@media (max-width: 768px) {
+  main.dashboard-main {
+    padding-left: 1rem !important; /* px-4 */
+    padding-right: 1rem !important; /* px-4 */
+  }
+
+  main.dashboard-main > div,
+  main.dashboard-main > form {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+}
+
+

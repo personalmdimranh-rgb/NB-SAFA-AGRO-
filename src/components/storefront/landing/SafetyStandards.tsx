@@ -66,7 +66,7 @@ export default function SafetyStandards() {
                 <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-muted border border-border">
                   <Image
                     src="/assets/agro_lab_qa.png"
-                    alt="Shafa Agro Lab QA inspection"
+                    alt="NB Safa Agro Lab QA inspection"
                     className="object-cover group-hover:scale-105 transition-transform duration-700"
                     fill
                     sizes="(max-width: 768px) 100vw, 320px"

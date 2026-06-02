@@ -57,7 +57,7 @@ export default function SalesPage() {
       // Header
       doc.setFontSize(20);
       doc.setTextColor(16, 185, 129); // emerald-500
-      doc.text('SHAFA AGRO FARM', 14, 20);
+      doc.text('NB SAFA AGRO FARM', 14, 20);
       
       doc.setFontSize(9);
       doc.setTextColor(100, 100, 100);
@@ -517,11 +517,11 @@ export default function SalesPage() {
             </div>
           )}
 
-          <DialogFooter className="sm:justify-between gap-2">
-            <Button variant="outline" size="sm" disabled={!selectedSale} onClick={() => selectedSale && handleDownloadInvoice(selectedSale)}>
-              <Download className="mr-2 h-4 w-4 text-primary" /> Download PDF
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4">
+            <Button variant="outline" className="w-full sm:flex-1 h-10 font-semibold" disabled={!selectedSale} onClick={() => selectedSale && handleDownloadInvoice(selectedSale)}>
+              <Download className="mr-2 h-4 w-4 text-primary inline" /> Download PDF
             </Button>
-            <Button variant="secondary" size="sm" onClick={() => setIsDetailsOpen(false)}>
+            <Button variant="secondary" className="w-full sm:flex-1 h-10 font-semibold" onClick={() => setIsDetailsOpen(false)}>
               Close
             </Button>
           </DialogFooter>

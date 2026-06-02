@@ -3,6 +3,7 @@
 import connectToDatabase from '@/lib/db';
 import ProductionBatch from '@/models/ProductionBatch';
 import LedgerTransaction from '@/models/LedgerTransaction';
+import User from '@/models/User';
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 
@@ -27,6 +28,9 @@ export async function logProductionBatch(data: {
   }
 
   await connectToDatabase();
+
+  const dbUser = await User.findOne({ email: session.user?.email });
+  if (!dbUser) throw new Error('Logged-in administrator user record not found in database');
 
   // Calculate costs
   const totalCost = data.rawMaterialsUsed.reduce((acc, rm) => acc + rm.cost, 0);
@@ -70,7 +74,7 @@ export async function logProductionBatch(data: {
       category: 'Raw Materials',
       amount: totalCost,
       description: `Raw materials for silage production batch ${batchNumber}`,
-      recordedBy: (session.user as any).id,
+      recordedBy: dbUser._id,
     });
     await expenseTx.save();
   }

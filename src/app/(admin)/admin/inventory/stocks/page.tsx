@@ -105,43 +105,43 @@ export default function StockLevelsPage() {
         <p className="text-muted-foreground">Monitor warehouse silage bag stocks and storage utilization</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-3">
         <Card className="border-primary/20 bg-white/50 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Cumulative Production</CardTitle>
-            <Layers className="h-4 w-4 text-primary" />
+          <CardHeader className="flex flex-row items-center justify-between pb-1.5 p-3 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium truncate">Cumulative Production</CardTitle>
+            <Layers className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-base sm:text-2xl font-bold text-primary truncate">
               {stockDetails.totalProduced.toLocaleString()} Bags
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Total Silage bags fermented</p>
+            <p className="text-xs sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 truncate">Total Silage bags fermented</p>
           </CardContent>
         </Card>
 
         <Card className="border-zinc-100 bg-white/50 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Cumulative Sales</CardTitle>
-            <TrendingUp className="h-4 w-4 text-zinc-500" />
+          <CardHeader className="flex flex-row items-center justify-between pb-1.5 p-3 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium truncate">Cumulative Sales</CardTitle>
+            <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-500 shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-zinc-800">
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-base sm:text-2xl font-bold text-zinc-800 truncate">
               {stockDetails.totalSold.toLocaleString()} Bags
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Total Silage bags shipped</p>
+            <p className="text-xs sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 truncate">Total Silage bags shipped</p>
           </CardContent>
         </Card>
 
-        <Card className="border-primary/20 bg-primary/10 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Current Stock Reserve</CardTitle>
-            <Warehouse className="h-4 w-4 text-primary" />
+        <Card className="border-primary/20 bg-primary/10 backdrop-blur-sm col-span-2 md:col-span-1">
+          <CardHeader className="flex flex-row items-center justify-between pb-1.5 p-3 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium truncate">Current Stock Reserve</CardTitle>
+            <Warehouse className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-base sm:text-2xl font-bold text-primary truncate">
               {stockDetails.currentStock.toLocaleString()} Bags
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Net bags available for order</p>
+            <p className="text-xs sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 truncate">Net bags available for order</p>
           </CardContent>
         </Card>
       </div>

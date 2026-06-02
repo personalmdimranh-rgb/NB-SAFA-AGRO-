@@ -56,7 +56,7 @@ export default function RecentBlogs() {
               Recent News & Blog Posts
             </h2>
             <p className="text-muted-foreground text-sm max-w-xl">
-              Stay updated with the latest farming tips, silage production techniques, and dairy yields insights from Shafa Agro.
+              Stay updated with the latest farming tips, silage production techniques, and dairy yields insights from NB Safa Agro.
             </p>
           </div>
           <Button asChild variant="outline" className="rounded-lg font-bold text-xs py-4 px-6 border-border hover:bg-muted text-foreground flex items-center gap-1.5 shrink-0 transition-all duration-300">

@@ -45,43 +45,43 @@ export default function DealerCommission() {
         <p className="text-sm text-muted-foreground">Track commission wallet balances accrued from Maize Silage bag purchases</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-3">
         <Card className="border-primary/20 bg-card/50 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Commission Wallet Balance</CardTitle>
-            <Coins className="h-4.5 w-4.5 text-primary" />
+          <CardHeader className="flex flex-row items-center justify-between pb-1.5 p-3 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-muted-foreground truncate">Commission Balance</CardTitle>
+            <Coins className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-base sm:text-2xl font-bold text-foreground truncate">
               ৳{dealer.commissionWallet.toLocaleString()}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-1">Available balance in your account wallet</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1 truncate">Available balance in your wallet</p>
           </CardContent>
         </Card>
 
         <Card className="border-primary/20 bg-card/50 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Active Commission Rate</CardTitle>
-            <Award className="h-4.5 w-4.5 text-primary" />
+          <CardHeader className="flex flex-row items-center justify-between pb-1.5 p-3 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-muted-foreground truncate">Active Rate</CardTitle>
+            <Award className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-base sm:text-2xl font-bold text-foreground truncate">
               ৳{dealer.commissionRate}/bag
             </div>
-            <p className="text-[10px] text-muted-foreground mt-1">Commission earned per silage bag ordered</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1 truncate">Earned per silage bag ordered</p>
           </CardContent>
         </Card>
 
-        <Card className="border-primary/30 bg-primary/5 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Cumulative Commissions</CardTitle>
-            <DollarSign className="h-4.5 w-4.5 text-primary" />
+        <Card className="border-primary/30 bg-primary/5 backdrop-blur-sm col-span-2 md:col-span-1">
+          <CardHeader className="flex flex-row items-center justify-between pb-1.5 p-3 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-muted-foreground truncate">Total Cumulative</CardTitle>
+            <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-base sm:text-2xl font-bold text-foreground truncate">
               ৳{totalEarnedCommissions.toLocaleString()}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-1">Sum of all earned commissions</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1 truncate">Sum of all earned commissions</p>
           </CardContent>
         </Card>
       </div>

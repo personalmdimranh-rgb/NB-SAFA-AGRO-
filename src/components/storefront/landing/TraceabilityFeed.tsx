@@ -58,7 +58,7 @@ export default function TraceabilityFeed() {
 
             <h2 className="text-3xl font-extrabold text-foreground font-heading leading-tight">Every Bag Tracked <br />From Harvest To Rumen</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              We believe in total logistical transparency. Shafa Agro’s backend portal enables administrators and directors to track raw material intake, production batch codes, dealer transaction ledgers, and credit limits in real-time.
+              We believe in total logistical transparency. NB Safa Agro’s backend portal enables administrators and directors to track raw material intake, production batch codes, dealer transaction ledgers, and credit limits in real-time.
             </p>
 
             <div className="space-y-3 text-xs">

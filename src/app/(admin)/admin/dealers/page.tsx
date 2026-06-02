@@ -482,11 +482,11 @@ export default function DealersAdminPage() {
               </div>
             )}
 
-            <DialogFooter className="gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => { setModalOpen(false); resetForm(); }} className="border-primary/20">
+            <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => { setModalOpen(false); resetForm(); }} className="w-full sm:flex-1 h-10 font-semibold border-primary/20">
                 Cancel
               </Button>
-              <Button type="submit" disabled={submitting} className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
+              <Button type="submit" disabled={submitting} className="w-full sm:flex-1 h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
                 {submitting ? 'Saving...' : editingDealerId ? 'Save Changes' : 'Register Dealer'}
               </Button>
             </DialogFooter>

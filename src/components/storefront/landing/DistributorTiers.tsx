@@ -35,7 +35,7 @@ export default function DistributorTiers() {
 
           <h2 className="text-3xl md:text-4xl font-extrabold text-foreground font-heading">Premium Distributor Tiers</h2>
           <p className="text-muted-foreground text-sm max-w-xl mx-auto">
-            Shafa Agro operates an exclusive regional dealer network. Register as a dealer and unlock higher commission structures and custom credit limits.
+            NB Safa Agro operates an exclusive regional dealer network. Register as a dealer and unlock higher commission structures and custom credit limits.
           </p>
         </motion.div>
 

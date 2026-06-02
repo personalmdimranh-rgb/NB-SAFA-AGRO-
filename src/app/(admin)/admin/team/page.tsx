@@ -364,9 +364,9 @@ export default function AdminTeamPage() {
                 )}
               />
 
-              <DialogFooter className="pt-4 border-t gap-2">
-                <Button type="button" variant="outline" onClick={() => setOpen(false)} className="rounded-xl font-bold">Cancel</Button>
-                <Button type="submit" disabled={submitting} className="rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/95 shadow-md">
+              <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4 border-t">
+                <Button type="button" variant="outline" onClick={() => setOpen(false)} className="w-full sm:flex-1 h-10 rounded-xl font-bold">Cancel</Button>
+                <Button type="submit" disabled={submitting} className="w-full sm:flex-1 h-10 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/95 shadow-md">
                   {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {editingMember ? 'Update' : 'Create'} Member
                 </Button>

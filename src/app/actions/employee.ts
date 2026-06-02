@@ -3,6 +3,7 @@
 import connectToDatabase from '@/lib/db';
 import Employee from '@/models/Employee';
 import LedgerTransaction from '@/models/LedgerTransaction';
+import User from '@/models/User';
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 
@@ -121,6 +122,9 @@ export async function processPayroll(employeeId: string, monthYearStr: string) {
 
   await connectToDatabase();
 
+  const dbUser = await User.findOne({ email: session.user?.email });
+  if (!dbUser) throw new Error('Logged-in administrator user record not found in database');
+
   const employee = await Employee.findById(employeeId);
   if (!employee) throw new Error('Employee not found');
 
@@ -168,7 +172,7 @@ export async function processPayroll(employeeId: string, monthYearStr: string) {
     category: 'Salary',
     amount: netSalary,
     description: `Salary paid to ${employee.name} (${employee.designation}) for ${monthYearStr}. Basic: ${basic}, Allowance: ${allowance}, Deductions: ${totalDeductions} (Base: ${deductions}, Attendance Penalty: ${attendanceDeduction} for ${absentsCount} total absents, allowed: ${allowed}).`,
-    recordedBy: (session.user as any).id,
+    recordedBy: dbUser._id,
   });
 
   await ledgerTx.save();
@@ -190,6 +194,9 @@ export async function processBulkPayroll(employeeIds: string[], monthYearStr: st
   }
 
   await connectToDatabase();
+
+  const dbUser = await User.findOne({ email: session.user?.email });
+  if (!dbUser) throw new Error('Logged-in administrator user record not found in database');
 
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const [monthName, yearStr] = monthYearStr.split(' ');
@@ -240,7 +247,7 @@ export async function processBulkPayroll(employeeIds: string[], monthYearStr: st
       category: 'Salary',
       amount: netSalary,
       description: `Salary paid to ${employee.name} (${employee.designation}) for ${monthYearStr}. Basic: ${basic}, Allowance: ${allowance}, Deductions: ${totalDeductions} (Base: ${deductions}, Attendance Penalty: ${attendanceDeduction} for ${absentsCount} total absents, allowed: ${allowed}).`,
-      recordedBy: (session.user as any).id,
+      recordedBy: dbUser._id,
     });
 
     await ledgerTx.save();

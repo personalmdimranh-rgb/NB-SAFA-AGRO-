@@ -6,7 +6,7 @@ import { format, isValid } from 'date-fns';
 export async function generateAppointmentLetterPDF(employee: any, settings: any) {
   const doc = new jsPDF();
 
-  const brandName = settings?.brandName || "SHAFA AGRO";
+  const brandName = settings?.brandName || "NB Safa Agro";
   const brandEmail = settings?.contact?.email || "info@nbsafaagro.com";
   const brandPhone = settings?.contact?.phone || "+880 1711-583424";
   const brandAddress = settings?.contact?.address || "Dhaka Cantonment, Dhaka, Bangladesh";
@@ -77,7 +77,7 @@ export async function generateAppointmentLetterPDF(employee: any, settings: any)
   // 7. Body Text
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  const bodyText = `Dear ${employee.name},\n\nWe are pleased to offer you employment at ${brandName} as ${employee.designation}. This appointment is effective from your joining date of ${formattedJoinDate}. Your service rules and responsibilities will be guided by the Shafa Agro HR handbook.\n\nAs part of your compensation package, your monthly salary structure is details as follows:`;
+  const bodyText = `Dear ${employee.name},\n\nWe are pleased to offer you employment at ${brandName} as ${employee.designation}. This appointment is effective from your joining date of ${formattedJoinDate}. Your service rules and responsibilities will be guided by the ${brandName} HR handbook.\n\nAs part of your compensation package, your monthly salary structure is detailed as follows:`;
   const splitBody = doc.splitTextToSize(bodyText, 182);
   doc.text(splitBody, 14, 112);
 

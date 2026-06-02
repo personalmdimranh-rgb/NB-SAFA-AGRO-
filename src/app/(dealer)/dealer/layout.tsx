@@ -39,7 +39,7 @@ export default async function DealerLayout({ children }: { children: React.React
       <aside className="w-full md:w-64 bg-primary text-primary-foreground flex flex-col justify-between shrink-0 p-4">
         <div className="space-y-6">
           <div className="p-2 border-b border-primary-foreground/20">
-            <h2 className="text-lg font-black tracking-wider text-white">SHAFA AGRO</h2>
+            <h2 className="text-lg font-black tracking-wider text-white">NB SAFA AGRO</h2>
             <p className="text-[10px] text-primary-foreground/70 font-semibold uppercase">Dealer Portal</p>
             <p className="text-xs text-primary-foreground/90 font-bold truncate mt-2">{dealerProfile?.shopName || dbUser.name}</p>
           </div>
@@ -69,7 +69,7 @@ export default async function DealerLayout({ children }: { children: React.React
       </aside>
 
       {/* Main Panel */}
-      <main className="flex-1 p-6 md:p-8 overflow-y-auto">
+      <main className="flex-1 p-6 md:p-8 overflow-y-auto dashboard-main">
         {children}
       </main>
     </div>

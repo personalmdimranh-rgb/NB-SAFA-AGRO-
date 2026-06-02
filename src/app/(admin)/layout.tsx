@@ -21,7 +21,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <AppSidebar />
       <SidebarInset>
         <AdminTopbar />
-        <main className="flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+        <main className="flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 dashboard-main">
           {children}
         </main>
       </SidebarInset>

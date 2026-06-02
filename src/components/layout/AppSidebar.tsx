@@ -142,11 +142,19 @@ const data = {
       title: "Director Panel",
       url: "#",
       icon: Tag,
-      roles: ['super_admin', 'director'],
+      roles: ['super_admin', 'admin', 'manager', 'director'],
       items: [
         {
-          title: "Director Panel",
+          title: "Director Equity Board",
           url: "/admin/director",
+        },
+        {
+          title: "All Director List",
+          url: "/admin/director/list",
+        },
+        {
+          title: "Create Resolution",
+          url: "/admin/director/resolutions",
         },
       ],
     },

@@ -33,8 +33,11 @@ export async function createSale(data: {
 
   await connectToDatabase();
 
-  const userRole = (session.user as any).role;
-  const userId = (session.user as any).id;
+  const dbUser = await User.findOne({ email: session.user?.email });
+  if (!dbUser) throw new Error('Logged-in user record not found in database');
+
+  const userRole = dbUser.role as string;
+  const userId = dbUser._id.toString();
 
   // Authorize based on role
   if (['super_admin', 'admin', 'manager', 'staff'].includes(userRole)) {
@@ -199,7 +202,7 @@ export async function createSale(data: {
       category: 'Silage Sale',
       amount: data.paidAmount,
       description: `Payment for invoice ${invoiceNumber}`,
-      recordedBy: (session.user as any).id,
+      recordedBy: dbUser._id,
     });
     await ledgerTx.save();
   }
@@ -228,6 +231,9 @@ export async function collectDue(data: {
   }
 
   await connectToDatabase();
+
+  const dbUser = await User.findOne({ email: session.user?.email });
+  if (!dbUser) throw new Error('Logged-in user record not found in database');
 
   if (data.buyerType === 'dealer') {
     const updatedDealer = await Dealer.findOneAndUpdate(
@@ -269,7 +275,7 @@ export async function collectDue(data: {
     category: 'Due Collection',
     amount: data.amount,
     description: `Due payment from ${data.buyerType} ID: ${data.buyerId}`,
-    recordedBy: (session.user as any).id,
+    recordedBy: dbUser._id,
   });
   await ledgerTx.save();
 
@@ -376,6 +382,9 @@ export async function togglePaymentStatus(saleId: string) {
 
   await connectToDatabase();
 
+  const dbUser = await User.findOne({ email: session.user?.email });
+  if (!dbUser) throw new Error('Logged-in user record not found in database');
+
   const sale = await Sale.findById(saleId);
   if (!sale) throw new Error('Sale not found');
 
@@ -419,7 +428,7 @@ export async function togglePaymentStatus(saleId: string) {
         category: 'Silage Sale',
         amount: sale.grandTotal,
         description: `Payment for invoice ${sale.invoiceNumber}`,
-        recordedBy: (session.user as any).id,
+        recordedBy: dbUser._id,
       });
       await ledgerTx.save();
     } else {

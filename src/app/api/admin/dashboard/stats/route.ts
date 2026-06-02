@@ -218,6 +218,16 @@ export async function GET(req: NextRequest) {
       totalFarmerDues = farmerDuesStats[0]?.totalDues || 0;
     }
 
+    // 7. Total Pending (Payable) Dividends
+    let totalPendingDividends = 0;
+    if (LedgerTransaction) {
+      const pendingDividends = await LedgerTransaction.aggregate([
+        { $match: { category: 'Dividend', status: 'pending' } },
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+      ]);
+      totalPendingDividends = pendingDividends[0]?.total || 0;
+    }
+
     return NextResponse.json({
       stats: {
         totalSalesRevenue,
@@ -234,6 +244,7 @@ export async function GET(req: NextRequest) {
         activeDealers,
         totalFarmers,
         pendingOrdersCount,
+        totalPendingDividends,
       },
       recentSales,
       recentTransactions,

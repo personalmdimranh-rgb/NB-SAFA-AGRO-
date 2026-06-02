@@ -55,7 +55,7 @@ export const proxy = auth(async (req) => {
     // Check if director-only sub-route
     const isDirectorRoute = nextUrl.pathname.startsWith("/admin/director");
     if (isDirectorRoute) {
-      if (role !== "director" && role !== "super_admin") {
+      if (role !== "director" && role !== "super_admin" && role !== "admin" && role !== "manager") {
         return NextResponse.redirect(new URL("/login", nextUrl));
       }
     } else {

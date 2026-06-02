@@ -18,6 +18,7 @@ export default function PublicHeader({ session }: PublicHeaderProps) {
 
   const navItems = [
     { label: 'Home', href: '/' },
+    { label: 'About Us', href: '/about' },
     { label: 'FAQ', href: '/faq' },
     { label: 'Our Team', href: '/team' },
     { label: 'Contact', href: '/contact' },

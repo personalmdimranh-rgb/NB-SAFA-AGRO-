@@ -96,23 +96,35 @@ function KpiCard({ title, value, sub, icon: Icon, iconBg, href, trend }: KpiCard
     <Card className="group relative overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-default h-full">
       {/* subtle top-border accent */}
       <div className="absolute inset-x-0 top-0 h-[3px] bg-primary/60 rounded-t-lg" />
-      <CardContent className="pt-5 pb-4 px-5 flex flex-col gap-3 h-full">
-        <div className="flex items-start justify-between">
-          <div className={`p-2.5 rounded-xl ${iconBg || 'bg-primary/10'}`}>
-            <Icon className="h-5 w-5 text-primary" />
+      <CardContent className="p-3 sm:p-5 flex flex-col justify-between h-full min-h-[110px] sm:min-h-[140px]">
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <div className={`p-1.5 sm:p-2 rounded-xl ${iconBg || 'bg-primary/10'}`}>
+              <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+            </div>
+            {href && (
+              <ArrowRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            )}
           </div>
-          {href && (
-            <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-          )}
+          <div className="space-y-1 min-w-0">
+            <p className="text-[9px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider truncate">
+              {title}
+            </p>
+            <p className="text-sm xs:text-base sm:text-2xl font-black tracking-tight leading-none text-zinc-900 dark:text-zinc-50 whitespace-nowrap truncate">
+              {value}
+            </p>
+          </div>
         </div>
-        <div className="space-y-0.5 flex-1">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            {title}
+        {sub && (
+          <p className="text-[9px] sm:text-xs text-muted-foreground mt-2 leading-tight">
+            {sub}
           </p>
-          <p className="text-2xl font-black tracking-tight leading-none">{value}</p>
-          {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
-        </div>
-        {trend !== undefined && <TrendBadge value={trend} />}
+        )}
+        {trend !== undefined && (
+          <div className="mt-1">
+            <TrendBadge value={trend} />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -474,7 +486,7 @@ export default function AdminDashboard() {
             Farm Overview
           </h1>
           <p className="text-muted-foreground text-sm mt-0.5">
-            Shafa Agro — Silage Production &amp; Farm Operations Dashboard
+            NB Safa Agro — Silage Production &amp; Farm Operations Dashboard
           </p>
         </div>
 
@@ -540,7 +552,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── Secondary KPIs ──────────────────────────────────────────────── */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
         <KpiCard
           title="Cash Balance"
           value={tk(stats?.cashBalance || 0)}
@@ -556,6 +568,14 @@ export default function AdminDashboard() {
           icon={Building2}
           iconBg="bg-chart-4/10"
           href="/admin/accounts"
+        />
+        <KpiCard
+          title="Payable Dividends"
+          value={tk(stats?.totalPendingDividends || 0)}
+          sub="Declared unpaid payouts"
+          icon={BadgeDollarSign}
+          iconBg="bg-amber-500/10"
+          href="/admin/director"
         />
         <KpiCard
           title="Active Dealers"
@@ -586,18 +606,18 @@ export default function AdminDashboard() {
             <CardDescription className="text-xs">Silage revenue &amp; collection trend</CardDescription>
           </div>
           {/* Metric tabs */}
-          <div className="flex border-t sm:border-t-0 sm:border-l divide-x overflow-x-auto no-scrollbar">
+          <div className="flex border-t sm:border-t-0 sm:border-l divide-x w-full sm:w-auto">
             {(Object.keys(metricConfig) as (keyof typeof metricConfig)[]).map(key => (
               <button
                 key={key}
                 data-active={activeMetric === key}
                 onClick={() => setActiveMetric(key)}
-                className="flex flex-col justify-center gap-0.5 px-5 py-3 text-left data-[active=true]:bg-muted/60 min-w-[110px] transition-colors"
+                className="flex-1 sm:flex-none flex flex-col justify-center gap-0.5 px-2.5 py-2.5 sm:px-5 sm:py-3 text-left data-[active=true]:bg-muted/60 min-w-0 sm:min-w-[110px] transition-colors"
               >
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+                <span className="text-[8px] sm:text-[10px] text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                   {metricConfig[key].label}
                 </span>
-                <span className="text-lg font-black leading-none">
+                <span className="text-xs sm:text-lg font-black leading-none whitespace-nowrap">
                   {metricConfig[key].format(chartTotals[key])}
                 </span>
               </button>

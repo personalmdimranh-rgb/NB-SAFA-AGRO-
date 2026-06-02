@@ -60,7 +60,7 @@ export default function FarmerCareHub() {
 
             <h2 className="text-3xl font-extrabold text-foreground font-heading leading-tight">Farmer & Cattle Care Hub</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Whether you own a local farm with 5 dairy cows or manage a major cooperative with 500 bulls, Shafa Agro offers dedicated feed optimization assistance. Our distribution trucks provide door-to-door delivery across Bogura and surrounding districts.
+              Whether you own a local farm with 5 dairy cows or manage a major cooperative with 500 bulls, NB Safa Agro offers dedicated feed optimization assistance. Our distribution trucks provide door-to-door delivery across Bogura and surrounding districts.
             </p>
 
             <div className="grid grid-cols-2 gap-4">

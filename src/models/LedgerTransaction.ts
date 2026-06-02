@@ -3,6 +3,7 @@ import mongoose, { Document, Model, Schema } from 'mongoose';
 export interface ILedgerTransaction extends Document {
   date: Date;
   type: 'income' | 'expense' | 'transfer';
+  status: 'pending' | 'released';
   source: 'cash' | 'bank';
   bankDetails?: {
     bankName?: string;
@@ -22,6 +23,7 @@ const LedgerTransactionSchema: Schema<ILedgerTransaction> = new Schema(
     date: { type: Date, required: true, default: Date.now },
     type: { type: String, enum: ['income', 'expense', 'transfer'], required: true },
     source: { type: String, enum: ['cash', 'bank'], required: true },
+    status: { type: String, enum: ['pending', 'released'], default: 'released' },
     bankDetails: {
       bankName: String,
       accountNo: String

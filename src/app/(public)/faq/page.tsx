@@ -41,7 +41,7 @@ export default function FAQPage() {
       icon: Activity,
       items: [
         {
-          question: "How does Shafa Agro Maize Silage optimize dairy milk yield?",
+          question: "How does NB Safa Agro Maize Silage optimize dairy milk yield?",
           answer: "Our whole-crop maize silage is harvested at peak starch maturity (30-35% dry matter) and processed to a precise 10-15mm chop size. This delivers concentrated energy directly to the rumen, improving digestibility by up to 72% and increasing daily milk yields by an average of 15% per cow."
         },
         {
@@ -49,7 +49,7 @@ export default function FAQPage() {
           answer: "We compact the chopped silage and seal it inside heavy-duty, triple-layer UV-resistant bags. This creates a completely anaerobic environment, preventing any oxygen infiltration or mold growth. Under this hermetic vacuum, our silage remains fresh and nutritionally viable for up to 18 months."
         },
         {
-          question: "Is Shafa Agro silage free of aflatoxins and synthetic chemicals?",
+          question: "Is NB Safa Agro silage free of aflatoxins and synthetic chemicals?",
           answer: "Yes, 100%. Every production batch undergoes strict laboratory wet-chemistry analysis to certify aflatoxin levels remain below 20 ppb (parts per billion). We use only whole-crop corn, premium molasses, and probiotic strains. We never add urea, synthetic preservatives, or artificial nitrogen feeds."
         },
         {
@@ -64,12 +64,12 @@ export default function FAQPage() {
       icon: Truck,
       items: [
         {
-          question: "How can a regional business apply to become an approved Shafa Agro Dealer?",
+          question: "How can a regional business apply to become an approved NB Safa Agro Dealer?",
           answer: "Interested regional distributors can apply through our Dealer Registry Portal. You must submit your trade license, shop details, NID card, and regional address. Once submitted, our office staff conducts an audit, approves the account, and assigns a credit limit boundary."
         },
         {
           question: "What are the standard credit limits and commission rates for regional distributors?",
-          answer: "Shafa Agro offers 3 main partner tiers: Authorized Partner (2% commission, 50K BDT credit limit), Executive Distributor (4% commission, 250K BDT credit limit), and Elite Agro Broker (6% commission, 1M BDT credit limit). Commisions are automatically deposited into your dealer wallet upon order completion."
+          answer: "NB Safa Agro offers 3 main partner tiers: Authorized Partner (2% commission, 50K BDT credit limit), Executive Distributor (4% commission, 250K BDT credit limit), and Elite Agro Broker (6% commission, 1M BDT credit limit). Commisions are automatically deposited into your dealer wallet upon order completion."
         },
         {
           question: "How does the automated billing and digital ledger system work?",
@@ -77,7 +77,7 @@ export default function FAQPage() {
         },
         {
           question: "Do you provide door-to-door delivery for bulk farmer cooperative orders?",
-          answer: "Yes. Shafa Agro operates a regional logistics network. Bulk shipments exceeding 15 tons are dispatched directly from our Bogura compacting hub to dairy farm cooperatives and distributors across surrounding districts in heavy-duty shipping trucks."
+          answer: "Yes. NB Safa Agro operates a regional logistics network. Bulk shipments exceeding 15 tons are dispatched directly from our Bogura compacting hub to dairy farm cooperatives and distributors across surrounding districts in heavy-duty shipping trucks."
         }
       ]
     },
@@ -148,7 +148,7 @@ export default function FAQPage() {
             transition={{ duration: 0.5 }}
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20 backdrop-blur-md"
           >
-            <HelpCircle className="h-3.5 w-3.5" /> Shafa Agro Help Center
+            <HelpCircle className="h-3.5 w-3.5" /> NB Safa Agro Help Center
           </motion.div>
 
           <motion.h1

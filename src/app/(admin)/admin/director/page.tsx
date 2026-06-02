@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { getDirectorSummary, logInvestment, releaseDividends, createResolution, getResolutions } from '@/app/actions/director';
+import { getDirectorSummary, logInvestment, releaseDividends, getDividendPayouts, approveDividendPayout } from '@/app/actions/director';
 import { getDealers } from '@/app/actions/dealer'; // just to fetch users with role='director'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,48 +9,49 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { Coins, PlusCircle, Shield, Award, Send, Users, Notebook } from 'lucide-react';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
+import { useSession } from 'next-auth/react';
 
 export default function DirectorPanelPage() {
+  const { data: session } = useSession();
+  const role = (session?.user as any)?.role;
+  const isReadOnly = ['manager', 'staff', 'director'].includes(role);
+  const canPostResolution = ['super_admin', 'admin', 'director'].includes(role);
+
   const [summary, setSummary] = useState<any>(null);
-  const [resolutions, setResolutions] = useState<any[]>([]);
+  const [payouts, setPayouts] = useState<any[]>([]);
   const [directors, setDirectors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submittingInvestment, setSubmittingInvestment] = useState(false);
   const [submittingDividend, setSubmittingDividend] = useState(false);
-  const [submittingResolution, setSubmittingResolution] = useState(false);
+  const [isInvestmentOpen, setIsInvestmentOpen] = useState(false);
 
   // Investment Form
   const [directorId, setDirectorId] = useState('');
   const [investmentAmount, setInvestmentAmount] = useState('');
+  const [investmentDate, setInvestmentDate] = useState('');
   const [equitySharePercentage, setEquitySharePercentage] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('bank');
   const [notes, setNotes] = useState('');
 
-  // Dividend Form
-  const [dividendPool, setDividendPool] = useState('');
-
-  // Board Resolution Form
-  const [resTitle, setResTitle] = useState('');
-  const [resContent, setResContent] = useState('');
-  const [resFileUrl, setResFileUrl] = useState('');
-  const [resMeetingDate, setResMeetingDate] = useState('');
-  const [resAgenda, setResAgenda] = useState('');
-  const [resAttendees, setResAttendees] = useState('');
+  // Dividend & Retained Earnings Form
+  const [declaredProfit, setDeclaredProfit] = useState('');
+  const [payoutPercentage, setPayoutPercentage] = useState('70');
 
   const loadData = async () => {
     await Promise.resolve(); // Defer state updates to avoid synchronous setState warning in useEffect
     try {
       setLoading(true);
-      const [sum, resList] = await Promise.all([
+      const [sum, payoutList] = await Promise.all([
         getDirectorSummary(),
-        getResolutions()
+        getDividendPayouts()
       ]);
       setSummary(sum);
-      setResolutions(resList);
+      setPayouts(payoutList);
 
       // Fetch user lists to extract users with role: director
       const response = await fetch('/api/admin/users'); // Or direct query, let's fetch director list
@@ -71,8 +72,13 @@ export default function DirectorPanelPage() {
 
   const handleLogInvestment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!directorId || !investmentAmount || !equitySharePercentage) {
-      toast.error('Director, Amount, and Equity Share percentage are required');
+    if (!directorId || !investmentAmount) {
+      toast.error('Director and Amount are required');
+      return;
+    }
+    const amt = parseFloat(investmentAmount);
+    if (isNaN(amt) || amt <= 0) {
+      toast.error('Investment amount must be a positive number');
       return;
     }
 
@@ -81,15 +87,17 @@ export default function DirectorPanelPage() {
       await logInvestment({
         directorId,
         investmentAmount: parseFloat(investmentAmount),
-        equitySharePercentage: parseFloat(equitySharePercentage),
+        equitySharePercentage: 0,
         paymentMethod,
         notes,
+        date: investmentDate || undefined,
       });
 
       toast.success('Investment logged and equity registered successfully!');
       setInvestmentAmount('');
-      setEquitySharePercentage('');
+      setInvestmentDate('');
       setNotes('');
+      setIsInvestmentOpen(false);
       loadData();
     } catch (err: any) {
       toast.error('Failed to log investment: ' + err.message);
@@ -100,74 +108,82 @@ export default function DirectorPanelPage() {
 
   const handleReleaseDividends = async (e: React.FormEvent) => {
     e.preventDefault();
-    const pool = parseFloat(dividendPool);
-    if (isNaN(pool) || pool <= 0) {
-      toast.error('Please enter a valid dividend pool amount');
+    const profit = parseFloat(declaredProfit);
+    const pct = parseFloat(payoutPercentage);
+    if (isNaN(profit) || profit <= 0) {
+      toast.error('Please enter a valid profit pool amount');
+      return;
+    }
+    if (isNaN(pct) || pct < 0 || pct > 100) {
+      toast.error('Payout percentage must be between 0% and 100%');
       return;
     }
 
+    const pool = (profit * pct) / 100;
+    const retained = profit - pool;
+
     const confirmResult = await Swal.fire({
-      title: 'Release Dividend Pool?',
-      html: `Do you want to distribute a total dividend pool of <strong>৳${pool.toLocaleString()} BDT</strong> among directors relative to their registered equity shares?<br/><br/><span style="font-size:11px; color:#c2410c;">This will register an Expense Ledger Entry on the Bank balance.</span>`,
+      title: 'Declare Profit Distribution?',
+      html: `Do you want to declare a profit pool of <strong>৳${profit.toLocaleString()} BDT</strong>?<br/><br/>
+             • Distribute to Directors: <strong>৳${pool.toLocaleString()} BDT (${pct}%)</strong><br/>
+             • Retain in Reserves: <strong>৳${retained.toLocaleString()} BDT (${100 - pct}%)</strong><br/><br/>
+             <span style="font-size:11px; color:#c2410c;">This will register an Expense Ledger Entry on the Bank balance for the distributed portion.</span>`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: 'var(--color-primary, #10b981)',
-      confirmButtonText: 'Yes, release dividends'
+      confirmButtonText: 'Yes, distribute and retain'
     });
 
     if (!confirmResult.isConfirmed) return;
 
     try {
       setSubmittingDividend(true);
-      const res = await releaseDividends(pool);
+      const res = await releaseDividends(profit, pct);
       if (res.success) {
-        const payoutsStr = res.payouts.map(p => `${p.directorName}: ৳${p.amount.toLocaleString()} (${p.equity}% equity)`).join('<br/>');
+        const payoutsStr = res.payouts.length > 0
+          ? res.payouts.map((p: any) => `${p.directorName}: ৳${p.amount.toLocaleString()} (${p.equity}% equity)`).join('<br/>')
+          : 'None (No directors eligible)';
         Swal.fire({
-          title: 'Dividends Distributed!',
-          html: `<div style="text-align:left; font-size:12px;">${payoutsStr}</div>`,
+          title: 'Profit Distributed!',
+          html: `<div style="text-align:left; font-size:12px;">
+                   <strong>Payouts:</strong><br/>${payoutsStr}<br/><br/>
+                   <strong>Retained Earnings:</strong> ৳${res.retainedAmount.toLocaleString()} BDT (${100 - pct}% kept in reserve + any undistributed portions)
+                 </div>`,
           icon: 'success'
         });
-        setDividendPool('');
+        setDeclaredProfit('');
         loadData();
       }
     } catch (err: any) {
-      toast.error('Failed to distribute dividends: ' + err.message);
+      toast.error('Failed to distribute profit: ' + err.message);
     } finally {
       setSubmittingDividend(false);
     }
   };
 
-  const handleCreateResolution = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!resTitle || !resContent) {
-      toast.error('Resolution Title and Content are required');
-      return;
-    }
+  const handleReleasePayout = async (id: string) => {
+    const confirmResult = await Swal.fire({
+      title: 'Release Dividend Payout?',
+      text: 'This will approve the payout, deduct the BDT amount from the bank ledger, and mark it as released.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: 'var(--color-primary, #10b981)',
+      confirmButtonText: 'Yes, release now'
+    });
+
+    if (!confirmResult.isConfirmed) return;
 
     try {
-      setSubmittingResolution(true);
-      await createResolution(
-        resTitle,
-        resContent,
-        resFileUrl || undefined,
-        resMeetingDate || undefined,
-        resAgenda || undefined,
-        resAttendees || undefined
-      );
-      toast.success('Board notice posted successfully!');
-      setResTitle('');
-      setResContent('');
-      setResFileUrl('');
-      setResMeetingDate('');
-      setResAgenda('');
-      setResAttendees('');
-      loadData();
+      const res = await approveDividendPayout(id);
+      if (res.success) {
+        toast.success('Dividend payout released and ledger updated!');
+        loadData();
+      }
     } catch (err: any) {
-      toast.error('Failed to post notice: ' + err.message);
-    } finally {
-      setSubmittingResolution(false);
+      toast.error('Failed to release payout: ' + err.message);
     }
   };
+
 
   if (loading) {
     return <div className="text-center py-20 text-muted-foreground">Loading Director Board Portal...</div>;
@@ -182,16 +198,146 @@ export default function DirectorPanelPage() {
       value: d.equity,
     })) || [];
 
+  const parsedDeclared = parseFloat(declaredProfit) || 0;
+  const parsedPercentage = parseFloat(payoutPercentage) || 0;
+  const distributeAmount = (parsedDeclared * parsedPercentage) / 100;
+  const retainedAmount = parsedDeclared - distributeAmount;
+
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-primary">Directors Panel & Equity Board</h1>
-        <p className="text-muted-foreground">Monitor capitalization investments, release dividends, and record board resolutions</p>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-primary">Directors Panel & Equity Board</h1>
+          <p className="text-muted-foreground">Monitor capitalization investments, release dividends, and record board resolutions</p>
+        </div>
+        {!isReadOnly && (
+          <Dialog open={isInvestmentOpen} onOpenChange={setIsInvestmentOpen}>
+            <DialogTrigger render={
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold flex items-center gap-1.5 self-start sm:self-auto">
+                <PlusCircle className="h-4.5 w-4.5" /> Log Capital Investment
+              </Button>
+            } />
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-md font-bold text-primary flex items-center gap-1.5">
+                  <PlusCircle className="h-4.5 w-4.5 text-primary" /> Log Capital Investment
+                </DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleLogInvestment} className="space-y-4 pt-2">
+                <div>
+                  <label className="text-[10px] font-bold text-primary block mb-0.5">Select Director</label>
+                  <Select value={directorId} onValueChange={(val: any) => setDirectorId(val || '')}>
+                    <SelectTrigger className="border-border h-9">
+                      <SelectValue placeholder="Choose Director...">
+                        {directors.find((d) => d._id === directorId)?.name}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {directors.map((d) => (
+                        <SelectItem key={d._id} value={d._id}>{d.name} ({d.email})</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-primary block mb-0.5">Amount (BDT)</label>
+                  <Input type="number" value={investmentAmount} onChange={(e) => setInvestmentAmount(e.target.value)} placeholder="0.00" className="border-border h-9" />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-primary block mb-0.5">Date of Investment</label>
+                  <Input type="date" value={investmentDate} onChange={(e) => setInvestmentDate(e.target.value)} className="border-border h-9" />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-primary block mb-0.5">Investment Method</label>
+                  <Select value={paymentMethod} onValueChange={(val: any) => setPaymentMethod(val || 'bank')}>
+                    <SelectTrigger className="border-border h-9">
+                      <SelectValue placeholder="Select Method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="bank">Bank Transfer</SelectItem>
+                      <SelectItem value="cash">Cash Contribution</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-primary block mb-0.5">Notes/Memos</label>
+                  <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g. Phase 2 expansion fund" className="border-border h-9" />
+                </div>
+
+                <Button type="submit" disabled={submittingInvestment} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
+                  {submittingInvestment ? 'Logging Capital...' : 'Log Capitalization'}
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
+
+      {/* Retained Earnings & Profits visual stats */}
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="border-border bg-card/70">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-semibold uppercase text-muted-foreground">Total Cumulative Profit</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-black text-primary">৳{summary?.profitBeforeDividends?.toLocaleString() || 0}</div>
+            <p className="text-[10px] text-muted-foreground">Net operating profit before any dividend payouts</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-border bg-card/70">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-semibold uppercase text-muted-foreground">Total Dividends Distributed</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-black text-primary">৳{summary?.totalDividends?.toLocaleString() || 0}</div>
+            <p className="text-[10px] text-muted-foreground">Payouts released to farm directors</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border bg-card/70">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-semibold uppercase text-muted-foreground">Retained Earnings (Reserves)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-black text-emerald-600">৳{summary?.retainedEarnings?.toLocaleString() || 0}</div>
+            <p className="text-[10px] text-muted-foreground">Reinvested profit kept in company reserves</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {summary?.profitBeforeDividends > 0 && (
+        <Card className="border-border bg-card/70 p-4">
+          <div className="flex justify-between items-center text-xs font-bold text-muted-foreground mb-1.5">
+            <span>Dividend Distribution Ratio</span>
+            <span>Retained Earnings Ratio</span>
+          </div>
+          <div className="w-full h-3 rounded-full bg-muted overflow-hidden flex">
+            <div 
+              style={{ width: `${(summary.totalDividends / summary.profitBeforeDividends) * 100}%` }} 
+              className="bg-primary h-full transition-all duration-500"
+              title={`Distributed: ${((summary.totalDividends / summary.profitBeforeDividends) * 100).toFixed(1)}%`}
+            />
+            <div 
+              style={{ width: `${(summary.retainedEarnings / summary.profitBeforeDividends) * 100}%` }} 
+              className="bg-emerald-600 h-full transition-all duration-500"
+              title={`Retained: ${((summary.retainedEarnings / summary.profitBeforeDividends) * 100).toFixed(1)}%`}
+            />
+          </div>
+          <div className="flex gap-4 mt-2 justify-center text-[10px] font-semibold text-muted-foreground">
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-primary" /> Distributed: {((summary.totalDividends / summary.profitBeforeDividends) * 100).toFixed(1)}%</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-emerald-600" /> Retained: {((summary.retainedEarnings / summary.profitBeforeDividends) * 100).toFixed(1)}%</span>
+          </div>
+        </Card>
+      )}
 
       {/* Summary Widget */}
       <div className="grid gap-6 md:grid-cols-12">
-        <Card className="md:col-span-8 border-border bg-card/70">
+        <Card className="md:col-span-12 border-border bg-card/70">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-primary">Capitalization & Equity Breakdown</CardTitle>
           </CardHeader>
@@ -236,201 +382,141 @@ export default function DirectorPanelPage() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Investment Form */}
-        <Card className="md:col-span-4 border-border bg-card/70">
-          <CardHeader>
-            <CardTitle className="text-md font-bold text-primary flex items-center gap-1.5">
-              <PlusCircle className="h-4.5 w-4.5 text-primary" /> Log Capital Investment
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogInvestment} className="space-y-4">
-              <div>
-                <label className="text-[10px] font-bold text-primary block mb-0.5">Select Director</label>
-                <Select value={directorId} onValueChange={(val: any) => setDirectorId(val || '')}>
-                  <SelectTrigger className="border-border h-9">
-                    <SelectValue placeholder="Choose Director..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {directors.map((d) => (
-                      <SelectItem key={d._id} value={d._id}>{d.name} ({d.email})</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-[10px] font-bold text-primary block mb-0.5">Amount (BDT)</label>
-                  <Input type="number" value={investmentAmount} onChange={(e) => setInvestmentAmount(e.target.value)} placeholder="0.00" className="border-border h-9" />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-primary block mb-0.5">Equity Share %</label>
-                  <Input type="number" step="0.01" value={equitySharePercentage} onChange={(e) => setEquitySharePercentage(e.target.value)} placeholder="e.g. 10.0" className="border-border h-9" />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-bold text-primary block mb-0.5">Investment Method</label>
-                <Select value={paymentMethod} onValueChange={(val: any) => setPaymentMethod(val || 'bank')}>
-                  <SelectTrigger className="border-border h-9">
-                    <SelectValue placeholder="Select Method" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="bank">Bank Transfer</SelectItem>
-                    <SelectItem value="cash">Cash Contribution</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-bold text-primary block mb-0.5">Notes/Memos</label>
-                <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g. Phase 2 expansion fund" className="border-border h-9" />
-              </div>
-
-              <Button type="submit" disabled={submittingInvestment} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
-                {submittingInvestment ? 'Logging Capital...' : 'Log Capitalization'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
       </div>
 
-      {/* Dividend Release & Notice Board */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <div className="space-y-6">
-          <Card className="border-border bg-card/70">
-            <CardHeader>
-              <CardTitle className="text-md font-bold text-primary flex items-center gap-1.5">
-                <Coins className="h-4.5 w-4.5 text-primary" /> Distribute Dividend Pool
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleReleaseDividends} className="space-y-4">
-                <div>
-                  <label className="text-xs font-semibold text-primary block mb-1">Total Dividend Pool (BDT)</label>
-                  <div className="flex gap-2">
+      {/* Dividend Release & Payout History */}
+      <div className="grid gap-6 md:grid-cols-12">
+        <div className="md:col-span-12">
+          {!isReadOnly && (
+            <Card className="border-border bg-card/70 h-full">
+              <CardHeader>
+                <CardTitle className="text-md font-bold text-primary flex items-center gap-1.5">
+                  <Coins className="h-4.5 w-4.5 text-primary" /> Distribute Profit Pool
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <form onSubmit={handleReleaseDividends} className="space-y-4">
+                  <div>
+                    <label className="text-xs font-semibold text-primary block mb-1">Declared Profit Pool (BDT)</label>
                     <Input
                       type="number"
                       placeholder="0.00"
-                      value={dividendPool}
-                      onChange={(e) => setDividendPool(e.target.value)}
+                      value={declaredProfit}
+                      onChange={(e) => setDeclaredProfit(e.target.value)}
                       className="border-border"
                       required
                     />
-                    <Button type="submit" disabled={submittingDividend} className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold whitespace-nowrap">
-                      {submittingDividend ? 'Releasing...' : 'Distribute Pool'}
-                    </Button>
                   </div>
-                </div>
-                <p className="text-[10px] text-muted-foreground italic">
-                  * Payouts are computed automatically matching each director's active share percentage.
-                </p>
-              </form>
-            </CardContent>
-          </Card>
+                  <div>
+                    <label className="text-xs font-semibold text-primary block mb-1">Payout Percentage (%)</label>
+                    <div className="flex gap-4 items-center">
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={payoutPercentage}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setPayoutPercentage(val);
+                        }}
+                        className="border-border w-24 h-9"
+                        required
+                      />
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={payoutPercentage || '0'}
+                        onChange={(e) => setPayoutPercentage(e.target.value)}
+                        className="flex-1 accent-primary h-2 bg-muted rounded-lg appearance-none cursor-pointer"
+                      />
+                    </div>
+                  </div>
 
-          {/* Resolutions list */}
-          <Card className="border-border bg-card/70">
+                  <div className="p-3 bg-muted/50 rounded-lg space-y-1.5 text-xs border border-border">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground font-semibold">Distributing Payout:</span>
+                      <span className="font-bold text-primary">৳{distributeAmount.toLocaleString()} BDT ({payoutPercentage}%)</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground font-semibold">Retained in Reserve:</span>
+                      <span className="font-bold text-emerald-600">৳{retainedAmount.toLocaleString()} BDT ({100 - parsedPercentage}%)</span>
+                    </div>
+                  </div>
+
+                  <Button type="submit" disabled={submittingDividend} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold whitespace-nowrap">
+                    {submittingDividend ? 'Releasing...' : 'Declare & Distribute Pool'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        <div className="md:col-span-12">
+          {/* Dividend Payout History */}
+          <Card className="border-border bg-card/70 h-full">
             <CardHeader>
               <CardTitle className="text-md font-bold text-primary flex items-center gap-1.5">
-                <Notebook className="h-4.5 w-4.5 text-primary" /> Board Resolutions Noticeboard
+                <Coins className="h-4.5 w-4.5 text-primary" /> Dividend Payout History
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 max-h-[300px] overflow-y-auto">
-              {resolutions.length === 0 ? (
-                <div className="text-xs text-muted-foreground text-center py-6">No notices posted.</div>
+              {payouts.length === 0 ? (
+                <div className="text-xs text-muted-foreground text-center py-6">No dividend payouts recorded.</div>
               ) : (
-                resolutions.map((res) => (
-                  <div key={res._id} className="p-3 border rounded-lg bg-muted/50 space-y-2 border-border">
-                    <div className="flex justify-between items-start">
-                      <h4 className="text-xs font-bold text-primary">{res.title}</h4>
-                      <span className="text-[9px] text-muted-foreground font-semibold">
-                        Posted: {new Date(res.date).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground whitespace-pre-wrap">{res.content}</p>
-                    
-                    {res.meetingDate && (
-                      <div className="text-[10px] text-primary font-semibold bg-primary/10 p-1.5 rounded">
-                        <strong>Meeting Date:</strong> {new Date(res.meetingDate).toLocaleDateString()}
-                      </div>
-                    )}
-                    
-                    {res.agenda && (
-                      <div className="text-[10px] text-muted-foreground border-l-2 border-primary pl-2">
-                        <strong>Agenda:</strong> {res.agenda}
-                      </div>
-                    )}
-
-                    {res.attendees && (
-                      <div className="text-[10px] text-muted-foreground border-l-2 border-accent pl-2">
-                        <strong>Attendees:</strong> {res.attendees}
-                      </div>
-                    )}
-
-                    {res.fileUrl && (
-                      <a href={res.fileUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary font-bold hover:underline block">
-                        Download Board Minute Attachment
-                      </a>
-                    )}
-                    <span className="block text-[9px] text-muted-foreground text-right italic">
-                      Posted by: {res.recordedBy?.name || 'Admin'}
-                    </span>
-                  </div>
-                ))
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-[10px] font-bold uppercase">Date</TableHead>
+                        <TableHead className="text-[10px] font-bold uppercase">Details</TableHead>
+                        <TableHead className="text-[10px] font-bold uppercase">Status</TableHead>
+                        <TableHead className="text-[10px] font-bold uppercase text-right">Amount</TableHead>
+                        {!isReadOnly && <TableHead className="text-[10px] font-bold uppercase text-right">Actions</TableHead>}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {payouts.map((p) => (
+                        <TableRow key={p._id}>
+                          <TableCell className="text-[10px] whitespace-nowrap font-medium">
+                            {new Date(p.date).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell className="text-[10px] text-muted-foreground max-w-[220px] truncate" title={p.description}>
+                            {p.description}
+                          </TableCell>
+                          <TableCell className="text-[10px] font-medium">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
+                              p.status === 'released' ? 'bg-primary/10 text-primary' : 'bg-amber-100 text-amber-800'
+                            }`}>
+                              {p.status || 'released'}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-[10px] font-bold text-primary text-right">
+                            ৳{p.amount.toLocaleString()}
+                          </TableCell>
+                          {!isReadOnly && (
+                            <TableCell className="text-right">
+                              {p.status === 'pending' && (
+                                <Button 
+                                  size="sm" 
+                                  className="h-6 text-[9px] font-bold bg-primary hover:bg-primary/90 text-primary-foreground px-2"
+                                  onClick={() => handleReleasePayout(p._id)}
+                                >
+                                  Release Payout
+                                </Button>
+                              )}
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </CardContent>
           </Card>
         </div>
-
-        {/* Board Resolution Poster */}
-        <Card className="border-border bg-card/70">
-          <CardHeader>
-            <CardTitle className="text-md font-bold text-primary flex items-center gap-1.5">
-              <Notebook className="h-4.5 w-4.5 text-primary" /> Create Resolution & Notice
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleCreateResolution} className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-primary block mb-1">Notice / Resolution Title</label>
-                <Input value={resTitle} onChange={(e) => setResTitle(e.target.value)} placeholder="e.g. Annual General Board Meeting Q3" required className="border-border" />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-primary block mb-1">Content / Board Minute Summary</label>
-                <Textarea value={resContent} onChange={(e) => setResContent(e.target.value)} placeholder="Enter details..." required className="border-border h-28" />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-semibold text-primary block mb-1">Meeting Date (Optional)</label>
-                  <Input type="date" value={resMeetingDate} onChange={(e) => setResMeetingDate(e.target.value)} className="border-border" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-primary block mb-1">Document Attachment Link (Optional)</label>
-                  <Input value={resFileUrl} onChange={(e) => setResFileUrl(e.target.value)} placeholder="e.g. https://nbsafaagro.com/docs/resolution-q3.pdf" className="border-border" />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-primary block mb-1">Agenda (Optional)</label>
-                <Input value={resAgenda} onChange={(e) => setResAgenda(e.target.value)} placeholder="e.g. Capitalization, Maize procurement" className="border-border" />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-primary block mb-1">Attendees (Optional)</label>
-                <Input value={resAttendees} onChange={(e) => setResAttendees(e.target.value)} placeholder="e.g. Imtiaz, Imran, Karim" className="border-border" />
-              </div>
-
-              <Button type="submit" disabled={submittingResolution} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
-                {submittingResolution ? 'Posting...' : 'Post Resolution'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

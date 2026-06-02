@@ -548,11 +548,11 @@ export default function EmployeesPage() {
               </div>
             </div>
 
-            <DialogFooter className="gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => { setAddModalOpen(false); resetAddForm(); }} className="border-primary/20">
+            <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => { setAddModalOpen(false); resetAddForm(); }} className="w-full sm:flex-1 h-10 font-semibold border-primary/20">
                 Cancel
               </Button>
-              <Button type="submit" disabled={submitting} className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
+              <Button type="submit" disabled={submitting} className="w-full sm:flex-1 h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
                 {submitting ? 'Registering...' : 'Register Employee'}
               </Button>
             </DialogFooter>
@@ -718,9 +718,9 @@ export default function EmployeesPage() {
                 </div>
               </div>
 
-              <DialogFooter className="gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => setEditOpen(false)} className="border-primary/20">Cancel</Button>
-                <Button type="submit" disabled={updating} className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
+              <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={() => setEditOpen(false)} className="w-full sm:flex-1 h-10 font-semibold border-primary/20">Cancel</Button>
+                <Button type="submit" disabled={updating} className="w-full sm:flex-1 h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
                   {updating ? 'Saving...' : 'Save Changes'}
                 </Button>
               </DialogFooter>

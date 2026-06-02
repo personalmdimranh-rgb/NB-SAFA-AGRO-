@@ -158,7 +158,7 @@ export default function RegisterPage() {
         >
           <div className="space-y-8 bg-card border border-border p-6 md:p-10 rounded-2xl shadow-md">
             <div className="space-y-2 text-center">
-              <h1 className="text-3xl font-bold tracking-tight text-primary">Create Shafa Agro Account</h1>
+              <h1 className="text-3xl font-bold tracking-tight text-primary">Create NB Safa Agro Account</h1>
               <p className="text-sm text-muted-foreground">
                 Join our agricultural portal and select your role to apply
               </p>
@@ -248,7 +248,7 @@ export default function RegisterPage() {
                             <FormItem>
                               <FormLabel>Shop / Company Name</FormLabel>
                               <FormControl>
-                                <Input placeholder="Shafa Agro Shop" {...field} disabled={isLoading} className="h-11 bg-background" />
+                                <Input placeholder="NB Safa Agro Shop" {...field} disabled={isLoading} className="h-11 bg-background" />
                               </FormControl>
                               <FormMessage />
                             </FormItem>

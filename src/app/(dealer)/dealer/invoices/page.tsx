@@ -46,7 +46,7 @@ export default function DealerInvoices() {
       // Header
       doc.setFontSize(20);
       doc.setTextColor(16, 185, 129); // emerald-500
-      doc.text('SHAFA AGRO FARM', 14, 20);
+      doc.text('NB SAFA AGRO FARM', 14, 20);
       
       doc.setFontSize(9);
       doc.setTextColor(100, 100, 100);

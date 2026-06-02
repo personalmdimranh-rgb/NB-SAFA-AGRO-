@@ -38,7 +38,7 @@ export default function ProfitLossPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border pb-5">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-primary font-heading">Financial Statement</h1>
-          <p className="text-muted-foreground mt-1">Interactive overview of Shafa Agro's operational revenues, expenses, and net margins</p>
+          <p className="text-muted-foreground mt-1">Interactive overview of NB Safa Agro's operational revenues, expenses, and net margins</p>
         </div>
         <div className="flex items-center gap-2 text-xs bg-muted px-3 py-1.5 rounded-full border border-border self-start md:self-auto">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>

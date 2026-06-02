@@ -77,6 +77,8 @@ export async function getLedgerBalances() {
   let bankBalance = 0;
 
   transactions.forEach((tx) => {
+    if ((tx as any).status === 'pending') return;
+    if (tx.category === 'Retained Earnings') return;
     if (tx.type === 'income') {
       if (tx.source === 'cash') cashBalance += tx.amount;
       if (tx.source === 'bank') bankBalance += tx.amount;
@@ -120,6 +122,8 @@ export async function getProfitLossReport() {
   const monthlyData: Record<string, { income: number; expense: number; profit: number }> = {};
 
   transactions.forEach((tx) => {
+    if ((tx as any).status === 'pending') return;
+    if (tx.category === 'Retained Earnings') return;
     const month = new Date(tx.date).toLocaleString('default', { month: 'short', year: 'numeric' });
     if (!monthlyData[month]) {
       monthlyData[month] = { income: 0, expense: 0, profit: 0 };

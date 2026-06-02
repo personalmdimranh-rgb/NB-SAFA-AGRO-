@@ -24,6 +24,7 @@ export default function PublicFooter() {
         <div className="space-y-3 flex flex-col items-center text-center sm:items-start sm:text-left">
           <h4 className="text-foreground font-bold text-sm">Quick Navigation</h4>
           <div className="flex flex-col items-center sm:items-start space-y-1.5 text-xs text-muted-foreground">
+            <Link href="/about" className="hover:text-primary hover:underline">About Us</Link>
             <Link href="/login" className="hover:text-primary hover:underline">Office Management Login</Link>
             <Link href="/login" className="hover:text-primary hover:underline">Dealer Register Portal</Link>
             <Link href="/team" className="hover:text-primary hover:underline">Our Team</Link>
@@ -72,13 +73,13 @@ export default function PublicFooter() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 border-t border-border mt-8 pt-4 text-center text-[10px] text-muted-foreground">
-        &copy; {new Date().getFullYear()} NB Safa Agro. All rights reserved.
-      </div>
-
-      {/* Developer logo — absolute bottom-right corner */}
-      <div className="absolute bottom-4 right-6">
-        <DeveloperLogo className="opacity-40 hover:opacity-100 transition-all duration-300" />
+      <div className="container mx-auto px-4 border-t border-border mt-8 pt-4 flex flex-col md:flex-row items-center justify-between gap-4 text-center text-[10px] text-muted-foreground">
+        <div>
+          &copy; {new Date().getFullYear()} NB Safa Agro. All rights reserved.
+        </div>
+        <div className="flex items-center justify-center">
+          <DeveloperLogo className="opacity-40 hover:opacity-100 transition-all duration-300" />
+        </div>
       </div>
     </footer>
   );

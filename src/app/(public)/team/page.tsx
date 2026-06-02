@@ -36,8 +36,8 @@ const defaultTeam: TeamMemberType[] = [
     name: "Imran Shuvo",
     role: "Founder & Chief Executive Officer",
     image: "https://i.ibb.co.com/zTBvBXws/lawyer-1.jpg",
-    desc: "Visionary agricultural entrepreneur directing Shafa Agro's industrial development and dealer operations.",
-    bio: "Imran founded Shafa Agro with a mission to bring scientific quality and tech-driven ledger systems to Bangladesh's livestock industry.",
+    desc: "Visionary agricultural entrepreneur directing NB Safa Agro's industrial development and dealer operations.",
+    bio: "Imran founded NB Safa Agro with a mission to bring scientific quality and tech-driven ledger systems to Bangladesh's livestock industry.",
     linkedin: "#",
     twitter: "#",
     facebook: "#"
@@ -77,7 +77,7 @@ const defaultTeam: TeamMemberType[] = [
     role: "Quality Control & Lab Director",
     image: "https://i.ibb.co.com/7dHGRPKj/lawyer-5.jpg",
     desc: "Overseeing wet-chemistry tests and certifying our aflatoxin-free parameters.",
-    bio: "Sophia manages Shafa Agro's onsite laboratory, running mycological screening checks to keep batches safe and certified.",
+    bio: "Sophia manages NB Safa Agro's onsite laboratory, running mycological screening checks to keep batches safe and certified.",
     linkedin: "#",
     twitter: "#",
     facebook: "#"
@@ -170,7 +170,7 @@ export default function TeamPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed"
           >
-            Meet the agricultural technicians, biochemists, logistics coordinators, and auditors driving Shafa Agro’s quality and logistics network.
+            Meet the agricultural technicians, biochemists, logistics coordinators, and auditors driving NB Safa Agro’s quality and logistics network.
           </motion.p>
         </div>
       </section>

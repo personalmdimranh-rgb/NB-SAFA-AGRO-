@@ -213,7 +213,7 @@ export default function AccountsPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-primary">Financial Ledger</h1>
-          <p className="text-muted-foreground">Manage cash &amp; bank transaction flows for Shafa Agro</p>
+          <p className="text-muted-foreground">Manage cash &amp; bank transaction flows for NB Safa Agro</p>
         </div>
         <Button
           onClick={() => setAddOpen(true)}
@@ -224,43 +224,43 @@ export default function AccountsPage() {
       </div>
 
       {/* Balance Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-3">
         <Card className="border-primary/20 bg-card/50 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Cash Ledger Balance</CardTitle>
-            <DollarSign className="h-4 w-4 text-primary" />
+          <CardHeader className="flex flex-row items-center justify-between pb-1.5 p-3 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium truncate">Cash Ledger Balance</CardTitle>
+            <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-base sm:text-2xl font-bold text-primary truncate">
               ৳{balances.cashBalance.toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">In-hand physical cash reserves</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 truncate">In-hand physical cash reserves</p>
           </CardContent>
         </Card>
 
         <Card className="border-primary/20 bg-card/50 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Bank Accounts Balance</CardTitle>
-            <DollarSign className="h-4 w-4 text-primary" />
+          <CardHeader className="flex flex-row items-center justify-between pb-1.5 p-3 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium truncate">Bank Accounts Balance</CardTitle>
+            <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-base sm:text-2xl font-bold text-primary truncate">
               ৳{balances.bankBalance.toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Sum of all linked bank accounts</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 truncate">Sum of all linked bank accounts</p>
           </CardContent>
         </Card>
 
-        <Card className="border-primary/30 bg-primary/5 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Net Balances</CardTitle>
-            <DollarSign className="h-4 w-4 text-primary" />
+        <Card className="border-primary/30 bg-primary/5 backdrop-blur-sm col-span-2 md:col-span-1">
+          <CardHeader className="flex flex-row items-center justify-between pb-1.5 p-3 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium truncate">Total Net Balances</CardTitle>
+            <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary font-extrabold">
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-base sm:text-2xl font-black text-primary truncate">
               ৳{balances.totalBalance.toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Total operational liquidity</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 truncate">Total operational liquidity</p>
           </CardContent>
         </Card>
       </div>
@@ -402,19 +402,19 @@ export default function AccountsPage() {
               />
             </div>
 
-            <DialogFooter className="gap-2 pt-2">
+            <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setAddOpen(false)}
-                className="flex-1"
+                className="w-full sm:flex-1 h-10 font-semibold"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={submitting}
-                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+                className="w-full sm:flex-1 h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
               >
                 {submitting ? 'Submitting...' : 'Log Transaction'}
               </Button>
@@ -676,19 +676,19 @@ export default function AccountsPage() {
                 />
               </div>
 
-              <DialogFooter className="gap-2 pt-2">
+              <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setEditOpen(false)}
-                  className="flex-1"
+                  className="w-full sm:flex-1 h-10 font-semibold"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={updating}
-                  className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+                  className="w-full sm:flex-1 h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
                 >
                   {updating ? 'Saving...' : 'Save Changes'}
                 </Button>
