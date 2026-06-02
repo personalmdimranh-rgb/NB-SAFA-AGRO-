@@ -5,7 +5,7 @@ import connectToDatabase from '@/lib/db';
 import User from '@/models/User';
 import Link from 'next/link';
 import { Home, User as UserIcon, Settings, Coins, LogOut, Shield } from 'lucide-react';
-import { SignOutButtonWhite } from '@/components/layout/UserNav';
+import { UserSidebarFooter } from '@/components/layout/UserNav';
 
 export default async function DirectorLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -55,10 +55,7 @@ export default async function DirectorLayout({ children }: { children: React.Rea
         </div>
 
         <div className="pt-4 border-t border-primary-foreground/20">
-          <div className="flex items-center justify-between text-xs p-2">
-            <span className="text-primary-foreground/70 truncate mr-2">Logged as {dbUser.name.split(' ')[0]}</span>
-            <SignOutButtonWhite />
-          </div>
+          <UserSidebarFooter user={{ name: dbUser.name, image: dbUser.image }} />
         </div>
       </aside>
 

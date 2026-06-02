@@ -45,6 +45,36 @@ export function SignOutButtonWhite() {
   );
 }
 
+export function UserSidebarFooter({ user }: { user: { name: string; image?: string } }) {
+  return (
+    <div className="flex items-center justify-between p-2 w-full">
+      <div className="flex items-center gap-2 min-w-0">
+        <div className="h-8 w-8 rounded-full border border-primary-foreground/20 overflow-hidden shrink-0">
+          <img
+            src={
+              user?.image ||
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'U')}&background=random`
+            }
+            alt={user?.name || 'User'}
+            className="h-full w-full object-cover"
+            referrerPolicy="no-referrer"
+          />
+        </div>
+        <span className="text-xs font-bold text-white truncate max-w-[110px]" title={user?.name}>
+          {user?.name}
+        </span>
+      </div>
+      <button
+        onClick={() => signOut({ callbackUrl: '/' })}
+        className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
+        title="Log Out"
+      >
+        <LogOut className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
+
 export function UserMenu({ user }: { user: any }) {
   const role = user?.role;
 
