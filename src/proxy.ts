@@ -104,7 +104,9 @@ export const proxy = auth(async (req) => {
       return NextResponse.redirect(new URL("/admin/dashboard", nextUrl));
     }
     if (role === "director") {
-      return NextResponse.redirect(new URL("/admin/director", nextUrl));
+      if (nextUrl.pathname !== "/dashboard/director") {
+        return NextResponse.redirect(new URL("/admin/director", nextUrl));
+      }
     }
     if (role === "dealer") {
       return NextResponse.redirect(new URL("/dealer/dashboard", nextUrl));

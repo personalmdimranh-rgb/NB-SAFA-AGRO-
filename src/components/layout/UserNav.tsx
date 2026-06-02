@@ -202,8 +202,8 @@ export function UserMenu({ user }: { user: any }) {
           {role === 'director' && (
             <>
               <DropdownMenuItem asChild>
-                <Link href="/admin/director" className="cursor-pointer">
-                  <Shield className="mr-2 h-4 w-4" /> Director Board
+                <Link href="/dashboard/director" className="cursor-pointer">
+                  <LayoutDashboard className="mr-2 h-4 w-4" /> Director Dashboard
                 </Link>
               </DropdownMenuItem>
             </>

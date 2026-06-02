@@ -9,7 +9,8 @@ import {
     Settings, 
     LogOut,
     Loader2,
-    Plus
+    Plus,
+    Coins
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,7 +33,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (role === 'admin' || role === 'super_admin' || role === 'manager' || role === 'staff') {
         router.push('/admin/dashboard');
       } else if (role === 'director') {
-        router.push('/admin/director');
+        if (pathname !== '/dashboard/director') {
+          router.push('/admin/director');
+        }
       } else if (role === 'dealer') {
         router.push('/dealer/dashboard');
       }
@@ -77,16 +80,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </CardHeader>
             <CardContent className="p-0">
               <nav className="flex flex-col">
-                <Link 
-                  href="/dashboard" 
-                  className={cn(
-                    buttonVariants({ variant: 'ghost' }),
-                    "justify-start px-6 h-12 rounded-none border-l-4 w-full",
-                    pathname === '/dashboard' ? 'border-primary bg-muted/50' : 'border-transparent'
-                  )}
-                >
-                  <ShoppingBag className="mr-3 h-4 w-4" /> My Orders
-                </Link>
+                {session?.user && (session.user as any).role !== 'director' && (
+                  <Link 
+                    href="/dashboard" 
+                    className={cn(
+                      buttonVariants({ variant: 'ghost' }),
+                      "justify-start px-6 h-12 rounded-none border-l-4 w-full",
+                      pathname === '/dashboard' ? 'border-primary bg-muted/50' : 'border-transparent'
+                    )}
+                  >
+                    <ShoppingBag className="mr-3 h-4 w-4" /> My Orders
+                  </Link>
+                )}
+                {session?.user && (session.user as any).role === 'director' && (
+                  <Link 
+                    href="/dashboard/director" 
+                    className={cn(
+                      buttonVariants({ variant: 'ghost' }),
+                      "justify-start px-6 h-12 rounded-none border-l-4 w-full",
+                      pathname === '/dashboard/director' ? 'border-primary bg-muted/50' : 'border-transparent'
+                    )}
+                  >
+                    <Coins className="mr-3 h-4 w-4" /> My Investment
+                  </Link>
+                )}
                 {session?.user && (session.user as any).role === 'farmer' && (
                   <Link 
                     href="/dashboard/order-new" 

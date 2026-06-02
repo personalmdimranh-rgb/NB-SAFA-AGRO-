@@ -332,3 +332,50 @@ export async function approveDividendPayout(transactionId: string) {
 
   return { success: true };
 }
+
+export async function getPersonalDirectorDashboardData() {
+  const session = await auth();
+  if (!session || !['director', 'super_admin', 'admin'].includes((session.user as any).role)) {
+    throw new Error('Unauthorized');
+  }
+
+  await connectToDatabase();
+
+  const dbUser = await User.findOne({ email: session.user?.email });
+  if (!dbUser) throw new Error('User not found');
+
+  const directorId = dbUser._id;
+
+  // 1. Fetch investments
+  const investments = await Investment.find({ directorId }).sort({ date: -1 });
+
+  // Calculate total investment
+  const totalInvestment = investments.reduce((sum, inv) => sum + inv.investmentAmount, 0);
+
+  // 2. Fetch dividend payouts from LedgerTransaction (we filter in memory based on description)
+  const allDividends = await LedgerTransaction.find({ category: 'Dividend' }).sort({ date: -1 });
+
+  const personalDividends = allDividends.filter(tx => {
+    return tx.description && tx.description.includes(`to director ${dbUser.name} `);
+  });
+
+  const dividendReceived = personalDividends
+    .filter(tx => tx.status === 'released')
+    .reduce((sum, tx) => sum + tx.amount, 0);
+
+  const dividendPending = personalDividends
+    .filter(tx => tx.status === 'pending')
+    .reduce((sum, tx) => sum + tx.amount, 0);
+
+  return {
+    name: dbUser.name,
+    email: dbUser.email,
+    phone: dbUser.phone,
+    joiningDate: dbUser.createdAt,
+    totalInvestment,
+    investments: JSON.parse(JSON.stringify(investments)),
+    dividends: JSON.parse(JSON.stringify(personalDividends)),
+    dividendReceived,
+    dividendPending
+  };
+}
