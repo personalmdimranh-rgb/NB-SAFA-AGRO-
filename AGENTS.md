@@ -1,10 +1,10 @@
 <!-- BEGIN:nextjs-agent-rules -->
 # Livestock Agro Farm Management System - Agent Development Guide
 
-This guide establishes the rules, architectural patterns, and database standards for implementing the conversion of the project into the Shafa Agro Farm Management System. All future agents working on this codebase must strictly adhere to these instructions.
+This guide establishes the rules, architectural patterns, and database standards for implementing the conversion of the project into the NB Safa Agro Farm Management System. All future agents working on this codebase must strictly adhere to these instructions.
 
 ## 1. Project Context & Purpose
-- **Target System:** A secure, responsive Livestock Agro Farm Management System (Shafa Agro) optimized for mobile, desktop, and office usage.
+- **Target System:** A secure, responsive Livestock Agro Farm Management System (NB Safa Agro) optimized for mobile, desktop, and office usage.
 - **Core Focus:** Silage production tracking, accounting (cash/bank ledger, P&L, dues), dealer portal (sales, commission, invoicing), director metrics (shares, investments, dividends), and employee management.
 
 ## 2. Technical Stack & UI Patterns

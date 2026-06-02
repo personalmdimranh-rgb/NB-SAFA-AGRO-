@@ -15,7 +15,7 @@ export const proxy = auth(async (req) => {
   const isDealerRoute = nextUrl.pathname.startsWith("/dealer");
   const isAuthRoute = nextUrl.pathname.startsWith("/login") || nextUrl.pathname.startsWith("/register");
 
-  // Redirect legacy NB SAFA AGRO e-commerce routes to new Shafa Agro home
+  // Redirect legacy NB SAFA AGRO e-commerce routes to new NB Safa Agro home
   const isLegacyEcommerceRoute = [
     "/shop",
     "/cart",

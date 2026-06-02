@@ -36,7 +36,7 @@ export default async function DirectorLayout({ children }: { children: React.Rea
       <aside className="w-full md:w-64 md:h-full bg-primary text-primary-foreground flex flex-col justify-between shrink-0 p-4 md:overflow-y-auto">
         <div className="space-y-6">
           <div className="p-2 border-b border-primary-foreground/20">
-            <h2 className="text-lg font-black tracking-wider text-white">SHAFA AGRO</h2>
+            <h2 className="text-lg font-black tracking-wider text-white">NB SAFA AGRO</h2>
             <p className="text-[10px] text-primary-foreground/70 font-semibold uppercase">Director Portal</p>
             <p className="text-xs text-primary-foreground/90 font-bold truncate mt-2">{dbUser.name}</p>
           </div>

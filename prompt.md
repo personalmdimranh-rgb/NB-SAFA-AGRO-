@@ -1,4 +1,4 @@
-# Shafa Agro - 5 Relevant FAQs (Frequently Asked Questions)
+# NB Safa Agro - 5 Relevant FAQs (Frequently Asked Questions)
 
 এখানে শাফা এগ্রো লাইভস্টক ফার্ম ও সাইলেজ ম্যানেজমেন্ট সিস্টেমের জন্য ৫টি অত্যন্ত প্রাসঙ্গিক ও প্রয়োজনীয় FAQ (প্রশ্ন ও উত্তর) দেওয়া হলো:
 
@@ -13,7 +13,7 @@
 ---
 
 ### FAQ 2: শাফা এগ্রো সাইলেজ কতদিন পর্যন্ত সংরক্ষণ করা যাবে এবং খোলার পর কতদিনের মধ্যে খাওয়াতে হবে?
-- **Question (EN):** How long can Shafa Agro silage be stored, and how soon should it be fed after opening?
+- **Question (EN):** How long can NB Safa Agro silage be stored, and how soon should it be fed after opening?
 - **Question (BN):** শাফা এগ্রো সাইলেজ কতদিন পর্যন্ত সংরক্ষণ করা যাবে এবং খোলার পর কতদিনের মধ্যে খাওয়াতে হবে?
 - **Answer (EN):** Our vacuum-packed, UV-resistant triple-layer silage bags maintain complete freshness for up to 18 months under anaerobic stability. However, once a bag is opened and exposed to oxygen, it should be consumed by cattle within 7 days to prevent mold growth.
 - **Answer (BN):** আমাদের ভ্যাকুয়াম এবং ইউভি-প্রতিরোধী ট্রিপল-লেয়ার সিলড ব্যাগে সাইলেজ প্রায় ১৮ মাস পর্যন্ত সম্পূর্ণ তাজা ও পুষ্টিগুণ অক্ষুণ্ণ অবস্থায় সংরক্ষণ করা যায়। তবে একবার ব্যাগ খোলার পর যেহেতু এতে অক্সিজেন প্রবেশ করে, তাই ব্যাকটেরিয়া ও মোল্ড সংক্রমণ এড়াতে ৭ দিনের মধ্যে এটি গবাদি পশুকে খাইয়ে শেষ করা উচিত।
@@ -21,7 +21,7 @@
 ---
 
 ### FAQ 3: শাফা এগ্রো ডিলার (Dealer) হওয়ার যোগ্যতা কি এবং কিভাবে আবেদন করব?
-- **Question (EN):** What are the requirements to become a Shafa Agro dealer, and how can I apply?
+- **Question (EN):** What are the requirements to become a NB Safa Agro dealer, and how can I apply?
 - **Question (BN):** শাফা এগ্রো ডিলার (Dealer) হওয়ার যোগ্যতা কি এবং কিভাবে আবেদন করব?
 - **Answer (EN):** Registered regional distributors with a valid Trade License and NID can apply via our Dealer Portal. Once the system administrator reviews and approves the application, you will unlock localized dealer commission rates, an automated commission wallet, and custom credit limits.
 - **Answer (BN):** বৈধ ট্রেড লাইসেন্স এবং জাতীয় পরিচয়পত্রধারী যে কোনো আঞ্চলিক বিক্রেতা আমাদের পোর্টালের "Create Account" পেইজে গিয়ে 'Dealer' অপশন সিলেক্ট করে আবেদন করতে পারবেন। অ্যাডমিন প্যানেল কর্তৃক ভেরিফিকেশন ও এপ্রুভাল সম্পন্ন হলে আপনার ডিলার অ্যাকাউন্টটি সক্রিয় হবে এবং আপনি আকর্ষণীয় কমিশন ওয়ালেট ও বাকিতে কেনার লিমিট (Credit Limit) সুবিধা পাবেন।
