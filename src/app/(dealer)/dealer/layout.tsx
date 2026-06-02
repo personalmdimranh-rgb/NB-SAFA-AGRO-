@@ -7,6 +7,7 @@ import Dealer from '@/models/Dealer';
 import Link from 'next/link';
 import { Home, ShoppingBag, Receipt, Coins, LogOut, ShieldAlert } from 'lucide-react';
 import { UserSidebarFooter } from '@/components/layout/UserNav';
+import { Logo } from '@/components/ui/logo';
 
 export default async function DealerLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -38,10 +39,16 @@ export default async function DealerLayout({ children }: { children: React.React
       {/* Dealer Sidebar */}
       <aside className="w-full md:w-64 md:h-full bg-primary text-primary-foreground flex flex-col justify-between shrink-0 p-4 md:overflow-y-auto">
         <div className="space-y-6">
-          <div className="p-2 border-b border-primary-foreground/20">
-            <h2 className="text-lg font-black tracking-wider text-white">NB SAFA AGRO</h2>
-            <p className="text-[10px] text-primary-foreground/70 font-semibold uppercase">Dealer Portal</p>
-            <p className="text-xs text-primary-foreground/90 font-bold truncate mt-2">{dealerProfile?.shopName || dbUser.name}</p>
+          <div className="p-2 border-b border-primary-foreground/20 space-y-3">
+            <Logo 
+              textClassName="text-white text-base md:text-lg font-black tracking-tighter group-hover:text-white font-logo whitespace-nowrap" 
+              imageClassName="size-8 md:size-8"
+              className="text-white"
+            />
+            <div>
+              <p className="text-[10px] text-primary-foreground/70 font-semibold uppercase">Dealer Portal</p>
+              <p className="text-xs text-primary-foreground/90 font-bold truncate mt-1">{dealerProfile?.shopName || dbUser.name}</p>
+            </div>
           </div>
 
           <nav className="space-y-1">
