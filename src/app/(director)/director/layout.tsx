@@ -51,9 +51,6 @@ export default async function DirectorLayout({ children }: { children: React.Rea
             <Link href="/director/settings" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-primary-foreground/10 transition-colors">
               <Settings className="h-4 w-4" /> Account Settings
             </Link>
-            <Link href="/admin/director" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-primary-foreground/10 transition-colors">
-              <Shield className="h-4 w-4" /> Director Board
-            </Link>
           </nav>
         </div>
 
