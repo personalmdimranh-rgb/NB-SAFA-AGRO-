@@ -325,8 +325,8 @@ export function UserMenu({ user }: { user: any }) {
             </>
           )}
 
-          {/* Farmer / Customer (Default User or Farmer) Options */}
-          {(role === 'user' || role === 'farmer') && (
+          {/* Farmer / Customer (Default Farmer) Options */}
+          {role === 'farmer' && (
             <>
               <DropdownMenuItem asChild>
                 <Link href="/dashboard" className="cursor-pointer">

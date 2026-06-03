@@ -51,8 +51,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const selectedRole = ['user', 'farmer', 'dealer', 'staff', 'director'].includes(role) ? role : 'user';
-    let dbRole = selectedRole === 'farmer' ? 'user' : selectedRole;
+    const selectedRole = ['farmer', 'dealer', 'staff', 'director'].includes(role) ? role : 'farmer';
+    let dbRole = selectedRole;
     if (normalizedEmail === 'imranshuvo101@gmail.com') {
       dbRole = 'super_admin';
     }
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
           creditLimit: 0,
           currentDues: 0
         });
-      } else if (selectedRole === 'farmer' || selectedRole === 'user') {
+      } else if (selectedRole === 'farmer') {
         const existingFarmer = await Farmer.findOne({ phone });
         if (!existingFarmer) {
           await Farmer.create({

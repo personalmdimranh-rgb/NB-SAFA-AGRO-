@@ -12,7 +12,7 @@ export default {
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
-        (session.user as any).role = token.role ?? 'user';
+        (session.user as any).role = token.role ?? 'farmer';
         (session.user as any).phone = token.phone as string;
         (session.user as any).status = (token.status as string) ?? 'active';
         if (token.image) {
@@ -24,7 +24,7 @@ export default {
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
-        token.role = (user as any).role ?? 'user';
+        token.role = (user as any).role ?? 'farmer';
         token.status = (user as any).status ?? 'active';
         token.image = user.image || token.picture;
       }

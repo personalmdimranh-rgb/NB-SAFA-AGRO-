@@ -51,7 +51,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // 1. First, apply base logic from authConfig
       if (user) {
         token.id = user.id;
-        token.role = (user as any).role ?? 'user';
+        token.role = (user as any).role ?? 'farmer';
         token.image = user.image || token.picture;
       }
 
@@ -68,7 +68,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               await dbUser.save();
             }
             token.id = dbUser._id.toString();
-            token.role = dbUser.role ?? 'user';
+            token.role = dbUser.role ?? 'farmer';
             token.status = dbUser.status ?? 'active';
             token.phone = dbUser.phone;
             token.image = dbUser.image || user.image || token.picture;
@@ -103,7 +103,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               email: user.email,
               image: user.image || '',
               googleId: account.providerAccountId,
-              role: isSuperAdmin ? 'super_admin' : 'user',
+              role: isSuperAdmin ? 'super_admin' : 'farmer',
               status: 'active',
               phone: 'N/A'
             });
@@ -129,7 +129,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             }
             
             // Auto create Farmer profile for the user
-            if (dbUser.role === 'user') {
+            if (dbUser.role === 'farmer') {
               const Farmer = (await import('./models/Farmer')).default;
               const existingFarmer = await Farmer.findOne({ phone: dbUser.phone });
               if (!existingFarmer) {

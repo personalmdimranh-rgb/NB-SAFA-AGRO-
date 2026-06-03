@@ -86,6 +86,8 @@ export default function LoginPage() {
           router.push('/director/dashboard');
         } else if (role === 'dealer') {
           router.push('/dealer/dashboard');
+        } else if (role === 'farmer') {
+          router.push('/dashboard');
         } else {
           router.push('/dashboard');
         }

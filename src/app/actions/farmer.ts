@@ -166,7 +166,7 @@ export async function getFarmerDashboardSummary(userId: string) {
   }
 
   let farmer = await Farmer.findOne({ phone: userPhone }).lean();
-  if (!farmer && (user.role === 'user' || (user as any).role === 'user')) {
+  if (!farmer && (user.role === 'farmer' || (user as any).role === 'farmer')) {
     const newFarmer = await Farmer.create({
       name: user.name || 'Unknown Farmer',
       phone: userPhone,

@@ -5,7 +5,7 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password?: string;
-  role: 'super_admin' | 'admin' | 'manager' | 'director' | 'dealer' | 'staff' | 'user';
+  role: 'super_admin' | 'admin' | 'manager' | 'director' | 'dealer' | 'staff' | 'farmer';
   status?: 'active' | 'inactive';
   image?: string;
   phone: string;
@@ -49,7 +49,7 @@ const UserSchema: Schema<IUser> = new Schema(
       match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.[A-Za-z]{2,})+$/, 'Please provide a valid email address']
     },
     password: { type: String, select: false },
-    role: { type: String, enum: ['super_admin', 'admin', 'manager', 'director', 'dealer', 'staff', 'user'], required: true, default: 'user' },
+    role: { type: String, enum: ['super_admin', 'admin', 'manager', 'director', 'dealer', 'staff', 'farmer'], required: true, default: 'farmer' },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
     image: { type: String },
     phone: { type: String, required: true },
