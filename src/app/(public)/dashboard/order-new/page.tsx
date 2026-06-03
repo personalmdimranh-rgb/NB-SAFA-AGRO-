@@ -11,6 +11,7 @@ import { ShoppingBag, ArrowRightCircle, Plus, Trash2, ShieldAlert, Copy, Check }
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 import { contactConfig } from '@/lib/contact-config';
+import { bdLocations, bdDivisions, divisions } from '@/lib/bd-locations';
 
 interface OrderItem {
   productName: string;
@@ -39,6 +40,13 @@ export default function FarmerPlaceOrder() {
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const [distributionDistrict, setDistributionDistrict] = useState('');
 
+  // Shipping details states
+  const [phone, setPhone] = useState('');
+  const [addressLine, setAddressLine] = useState('');
+  const [division, setDivision] = useState('');
+  const [district, setDistrict] = useState('');
+  const [thana, setThana] = useState('');
+
   const copyToClipboard = (text: string, type: string) => {
     navigator.clipboard.writeText(text);
     setCopiedText(type);
@@ -54,6 +62,11 @@ export default function FarmerPlaceOrder() {
         const userObj = await res.json();
         if (userObj.farmer) {
           setFarmer(userObj.farmer);
+          setPhone(userObj.farmer.phone || '');
+          setAddressLine(userObj.farmer.address?.village || '');
+          setDivision(userObj.farmer.address?.division || '');
+          setDistrict(userObj.farmer.address?.district || '');
+          setThana(userObj.farmer.address?.thana || '');
           setDistributionDistrict(userObj.farmer.address?.district || '');
         } else {
           toast.error('Farmer profile not found in user account.');
@@ -99,6 +112,31 @@ export default function FarmerPlaceOrder() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!farmer) return;
+
+    if (!phone || phone.trim() === '') {
+      toast.error('Please enter a valid mobile number.');
+      return;
+    }
+    if (phone.startsWith('G-')) {
+      toast.error('Please enter your actual mobile number.');
+      return;
+    }
+    if (!addressLine || addressLine.trim() === '') {
+      toast.error('Please enter your shipping address line (village/road/street).');
+      return;
+    }
+    if (!division) {
+      toast.error('Please select your division.');
+      return;
+    }
+    if (!district) {
+      toast.error('Please select your district.');
+      return;
+    }
+    if (!thana) {
+      toast.error('Please select your thana/upazila.');
+      return;
+    }
 
     if (totalQuantity <= 0) {
       toast.error('Order quantity must be greater than 0');
@@ -179,7 +217,12 @@ export default function FarmerPlaceOrder() {
           ? transactionNumber 
           : (paymentMethod === 'bank-transfer' ? transactionNumber : undefined),
         bankName: paymentMethod === 'bank-transfer' ? bankName : undefined,
-        distributionDistrict: distributionDistrict || 'Unknown',
+        phone,
+        addressLine,
+        division,
+        thana,
+        district,
+        distributionDistrict: district,
         orderType: 'by-user',
       });
 
@@ -275,6 +318,105 @@ export default function FarmerPlaceOrder() {
               </div>
             ))}
 
+            {/* Shipping details */}
+            <div className="border-t pt-4 space-y-4">
+              <h3 className="text-sm font-bold text-primary">Shipping Address & Contact Info</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-zinc-600 mb-1 block">Mobile Number <span className="text-rose-500">*</span></label>
+                  <Input
+                    type="text"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="e.g. 017XXXXXXXX"
+                    className="border-border"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-zinc-600 mb-1 block">Address Line (Village/Road/Street) <span className="text-rose-500">*</span></label>
+                  <Input
+                    type="text"
+                    value={addressLine}
+                    onChange={(e) => setAddressLine(e.target.value)}
+                    placeholder="e.g. Ward 3, Green Road"
+                    className="border-border"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-zinc-600 mb-1 block">Division <span className="text-rose-500">*</span></label>
+                  <Select
+                    value={division}
+                    onValueChange={(val) => {
+                      setDivision(val || '');
+                      setDistrict('');
+                      setThana('');
+                    }}
+                  >
+                    <SelectTrigger className="border-border">
+                      <SelectValue placeholder="Select Division" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {divisions.map((div) => (
+                        <SelectItem key={div} value={div}>{div}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-zinc-600 mb-1 block">District <span className="text-rose-500">*</span></label>
+                  <Select
+                    value={district}
+                    disabled={!division}
+                    onValueChange={(val) => {
+                      setDistrict(val || '');
+                      setThana('');
+                    }}
+                  >
+                    <SelectTrigger className="border-border">
+                      <SelectValue placeholder="Select District" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {division && bdDivisions[division] ? (
+                        bdDivisions[division].map((dist) => (
+                          <SelectItem key={dist} value={dist}>{dist}</SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="_empty" disabled>Select Division first</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-zinc-600 mb-1 block">Thana / Upazila <span className="text-rose-500">*</span></label>
+                  <Select
+                    value={thana}
+                    disabled={!district}
+                    onValueChange={(val) => setThana(val || '')}
+                  >
+                    <SelectTrigger className="border-border">
+                      <SelectValue placeholder="Select Thana" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {district && bdLocations[district] ? (
+                        bdLocations[district].map((th) => (
+                          <SelectItem key={th} value={th}>{th}</SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="_empty" disabled>Select District first</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
               <div>
                 <label className="text-xs font-semibold text-primary mb-1 block">Payment Method</label>
@@ -296,17 +438,6 @@ export default function FarmerPlaceOrder() {
                     <SelectItem value="nagad">Nagad</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-primary mb-1 block">Distribution District</label>
-                <Input
-                  value={distributionDistrict}
-                  onChange={(e) => setDistributionDistrict(e.target.value)}
-                  placeholder="e.g. Bogura"
-                  className="border-border"
-                  required
-                />
               </div>
             </div>
 
@@ -476,7 +607,7 @@ export default function FarmerPlaceOrder() {
         </Card>
 
         {/* Invoice Checkout Summary */}
-        <Card className="lg:col-span-4 border-border bg-card/70">
+        <Card className="lg:col-span-4 border-border bg-card/70 lg:sticky lg:top-6 h-fit">
           <CardHeader>
             <CardTitle className="text-lg font-bold text-foreground">Checkout Summary</CardTitle>
           </CardHeader>

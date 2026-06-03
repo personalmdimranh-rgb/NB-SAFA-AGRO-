@@ -20,10 +20,10 @@ export default function FarmerDashboard() {
   const [selectedSale, setSelectedSale] = useState<any>(null);
   const [trackerOpen, setTrackerOpen] = useState(false);
 
-  const loadData = async () => {
+  const loadData = async (showLoading = false) => {
     if (!session?.user?.id) return;
     try {
-      setLoading(true);
+      if (showLoading || !data) setLoading(true);
       const res = await getFarmerDashboardSummary((session.user as any).id);
       setData(res);
     } catch (err: any) {
@@ -34,10 +34,12 @@ export default function FarmerDashboard() {
   };
 
   useEffect(() => {
-    loadData();
-  }, [session]);
+    if (session?.user?.id) {
+      loadData();
+    }
+  }, [session?.user?.id]);
 
-  if (loading) {
+  if (loading && !data) {
     return <div className="text-center py-20 text-muted-foreground">Loading your dashboard...</div>;
   }
 
@@ -69,7 +71,7 @@ export default function FarmerDashboard() {
           >
             <ShoppingCart className="h-4 w-4" /> Place New Order
           </Button>
-          <Button onClick={loadData} size="sm" variant="outline" className="border-primary/20 text-primary hover:bg-primary/5 h-8">
+          <Button onClick={() => loadData(true)} size="sm" variant="outline" className="border-primary/20 text-primary hover:bg-primary/5 h-8">
             <RefreshCw className="h-3.5 w-3.5 mr-1" /> Refresh
           </Button>
         </div>

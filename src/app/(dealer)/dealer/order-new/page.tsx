@@ -12,6 +12,7 @@ import { ShoppingBag, ArrowRightCircle, Plus, Trash2, ShieldAlert, Copy, Check }
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 import { contactConfig } from '@/lib/contact-config';
+import { bdLocations, bdDivisions, divisions } from '@/lib/bd-locations';
 
 interface OrderItem {
   productName: string;
@@ -40,6 +41,13 @@ export default function DealerPlaceOrder() {
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const [distributionDistrict, setDistributionDistrict] = useState('');
 
+  // Shipping details states
+  const [phone, setPhone] = useState('');
+  const [addressLine, setAddressLine] = useState('');
+  const [division, setDivision] = useState('');
+  const [district, setDistrict] = useState('');
+  const [thana, setThana] = useState('');
+
   const copyToClipboard = (text: string, type: string) => {
     navigator.clipboard.writeText(text);
     setCopiedText(type);
@@ -53,7 +61,13 @@ export default function DealerPlaceOrder() {
       setLoading(true);
       const res = await getDealerDashboardSummary((session.user as any).id);
       setDealer(res.dealer);
-      setDistributionDistrict(res.dealer.address?.district || '');
+      const userAddr = res.dealer.userId?.addresses?.[0];
+      setPhone(res.dealer.userId?.phone || '');
+      setAddressLine(userAddr?.street || res.dealer.address?.village || '');
+      setDivision(userAddr?.division || '');
+      setDistrict(userAddr?.state || res.dealer.address?.district || '');
+      setThana(userAddr?.city || res.dealer.address?.thana || '');
+      setDistributionDistrict(userAddr?.state || res.dealer.address?.district || '');
     } catch (err: any) {
       toast.error('Failed to load dealer profile');
     } finally {
@@ -95,6 +109,31 @@ export default function DealerPlaceOrder() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!dealer) return;
+
+    if (!phone || phone.trim() === '') {
+      toast.error('Please enter a valid mobile number.');
+      return;
+    }
+    if (phone.startsWith('G-')) {
+      toast.error('Please enter your actual mobile number.');
+      return;
+    }
+    if (!addressLine || addressLine.trim() === '') {
+      toast.error('Please enter your shipping address line (village/road/street).');
+      return;
+    }
+    if (!division) {
+      toast.error('Please select your division.');
+      return;
+    }
+    if (!district) {
+      toast.error('Please select your district.');
+      return;
+    }
+    if (!thana) {
+      toast.error('Please select your thana/upazila.');
+      return;
+    }
 
     if (totalQuantity <= 0) {
       toast.error('Order quantity must be greater than 0');
@@ -178,7 +217,12 @@ export default function DealerPlaceOrder() {
           ? transactionNumber 
           : (paymentMethod === 'bank-transfer' ? transactionNumber : undefined),
         bankName: paymentMethod === 'bank-transfer' ? bankName : undefined,
-        distributionDistrict: distributionDistrict || 'Unknown',
+        phone,
+        addressLine,
+        division,
+        thana,
+        district,
+        distributionDistrict: district,
         orderType: 'by-user',
       });
 
@@ -266,6 +310,105 @@ export default function DealerPlaceOrder() {
               </div>
             ))}
 
+            {/* Shipping details */}
+            <div className="border-t pt-4 space-y-4">
+              <h3 className="text-sm font-bold text-primary">Shipping Address & Contact Info</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-zinc-600 mb-1 block">Mobile Number <span className="text-rose-500">*</span></label>
+                  <Input
+                    type="text"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="e.g. 017XXXXXXXX"
+                    className="border-border"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-zinc-600 mb-1 block">Address Line (Village/Road/Street) <span className="text-rose-500">*</span></label>
+                  <Input
+                    type="text"
+                    value={addressLine}
+                    onChange={(e) => setAddressLine(e.target.value)}
+                    placeholder="e.g. Ward 3, Green Road"
+                    className="border-border"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-zinc-600 mb-1 block">Division <span className="text-rose-500">*</span></label>
+                  <Select
+                    value={division}
+                    onValueChange={(val) => {
+                      setDivision(val || '');
+                      setDistrict('');
+                      setThana('');
+                    }}
+                  >
+                    <SelectTrigger className="border-border">
+                      <SelectValue placeholder="Select Division" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {divisions.map((div) => (
+                        <SelectItem key={div} value={div}>{div}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-zinc-600 mb-1 block">District <span className="text-rose-500">*</span></label>
+                  <Select
+                    value={district}
+                    disabled={!division}
+                    onValueChange={(val) => {
+                      setDistrict(val || '');
+                      setThana('');
+                    }}
+                  >
+                    <SelectTrigger className="border-border">
+                      <SelectValue placeholder="Select District" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {division && bdDivisions[division] ? (
+                        bdDivisions[division].map((dist) => (
+                          <SelectItem key={dist} value={dist}>{dist}</SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="_empty" disabled>Select Division first</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-zinc-600 mb-1 block">Thana / Upazila <span className="text-rose-500">*</span></label>
+                  <Select
+                    value={thana}
+                    disabled={!district}
+                    onValueChange={(val) => setThana(val || '')}
+                  >
+                    <SelectTrigger className="border-border">
+                      <SelectValue placeholder="Select Thana" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {district && bdLocations[district] ? (
+                        bdLocations[district].map((th) => (
+                          <SelectItem key={th} value={th}>{th}</SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="_empty" disabled>Select District first</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
               <div>
                 <label className="text-xs font-semibold text-primary mb-1 block">Payment Method</label>
@@ -288,17 +431,6 @@ export default function DealerPlaceOrder() {
                     <SelectItem value="wallet">Commission Wallet (Balance: ৳{(dealer?.commissionWallet || 0).toLocaleString()})</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-primary mb-1 block">Distribution District</label>
-                <Input
-                  value={distributionDistrict}
-                  onChange={(e) => setDistributionDistrict(e.target.value)}
-                  placeholder="e.g. Bogura"
-                  className="border-border"
-                  required
-                />
               </div>
             </div>
 
@@ -468,7 +600,7 @@ export default function DealerPlaceOrder() {
         </Card>
 
         {/* Invoice Checkout Summary */}
-        <Card className="lg:col-span-4 border-border bg-card/70">
+        <Card className="lg:col-span-4 border-border bg-card/70 lg:sticky lg:top-6 h-fit">
           <CardHeader>
             <CardTitle className="text-lg font-bold text-foreground">Checkout Summary</CardTitle>
           </CardHeader>

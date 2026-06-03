@@ -16,7 +16,7 @@ export async function createFarmer(data: {
   creditLimit: number;
 }) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin', 'manager', 'staff'].includes((session.user as any).role)) {
+  if (!session || !['super_admin', 'admin', 'staff'].includes((session.user as any).role)) {
     throw new Error('Unauthorized');
   }
 
@@ -62,7 +62,7 @@ export async function updateFarmer(
   }
 ) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin', 'manager', 'staff'].includes((session.user as any).role)) {
+  if (!session || !['super_admin', 'admin', 'staff'].includes((session.user as any).role)) {
     throw new Error('Unauthorized');
   }
 
@@ -127,7 +127,7 @@ export async function getFarmers() {
 
 export async function deleteFarmer(farmerId: string) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin', 'manager'].includes((session.user as any).role)) {
+  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
     throw new Error('Unauthorized');
   }
 

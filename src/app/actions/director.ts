@@ -267,7 +267,7 @@ export async function createResolution(
   attendees?: string
 ) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin', 'director', 'manager'].includes((session.user as any).role)) {
+  if (!session || !['super_admin', 'admin', 'director'].includes((session.user as any).role)) {
     throw new Error('Unauthorized');
   }
 

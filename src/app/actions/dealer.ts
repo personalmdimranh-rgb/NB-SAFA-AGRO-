@@ -76,7 +76,7 @@ export async function registerDealer(data: {
 
 export async function approveDealer(userId: string) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin', 'manager'].includes((session.user as any).role)) {
+  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
     throw new Error('Unauthorized');
   }
 
@@ -100,7 +100,7 @@ export async function updateDealerSettings(
   }
 ) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin', 'manager'].includes((session.user as any).role)) {
+  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
     throw new Error('Unauthorized');
   }
 
@@ -140,7 +140,7 @@ export async function updateDealer(
   }
 ) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin', 'manager'].includes((session.user as any).role)) {
+  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
     throw new Error('Unauthorized');
   }
 
@@ -269,7 +269,7 @@ export async function getDealerDashboardSummary(userId: string) {
 
 export async function deleteDealer(dealerId: string) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin', 'manager'].includes((session.user as any).role)) {
+  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
     throw new Error('Unauthorized');
   }
 

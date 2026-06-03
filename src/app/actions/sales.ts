@@ -27,7 +27,12 @@ export async function createSale(data: {
   paymentNumber?: string;
   transactionNumber?: string;
   bankName?: string;
-  distributionDistrict: string;
+  phone?: string;
+  addressLine?: string;
+  division?: string;
+  thana?: string;
+  district?: string;
+  distributionDistrict?: string;
   date?: string;
   orderType?: 'manual' | 'by-user';
 }) {
@@ -45,7 +50,7 @@ export async function createSale(data: {
   const userId = dbUser._id.toString();
 
   // Authorize based on role
-  if (['super_admin', 'admin', 'manager', 'staff'].includes(userRole)) {
+  if (['super_admin', 'admin', 'staff'].includes(userRole)) {
     // Admins can log any sale
   } else if (userRole === 'dealer') {
     // Dealers can only create a sale for themselves (as a dealer buyer)
@@ -133,6 +138,33 @@ export async function createSale(data: {
       throw new Error(`Order blocks: Current due plus new due exceeds dealer's credit limit (${dealer.creditLimit}).`);
     }
 
+    // Defer profile updates until transaction succeeds
+    if (data.phone) {
+      await User.findByIdAndUpdate(dealer.userId, { phone: data.phone });
+    }
+    if (data.addressLine || data.thana || data.district) {
+      dealer.address = {
+        village: data.addressLine || dealer.address?.village || '',
+        union: dealer.address?.union || '',
+        thana: data.thana || dealer.address?.thana || '',
+        district: data.district || dealer.address?.district || '',
+      };
+      await dealer.save();
+
+      if (data.division) {
+        await User.findByIdAndUpdate(dealer.userId, {
+          addresses: [{
+            street: data.addressLine || '',
+            division: data.division || '',
+            state: data.district || '',
+            city: data.thana || '',
+            country: 'Bangladesh',
+            isDefault: true
+          }]
+        });
+      }
+    }
+
   } else if (data.buyerType === 'farmer') {
     const farmer = await Farmer.findById(data.buyerId);
     if (!farmer) throw new Error('Farmer not found');
@@ -162,6 +194,21 @@ export async function createSale(data: {
     if (!updatedFarmer) {
       throw new Error(`Order blocks: Current due plus new due exceeds farmer's credit limit (${farmer.creditLimit}).`);
     }
+
+    // Defer profile updates until transaction succeeds
+    if (data.phone) {
+      farmer.phone = data.phone;
+      await User.findOneAndUpdate({ email: session.user?.email }, { phone: data.phone });
+    }
+    if (data.addressLine || data.division || data.thana || data.district) {
+      farmer.address = {
+        village: data.addressLine || farmer.address?.village || '',
+        division: data.division || farmer.address?.division || '',
+        thana: data.thana || farmer.address?.thana || '',
+        district: data.district || farmer.address?.district || '',
+      };
+    }
+    await farmer.save();
   }
 
   // 3. Generate unique invoice number checking database for duplicates to prevent collision risk
@@ -211,7 +258,7 @@ export async function createSale(data: {
     paymentNumber: data.paymentNumber,
     transactionNumber: data.transactionNumber,
     bankName: data.bankName,
-    distributionDistrict: data.distributionDistrict,
+    distributionDistrict: data.district || data.distributionDistrict || 'Unknown',
     orderType: data.orderType || 'by-user',
     date: data.date ? new Date(data.date) : new Date(),
   });
@@ -254,7 +301,7 @@ export async function collectDue(data: {
   }
 
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin', 'manager', 'staff'].includes(role)) {
+  if (!['super_admin', 'admin', 'staff'].includes(role)) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 
@@ -400,7 +447,7 @@ export async function deleteSale(saleId: string) {
   }
 
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin', 'manager'].includes(role)) {
+  if (!['super_admin', 'admin'].includes(role)) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 
@@ -418,7 +465,7 @@ export async function togglePaymentStatus(saleId: string) {
     throw new Error('Unauthorized');
   }
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin', 'manager', 'staff'].includes(role)) {
+  if (!['super_admin', 'admin', 'staff'].includes(role)) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 
@@ -493,7 +540,7 @@ export async function updateSaleStatus(saleId: string, status: string) {
     throw new Error('Unauthorized');
   }
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin', 'manager', 'staff'].includes(role)) {
+  if (!['super_admin', 'admin', 'staff'].includes(role)) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 

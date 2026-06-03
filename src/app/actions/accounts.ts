@@ -24,7 +24,7 @@ export async function createTransaction(data: {
   }
 
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin', 'manager', 'staff'].includes(role)) {
+  if (!['super_admin', 'admin', 'staff'].includes(role)) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 
@@ -166,7 +166,7 @@ export async function deleteTransaction(id: string) {
   }
 
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin', 'manager'].includes(role)) {
+  if (!['super_admin', 'admin'].includes(role)) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 
@@ -201,7 +201,7 @@ export async function updateTransaction(
   }
 
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin', 'manager'].includes(role)) {
+  if (!['super_admin', 'admin'].includes(role)) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 
