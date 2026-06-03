@@ -268,8 +268,8 @@ export default function DealersAdminPage() {
                   <TableRow>
                     <TableHead className="w-[40px]">#</TableHead>
                     <TableHead>Dealer / Shop</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Total Orders</TableHead>
+                    <TableHead className="text-right">Purchase Value</TableHead>
                     <TableHead className="text-right">Commission</TableHead>
                     <TableHead className="text-right">Wallet</TableHead>
                     <TableHead className="text-right">Credit Limit</TableHead>
@@ -283,7 +283,7 @@ export default function DealersAdminPage() {
                     return (
                       <TableRow key={d._id}>
                         <TableCell className="text-xs text-muted-foreground">{(currentPage - 1) * pageSize + index + 1}</TableCell>
-                        <TableCell className="font-semibold text-sm text-primary">
+                        <TableCell className="font-semibold text-sm text-primary py-3 space-y-1">
                           {u._id ? (
                             <Link
                               href={`/admin/users/${u._id}`}
@@ -298,17 +298,22 @@ export default function DealersAdminPage() {
                           <span className="block text-[10px] text-muted-foreground font-normal italic">
                             {d.shopName} · {d.address?.district || 'No District'}
                           </span>
+                          <span className="block text-[10px] text-zinc-600 font-medium">
+                            {u.phone} · <span className="text-muted-foreground">{u.email}</span>
+                          </span>
+                          <div className="pt-0.5">
+                            {u.status === 'active' ? (
+                              <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 text-[9px] font-bold px-1.5 py-0.2">Active</Badge>
+                            ) : (
+                              <Badge className="bg-yellow-50 text-yellow-700 border-yellow-200 text-[9px] font-bold px-1.5 py-0.2">Pending</Badge>
+                            )}
+                          </div>
                         </TableCell>
-                        <TableCell className="text-xs">
-                          {u.phone}
-                          <span className="block text-[10px] text-muted-foreground">{u.email}</span>
+                        <TableCell className="text-right font-bold text-xs">
+                          {d.totalOrders || 0}
                         </TableCell>
-                        <TableCell>
-                          {u.status === 'active' ? (
-                            <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 text-[10px]">Active</Badge>
-                          ) : (
-                            <Badge className="bg-yellow-50 text-yellow-700 border-yellow-200 text-[10px]">Pending</Badge>
-                          )}
+                        <TableCell className="text-right font-bold text-xs text-zinc-800">
+                          ৳{(d.purchaseValue || 0).toLocaleString()}
                         </TableCell>
                         <TableCell className="text-right font-bold text-xs">৳{d.commissionRate}/bag</TableCell>
                         <TableCell className="text-right text-primary font-bold text-xs">৳{d.commissionWallet.toLocaleString()}</TableCell>

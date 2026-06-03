@@ -32,7 +32,7 @@ export default function NewOrderPage() {
   const [items, setItems] = useState<SaleItem[]>([{ productName: 'Premium Silage Bag (40kg)', productType: 'bag', quantity: 1, unitPrice: 380 }]);
   const [discount, setDiscount] = useState('0');
   const [paidAmount, setPaidAmount] = useState('0');
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank-transfer' | 'bkash' | 'nagad' | 'cod' | 'due'>('cash');
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank-transfer' | 'bkash' | 'nagad' | 'cod' | 'due' | 'wallet'>('cash');
   const [distributionDistrict, setDistributionDistrict] = useState('');
   const [estimatedPaymentDate, setEstimatedPaymentDate] = useState('');
   const [paymentNumber, setPaymentNumber] = useState('');
@@ -98,9 +98,10 @@ export default function NewOrderPage() {
   const commissionRate = (buyerType === 'dealer' && activeBuyer?.commissionRate) || 0;
   const commissionApplied = totalQuantity * commissionRate;
 
-  const grandTotal = Math.max(0, subtotal - discountVal - commissionApplied);
+  const grandTotal = Math.max(0, subtotal - discountVal);
   const paidVal = parseFloat(paidAmount) || 0;
   const dueAmount = Math.max(0, grandTotal - paidVal);
+  const isPaymentExcessive = paidVal > grandTotal || (paymentMethod === 'wallet' && buyerType === 'dealer' && paidVal > (activeBuyer?.commissionWallet || 0));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,6 +113,17 @@ export default function NewOrderPage() {
     if (totalQuantity <= 0) {
       toast.error('Please add at least one item with quantity greater than 0');
       return;
+    }
+
+    if (paymentMethod === 'wallet') {
+      if (buyerType !== 'dealer') {
+        toast.error('Wallet payment option is only available for registered dealers.');
+        return;
+      }
+      if (paidVal > (activeBuyer?.commissionWallet || 0)) {
+        toast.error(`Payment amount cannot exceed dealer's available wallet balance of ৳${(activeBuyer?.commissionWallet || 0).toLocaleString()} BDT.`);
+        return;
+      }
     }
 
     if (paidVal > grandTotal) {
@@ -353,6 +365,11 @@ export default function NewOrderPage() {
                     <SelectItem value="due">Due / Credit</SelectItem>
                     <SelectItem value="bkash">bKash</SelectItem>
                     <SelectItem value="nagad">Nagad</SelectItem>
+                    {buyerType === 'dealer' && activeBuyer && (
+                      <SelectItem value="wallet">
+                        Commission Wallet (Balance: ৳{(activeBuyer.commissionWallet || 0).toLocaleString()})
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -557,8 +574,8 @@ export default function NewOrderPage() {
 
               {buyerType === 'dealer' && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-primary font-semibold">Dealer Commission</span>
-                  <span className="font-semibold text-primary">-৳{commissionApplied.toLocaleString()}</span>
+                  <span className="text-primary font-semibold">Dealer Commission (To Wallet)</span>
+                  <span className="font-semibold text-primary">৳{commissionApplied.toLocaleString()}</span>
                 </div>
               )}
 
@@ -601,7 +618,7 @@ export default function NewOrderPage() {
               </div>
             )}
 
-            <Button type="submit" disabled={submitting} className="w-full bg-primary hover:bg-primary/90 text-white font-semibold">
+            <Button type="submit" disabled={submitting || isPaymentExcessive} className="w-full bg-primary hover:bg-primary/90 text-white font-semibold">
               {submitting ? 'Creating Invoice...' : 'Post Sales Invoice'}
             </Button>
           </CardContent>

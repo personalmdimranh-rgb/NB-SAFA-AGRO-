@@ -201,10 +201,25 @@ export async function getDealers() {
   }
 
   await connectToDatabase();
+  const Sale = (await import('@/models/Sale')).default;
   const dealers = await Dealer.find()
     .populate('userId', 'name email phone status')
     .sort({ createdAt: -1 });
-  return JSON.parse(JSON.stringify(dealers));
+
+  const dealersWithStats = await Promise.all(
+    dealers.map(async (d) => {
+      const sales = await Sale.find({ buyerId: d._id, buyerType: 'dealer' });
+      const purchaseValue = sales.reduce((acc, s) => acc + s.grandTotal, 0);
+      const totalOrders = sales.length;
+      return {
+        ...d.toObject(),
+        totalOrders,
+        purchaseValue,
+      };
+    })
+  );
+
+  return JSON.parse(JSON.stringify(dealersWithStats));
 }
 
 export async function getDealerProfile(userId: string) {

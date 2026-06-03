@@ -210,11 +210,10 @@ export default function FarmersPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[40px]">#</TableHead>
-                    <TableHead>Farmer Name</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Location</TableHead>
+                    <TableHead>Farmer / Contact</TableHead>
+                    <TableHead className="text-right">Total Orders</TableHead>
+                    <TableHead className="text-right">Purchase Value</TableHead>
                     <TableHead className="text-center">Cattle</TableHead>
-                    <TableHead className="text-center">Purchases</TableHead>
                     <TableHead className="text-right">Credit Limit</TableHead>
                     <TableHead className="text-right">Dues</TableHead>
                     <TableHead className="text-center w-[60px]">Actions</TableHead>
@@ -224,7 +223,7 @@ export default function FarmersPage() {
                   {paginatedFarmers.map((f, index) => (
                     <TableRow key={f._id}>
                       <TableCell className="text-xs text-muted-foreground">{(currentPage - 1) * pageSize + index + 1}</TableCell>
-                      <TableCell className="font-semibold text-sm text-primary">
+                      <TableCell className="font-semibold text-sm text-primary py-3 space-y-1">
                         {f.userId ? (
                           <Link
                             href={`/admin/users/${f.userId}`}
@@ -236,23 +235,22 @@ export default function FarmersPage() {
                         ) : (
                           f.name
                         )}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        <span className="flex items-center gap-1">
-                          <Phone className="h-3 w-3 text-muted-foreground" /> {f.phone}
+                        <span className="block text-[10px] text-zinc-600 font-medium">
+                          <Phone className="h-3 w-3 text-muted-foreground inline mr-1" />
+                          {f.phone}
                         </span>
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3 text-destructive/60" />
+                        <span className="block text-[10px] text-muted-foreground font-normal">
+                          <MapPin className="h-3 w-3 text-destructive/60 inline mr-1" />
                           {[f.address?.village, f.address?.thana, f.address?.district].filter(Boolean).join(', ') || 'N/A'}
                         </span>
                       </TableCell>
-                      <TableCell className="text-center font-bold text-xs">{f.cattleCount}</TableCell>
-                      <TableCell className="text-center text-xs">
-                        <span>{f.purchaseCount} orders</span>
-                        <span className="block text-[10px] text-muted-foreground">({f.totalPurchasedQty || 0} bags)</span>
+                      <TableCell className="text-right font-bold text-xs">
+                        {f.totalOrders || 0}
                       </TableCell>
+                      <TableCell className="text-right font-bold text-xs text-zinc-800">
+                        ৳{(f.purchaseValue || 0).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-center font-bold text-xs">{f.cattleCount}</TableCell>
                       <TableCell className="text-right font-semibold text-xs">৳{(f.creditLimit || 0).toLocaleString()}</TableCell>
                       <TableCell className={`text-right font-bold text-xs ${(f.currentDues || 0) > (f.creditLimit || 0) ? 'text-destructive' : 'text-primary'}`}>
                         ৳{(f.currentDues || 0).toLocaleString()}

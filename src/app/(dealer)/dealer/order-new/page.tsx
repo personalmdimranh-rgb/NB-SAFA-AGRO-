@@ -31,7 +31,7 @@ export default function DealerPlaceOrder() {
     { productName: 'Premium Silage Bag (40kg)', productType: 'bag', quantity: 100, unitPrice: 380 }
   ]);
   const [paidAmount, setPaidAmount] = useState('0');
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank-transfer' | 'bkash' | 'nagad' | 'cod' | 'due'>('bank-transfer');
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank-transfer' | 'bkash' | 'nagad' | 'cod' | 'due' | 'wallet'>('bank-transfer');
   const [estimatedPaymentDate, setEstimatedPaymentDate] = useState('');
   const [paymentNumber, setPaymentNumber] = useState('');
   const [transactionNumber, setTransactionNumber] = useState('');
@@ -87,10 +87,10 @@ export default function DealerPlaceOrder() {
   const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
   const totalQuantity = items.reduce((sum, qty) => sum + qty.quantity, 0);
   const commissionApplied = totalQuantity * (dealer?.commissionRate || 0);
-  const grandTotal = Math.max(0, subtotal - commissionApplied);
+  const grandTotal = subtotal;
   const paidVal = parseFloat(paidAmount) || 0;
   const dueAmount = Math.max(0, grandTotal - paidVal);
-  const isPaymentExcessive = paidVal > grandTotal;
+  const isPaymentExcessive = paidVal > grandTotal || (paymentMethod === 'wallet' && paidVal > (dealer?.commissionWallet || 0));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,6 +98,11 @@ export default function DealerPlaceOrder() {
 
     if (totalQuantity <= 0) {
       toast.error('Order quantity must be greater than 0');
+      return;
+    }
+
+    if (paymentMethod === 'wallet' && paidVal > (dealer.commissionWallet || 0)) {
+      toast.error(`Payment amount cannot exceed your available wallet balance of ৳${(dealer.commissionWallet || 0).toLocaleString()} BDT.`);
       return;
     }
 
@@ -146,7 +151,7 @@ export default function DealerPlaceOrder() {
 
     const confirmResult = await Swal.fire({
       title: 'Submit Order Request?',
-      html: `Order total: ৳${grandTotal.toLocaleString()} BDT.<br/>Dues logged: ৳${dueAmount.toLocaleString()} BDT.<br/>Commission applied: ৳${commissionApplied.toLocaleString()} BDT.`,
+      html: `Order total: ৳${grandTotal.toLocaleString()} BDT.<br/>Dues logged: ৳${dueAmount.toLocaleString()} BDT.<br/>Commission to be earned: ৳${commissionApplied.toLocaleString()} BDT.`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: 'var(--color-primary, #10b981)',
@@ -280,6 +285,7 @@ export default function DealerPlaceOrder() {
                     <SelectItem value="due">Due / Credit</SelectItem>
                     <SelectItem value="bkash">bKash</SelectItem>
                     <SelectItem value="nagad">Nagad</SelectItem>
+                    <SelectItem value="wallet">Commission Wallet (Balance: ৳{(dealer?.commissionWallet || 0).toLocaleString()})</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -473,8 +479,8 @@ export default function DealerPlaceOrder() {
                 <span className="font-semibold text-zinc-800">৳{subtotal.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-primary font-semibold">Dealer Commission</span>
-                <span className="font-semibold text-primary">-৳{commissionApplied.toLocaleString()}</span>
+                <span className="text-primary font-semibold">Estimated Commission (To Wallet)</span>
+                <span className="font-semibold text-primary">৳{commissionApplied.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-base font-bold border-t pt-2 mt-2 text-foreground">
                 <span>Grand Total</span>

@@ -99,6 +99,7 @@ export async function getFarmers() {
   }
 
   await connectToDatabase();
+  const Sale = (await import('@/models/Sale')).default;
   const farmers = await Farmer.find().sort({ createdAt: -1 }).lean();
   
   // Lookup matching User entries by phone number
@@ -107,10 +108,19 @@ export async function getFarmers() {
   const users = await User.find({ phone: { $in: phones } }).select('_id phone').lean();
   const userMap = new Map(users.map(u => [u.phone, u._id.toString()]));
 
-  const enrichedFarmers = farmers.map(f => ({
-    ...f,
-    userId: f.phone ? userMap.get(f.phone) || null : null
-  }));
+  const enrichedFarmers = await Promise.all(
+    farmers.map(async (f) => {
+      const sales = await Sale.find({ buyerId: f._id, buyerType: 'farmer' });
+      const purchaseValue = sales.reduce((acc, s) => acc + s.grandTotal, 0);
+      const totalOrders = sales.length;
+      return {
+        ...f,
+        userId: f.phone ? userMap.get(f.phone) || null : null,
+        totalOrders,
+        purchaseValue,
+      };
+    })
+  );
 
   return JSON.parse(JSON.stringify(enrichedFarmers));
 }

@@ -22,7 +22,7 @@ export async function createSale(data: {
   }[];
   discount: number;
   paidAmount: number;
-  paymentMethod: 'cash' | 'bank-transfer' | 'bkash' | 'nagad' | 'cod' | 'due';
+  paymentMethod: 'cash' | 'bank-transfer' | 'bkash' | 'nagad' | 'cod' | 'due' | 'wallet';
   estimatedPaymentDate?: string;
   paymentNumber?: string;
   transactionNumber?: string;
@@ -96,7 +96,13 @@ export async function createSale(data: {
     // Calculate commission
     const totalQty = data.items.reduce((acc, item) => acc + item.quantity, 0);
     commissionApplied = totalQty * dealer.commissionRate;
-    dueAmount = grandTotal - data.paidAmount;
+    let walletDeduction = 0;
+    if (data.paymentMethod === 'wallet') {
+      if (dealer.commissionWallet < data.paidAmount) {
+        throw new Error(`Insufficient wallet balance. Available: ৳${dealer.commissionWallet.toLocaleString()}`);
+      }
+      walletDeduction = data.paidAmount;
+    }
 
     // Atomically update dealer stats with credit-limit enforcement (prevention of race conditions)
     // Only check credit limit if the transaction results in new/additional dues (dueAmount > 0)
@@ -104,13 +110,16 @@ export async function createSale(data: {
     if (dueAmount > 0) {
       dealerQuery.$expr = { $lte: [{ $add: ['$currentDues', dueAmount] }, '$creditLimit'] };
     }
+    if (walletDeduction > 0) {
+      dealerQuery.commissionWallet = { $gte: walletDeduction };
+    }
 
     const updatedDealer = await Dealer.findOneAndUpdate(
       dealerQuery,
       {
         $inc: {
           currentDues: dueAmount,
-          commissionWallet: commissionApplied,
+          commissionWallet: commissionApplied - walletDeduction,
           totalSalesCount: 1,
         },
       },
@@ -118,6 +127,9 @@ export async function createSale(data: {
     );
 
     if (!updatedDealer) {
+      if (walletDeduction > 0) {
+        throw new Error('Order blocks: Insufficient wallet balance or credit limit exceeded.');
+      }
       throw new Error(`Order blocks: Current due plus new due exceeds dealer's credit limit (${dealer.creditLimit}).`);
     }
 
@@ -217,7 +229,7 @@ export async function createSale(data: {
         : undefined,
       category: 'Silage Sale',
       amount: data.paidAmount,
-      description: `Payment for invoice ${invoiceNumber}`,
+      description: `Payment for invoice ${invoiceNumber}${data.paymentMethod === 'wallet' ? ' (Paid via Wallet)' : ''}`,
       recordedBy: dbUser._id,
     });
     await ledgerTx.save();
