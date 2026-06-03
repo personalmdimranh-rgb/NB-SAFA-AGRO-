@@ -81,7 +81,10 @@ export default function AdminTopbar() {
               <DropdownMenuSeparator />
               <DropdownMenuItem 
                 variant="destructive"
-                onClick={() => signOut({ callbackUrl: window.location.origin })}
+                onClick={async () => {
+                  await signOut({ redirect: false });
+                  window.location.replace('/');
+                }}
               >
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>

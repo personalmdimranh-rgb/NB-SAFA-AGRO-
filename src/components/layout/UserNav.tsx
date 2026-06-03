@@ -27,7 +27,10 @@ export function SignOutButton() {
   return (
     <button
       className="text-xs font-semibold hover:bg-accent hover:text-accent-foreground text-muted-foreground p-1 h-auto flex items-center transition-all cursor-pointer"
-      onClick={() => signOut({ callbackUrl: '/' })}
+      onClick={async () => {
+        await signOut({ redirect: false });
+        window.location.replace('/');
+      }}
     >
       <LogOut className="h-3.5 w-3.5 mr-1" /> Log Out
     </button>
@@ -38,7 +41,10 @@ export function SignOutButtonWhite() {
   return (
     <button
       className="text-xs font-bold text-white hover:bg-white/10 px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
-      onClick={() => signOut({ callbackUrl: '/' })}
+      onClick={async () => {
+        await signOut({ redirect: false });
+        window.location.replace('/');
+      }}
     >
       <LogOut className="h-3.5 w-3.5 mr-1" /> Log Out
     </button>
@@ -65,7 +71,10 @@ export function UserSidebarFooter({ user }: { user: { name: string; image?: stri
         </span>
       </div>
       <button
-        onClick={() => signOut({ callbackUrl: '/' })}
+      onClick={async () => {
+        await signOut({ redirect: false });
+        window.location.replace('/');
+      }}
         className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
         title="Log Out"
       >
@@ -140,7 +149,7 @@ export function UserMenu({ user }: { user: any }) {
               </div>
             </div>
           </DropdownMenuLabel>
-          <DropdownMenuSeparator />          {['super_admin', 'admin', 'manager', 'staff'].includes(role) && (
+          <DropdownMenuSeparator />          {['super_admin', 'admin', 'manager'].includes(role) && (
             <>
               <DropdownMenuItem asChild>
                 <Link href="/admin/profile" className="cursor-pointer font-semibold text-primary">
@@ -229,16 +238,6 @@ export function UserMenu({ user }: { user: any }) {
               <DropdownMenuItem asChild>
                 <Link href="/staff/dashboard" className="cursor-pointer">
                   <LayoutDashboard className="mr-2 h-4 w-4" /> Staff Dashboard
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/admin/employees/attendance" className="cursor-pointer">
-                  <Calendar className="mr-2 h-4 w-4" /> Log Attendance
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/admin/sales" className="cursor-pointer">
-                  <Truck className="mr-2 h-4 w-4" /> Sales Ledger
                 </Link>
               </DropdownMenuItem>
             </>
@@ -372,7 +371,10 @@ export function UserMenu({ user }: { user: any }) {
 
         <DropdownMenuItem
           variant="destructive"
-          onClick={() => signOut({ callbackUrl: '/' })}
+          onClick={async () => {
+            await signOut({ redirect: false });
+            window.location.replace('/');
+          }}
           className="cursor-pointer"
         >
           <LogOut className="mr-2 h-4 w-4" /> Sign Out
