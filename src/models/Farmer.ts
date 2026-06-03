@@ -21,7 +21,7 @@ export interface IFarmer extends Document {
 const FarmerSchema: Schema<IFarmer> = new Schema(
   {
     name: { type: String, required: true },
-    phone: { type: String, required: true, unique: true },
+    phone: { type: String, default: '' },
     address: {
       village: String,
       division: String,

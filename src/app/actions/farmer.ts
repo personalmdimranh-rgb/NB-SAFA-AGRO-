@@ -158,10 +158,33 @@ export async function getFarmerDashboardSummary(userId: string) {
   const user = await User.findById(userId).lean();
   if (!user) throw new Error('User not found');
 
-  const userPhone = (user as any).phone;
-  if (!userPhone) return null; // No phone on record — cannot match a farmer safely
+  let userPhone = (user as any).phone;
+  if (!userPhone || userPhone === 'N/A') {
+    const uniquePhone = `G-${user._id.toString().slice(-8)}`;
+    await User.findByIdAndUpdate(userId, { phone: uniquePhone });
+    userPhone = uniquePhone;
+  }
 
-  const farmer = await Farmer.findOne({ phone: userPhone }).lean();
+  let farmer = await Farmer.findOne({ phone: userPhone }).lean();
+  if (!farmer && (user.role === 'user' || (user as any).role === 'user')) {
+    const newFarmer = await Farmer.create({
+      name: user.name || 'Unknown Farmer',
+      phone: userPhone,
+      address: {
+        village: '',
+        division: '',
+        thana: '',
+        district: ''
+      },
+      cattleCount: 0,
+      purchaseCount: 0,
+      totalPurchasedQty: 0,
+      creditLimit: 0,
+      currentDues: 0
+    });
+    farmer = JSON.parse(JSON.stringify(newFarmer));
+  }
+
   if (!farmer) return null;
 
   const Sale = (await import('@/models/Sale')).default;
