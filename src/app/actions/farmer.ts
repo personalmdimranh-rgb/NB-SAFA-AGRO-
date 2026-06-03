@@ -155,13 +155,31 @@ export async function getFarmerDashboardSummary(userId: string) {
   await connectToDatabase();
   
   const User = (await import('@/models/User')).default;
-  const user = await User.findById(userId).lean();
+  let user = await User.findById(userId).lean();
+  if (!user && session.user.email) {
+    user = await User.findOne({ email: session.user.email }).lean();
+  }
+  if (!user && session.user.email) {
+    const isSuperAdmin = session.user.email === 'imranshuvo101@gmail.com';
+    const newUser = new User({
+      name: session.user.name || 'Unknown',
+      email: session.user.email,
+      image: session.user.image || '',
+      role: isSuperAdmin ? 'super_admin' : 'farmer',
+      status: 'active',
+      phone: 'N/A'
+    });
+    await newUser.save();
+    newUser.phone = `G-${newUser._id.toString().slice(-8)}`;
+    await newUser.save();
+    user = JSON.parse(JSON.stringify(newUser));
+  }
   if (!user) throw new Error('User not found');
 
   let userPhone = (user as any).phone;
   if (!userPhone || userPhone === 'N/A') {
-    const uniquePhone = `G-${user._id.toString().slice(-8)}`;
-    await User.findByIdAndUpdate(userId, { phone: uniquePhone });
+    const uniquePhone = `G-${(user as any)._id.toString().slice(-8)}`;
+    await User.findByIdAndUpdate((user as any)._id, { phone: uniquePhone });
     userPhone = uniquePhone;
   }
 

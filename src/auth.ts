@@ -94,6 +94,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!user.email) return false;
         
         try {
+          await connectToDatabase();
           const isSuperAdmin = user.email === 'imranshuvo101@gmail.com';
           let dbUser = await User.findOne({ email: user.email });
           

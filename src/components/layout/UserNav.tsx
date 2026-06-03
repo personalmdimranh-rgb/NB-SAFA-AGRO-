@@ -71,10 +71,10 @@ export function UserSidebarFooter({ user }: { user: { name: string; image?: stri
         </span>
       </div>
       <button
-      onClick={async () => {
-        await signOut({ redirect: false });
-        window.location.replace('/');
-      }}
+        onClick={async () => {
+          await signOut({ redirect: false });
+          window.location.replace('/');
+        }}
         className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
         title="Log Out"
       >
