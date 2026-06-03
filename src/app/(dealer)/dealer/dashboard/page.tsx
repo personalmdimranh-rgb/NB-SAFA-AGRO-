@@ -9,11 +9,14 @@ import { Badge } from '@/components/ui/badge';
 import { DollarSign, ShieldCheck, Wallet, RefreshCw, Calendar, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import OrderTrackerModal from '@/components/user/OrderTrackerModal';
 
 export default function DealerDashboard() {
   const { data: session } = useSession();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedSale, setSelectedSale] = useState<any>(null);
+  const [trackerOpen, setTrackerOpen] = useState(false);
 
   const loadData = async () => {
     if (!session?.user?.id) return;
@@ -41,7 +44,10 @@ export default function DealerDashboard() {
   }
 
   const { dealer, recentSales } = data;
-  const availableCredit = Math.max(0, dealer.creditLimit - dealer.currentDues);
+  const currentDues = dealer?.currentDues ?? 0;
+  const creditLimit = dealer?.creditLimit ?? 0;
+  const commissionWallet = dealer?.commissionWallet ?? 0;
+  const availableCredit = Math.max(0, creditLimit - currentDues);
 
   return (
     <div className="space-y-6">
@@ -64,7 +70,7 @@ export default function DealerDashboard() {
           </CardHeader>
           <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
             <div className="text-base sm:text-xl font-bold text-rose-700 truncate">
-              ৳{dealer.currentDues.toLocaleString()}
+              ৳{currentDues.toLocaleString()}
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1 truncate">Pending payments to clear</p>
           </CardContent>
@@ -77,7 +83,7 @@ export default function DealerDashboard() {
           </CardHeader>
           <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
             <div className="text-base sm:text-xl font-bold text-zinc-700 truncate">
-              ৳{dealer.creditLimit.toLocaleString()}
+              ৳{creditLimit.toLocaleString()}
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1 truncate">Max allowed credit line</p>
           </CardContent>
@@ -103,7 +109,7 @@ export default function DealerDashboard() {
           </CardHeader>
           <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
             <div className="text-base sm:text-xl font-bold text-foreground truncate">
-              ৳{dealer.commissionWallet.toLocaleString()}
+              ৳{commissionWallet.toLocaleString()}
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1 truncate">Earned bag commissions</p>
           </CardContent>
@@ -165,14 +171,27 @@ export default function DealerDashboard() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={`capitalize ${
-                          sale.status === 'delivery complete' ? 'bg-primary/10 text-primary border-primary/20' :
-                          sale.status === 'cancel' ? 'bg-destructive/10 text-destructive border-destructive/20' :
-                          sale.status === 'pending' ? 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20' :
-                          'bg-blue-500/10 text-blue-600 border-blue-500/20'
-                        }`}>
-                          {sale.status || 'pending'}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className={`capitalize ${
+                            sale.status === 'delivery complete' ? 'bg-primary/10 text-primary border-primary/20' :
+                            sale.status === 'cancel' ? 'bg-destructive/10 text-destructive border-destructive/20' :
+                            sale.status === 'pending' ? 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20' :
+                            'bg-blue-500/10 text-blue-600 border-blue-500/20'
+                          }`}>
+                            {sale.status || 'pending'}
+                          </Badge>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="h-7 px-2 text-[10px] text-primary hover:text-primary hover:bg-primary/5 font-bold gap-1 border border-primary/10 rounded-md"
+                            onClick={() => {
+                              setSelectedSale(sale);
+                              setTrackerOpen(true);
+                            }}
+                          >
+                            Track
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -182,6 +201,12 @@ export default function DealerDashboard() {
           )}
         </CardContent>
       </Card>
+
+      <OrderTrackerModal 
+        isOpen={trackerOpen} 
+        onOpenChange={setTrackerOpen} 
+        sale={selectedSale} 
+      />
     </div>
   );
 }

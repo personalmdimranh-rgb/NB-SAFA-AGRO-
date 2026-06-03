@@ -20,7 +20,11 @@ export interface ISale extends Document {
   paidAmount: number;
   dueAmount: number;
   paymentStatus: 'paid' | 'partially-paid' | 'unpaid';
-  paymentMethod: 'cash' | 'bank-transfer' | 'bkash' | 'nagad';
+  paymentMethod: 'cash' | 'bank-transfer' | 'bkash' | 'nagad' | 'cod' | 'due';
+  estimatedPaymentDate?: Date;
+  paymentNumber?: string;
+  transactionNumber?: string;
+  bankName?: string;
   distributionDistrict: string;
   status?: 'pending' | 'approved' | 'ready to deliver' | 'release to deliver' | 'delivery complete' | 'cancel';
   date: Date;
@@ -49,7 +53,11 @@ const SaleSchema: Schema<ISale> = new Schema(
     paidAmount: { type: Number, default: 0 },
     dueAmount: { type: Number, default: 0 },
     paymentStatus: { type: String, enum: ['paid', 'partially-paid', 'unpaid'], required: true },
-    paymentMethod: { type: String, enum: ['cash', 'bank-transfer', 'bkash', 'nagad'], required: true },
+    paymentMethod: { type: String, enum: ['cash', 'bank-transfer', 'bkash', 'nagad', 'cod', 'due'], required: true },
+    estimatedPaymentDate: { type: Date },
+    paymentNumber: { type: String },
+    transactionNumber: { type: String },
+    bankName: { type: String },
     distributionDistrict: { type: String, required: true },
     status: { 
       type: String, 

@@ -22,7 +22,8 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { divisions, bdDivisions, bdLocations } from '@/lib/bd-locations';
-import { Users, PlusCircle, Calendar, Briefcase, MoreVertical, Edit, Trash2, FileText, BanknoteIcon } from 'lucide-react';
+import Link from 'next/link';
+import { Users, PlusCircle, Calendar, Briefcase, MoreVertical, Edit, Trash2, FileText, BanknoteIcon, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 
@@ -321,7 +322,17 @@ export default function EmployeesPage() {
                       <TableRow key={emp._id}>
                         <TableCell className="text-xs text-muted-foreground">{(currentPage - 1) * pageSize + index + 1}</TableCell>
                         <TableCell className="font-semibold text-sm text-primary">
-                          {emp.name}
+                          {emp.userId ? (
+                            <Link
+                              href={`/admin/users/${emp.userId}`}
+                              className="font-semibold text-slate-900 hover:text-primary transition-colors flex items-center gap-1 group w-fit"
+                            >
+                              {emp.name}
+                              <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                            </Link>
+                          ) : (
+                            emp.name
+                          )}
                           <span className="block text-[10px] text-muted-foreground font-mono font-normal">ID: {emp.employeeId || '—'}</span>
                           <span className="block text-[10px] text-muted-foreground font-normal">{emp.phone}</span>
                         </TableCell>

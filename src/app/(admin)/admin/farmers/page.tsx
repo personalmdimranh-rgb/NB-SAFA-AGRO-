@@ -21,7 +21,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { divisions, bdDivisions, bdLocations } from '@/lib/bd-locations';
-import { Users, PlusCircle, Phone, MapPin, MoreVertical, Edit, Trash2 } from 'lucide-react';
+import Link from 'next/link';
+import { Users, PlusCircle, Phone, MapPin, MoreVertical, Edit, Trash2, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 
@@ -223,7 +224,19 @@ export default function FarmersPage() {
                   {paginatedFarmers.map((f, index) => (
                     <TableRow key={f._id}>
                       <TableCell className="text-xs text-muted-foreground">{(currentPage - 1) * pageSize + index + 1}</TableCell>
-                      <TableCell className="font-semibold text-sm text-primary">{f.name}</TableCell>
+                      <TableCell className="font-semibold text-sm text-primary">
+                        {f.userId ? (
+                          <Link
+                            href={`/admin/users/${f.userId}`}
+                            className="font-semibold text-slate-900 hover:text-primary transition-colors flex items-center gap-1 group w-fit"
+                          >
+                            {f.name}
+                            <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                          </Link>
+                        ) : (
+                          f.name
+                        )}
+                      </TableCell>
                       <TableCell className="text-xs">
                         <span className="flex items-center gap-1">
                           <Phone className="h-3 w-3 text-muted-foreground" /> {f.phone}

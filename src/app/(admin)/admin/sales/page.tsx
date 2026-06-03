@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { Pagination } from '@/components/ui/pagination';
 import { getSales, deleteSale, togglePaymentStatus, updateSaleStatus } from '@/app/actions/sales';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +16,7 @@ import {
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter
 } from '@/components/ui/dialog';
-import { FileText, Download, Calendar, Search, MapPin, MoreVertical, Trash2 } from 'lucide-react';
+import { FileText, Download, Calendar, Search, MapPin, MoreVertical, Trash2, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 
@@ -86,11 +87,28 @@ export default function SalesPage() {
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
       if (sale.buyerType === 'dealer') {
+        const addr = sale.buyerId?.address;
+        const addressParts = [];
+        if (addr?.village) addressParts.push(addr.village);
+        if (addr?.union) addressParts.push(addr.union);
+        if (addr?.thana) addressParts.push(addr.thana);
+        if (addr?.district || sale.distributionDistrict) {
+          addressParts.push(addr?.district || sale.distributionDistrict);
+        }
+        const fullAddress = addressParts.join(', ') || 'N/A';
         doc.text(`Shop Name: ${sale.buyerId?.shopName || sale.shopName || 'N/A'}`, 14, 53);
-        doc.text(`District: ${sale.buyerId?.address?.district || 'N/A'}`, 14, 57);
+        doc.text(`Address: ${fullAddress}`, 14, 57);
       } else {
         doc.text(`Phone: ${sale.buyerId?.phone || 'N/A'}`, 14, 53);
-        doc.text(`Address: ${sale.buyerId?.address?.village || 'N/A'}, ${sale.buyerId?.address?.district || 'N/A'}`, 14, 57);
+        const addr = sale.buyerId?.address;
+        const addressParts = [];
+        if (addr?.village) addressParts.push(addr.village);
+        if (addr?.thana) addressParts.push(addr.thana);
+        if (addr?.district || sale.distributionDistrict) {
+          addressParts.push(addr?.district || sale.distributionDistrict);
+        }
+        const fullAddress = addressParts.join(', ') || 'N/A';
+        doc.text(`Address: ${fullAddress}`, 14, 57);
       }
 
       // Items Table
@@ -245,13 +263,10 @@ export default function SalesPage() {
                   <TableRow>
                     <TableHead className="w-[40px]">#</TableHead>
                     <TableHead>Invoice</TableHead>
-                    <TableHead>Date</TableHead>
                     <TableHead>Buyer</TableHead>
-                    <TableHead>Items</TableHead>
                     <TableHead>Grand Total</TableHead>
                     <TableHead>Payment</TableHead>
                     <TableHead>Order Status</TableHead>
-                    <TableHead>Logistics</TableHead>
                     <TableHead className="text-center w-[60px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -260,50 +275,85 @@ export default function SalesPage() {
                     const buyerName = sale.buyerType === 'dealer'
                       ? sale.buyerId?.userId?.name || sale.buyerName || 'Dealer'
                       : sale.buyerId?.name || sale.buyerName || 'Farmer';
+                    const orderItemsStr = sale.items.map((it: any) => `${it.productName} (x${it.quantity})`).join(', ');
                     return (
                       <TableRow key={sale._id}>
                         <TableCell className="text-xs text-muted-foreground font-medium">{(currentPage - 1) * pageSize + index + 1}</TableCell>
-                        <TableCell className="font-bold text-xs text-zinc-900">
+                        <TableCell className="font-bold text-xs text-zinc-900 space-y-1">
                           <button
                             onClick={() => {
                               setSelectedSale(sale);
                               setIsDetailsOpen(true);
                             }}
-                            className="hover:underline text-primary text-left font-bold focus:outline-none"
+                            className="hover:underline text-primary text-left font-bold focus:outline-none block"
                           >
                             {sale.invoiceNumber}
                           </button>
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap font-medium text-xs">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3 text-muted-foreground" />
+                          <span className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium whitespace-nowrap">
+                            <Calendar className="h-3 w-3" />
                             {new Date(sale.date).toLocaleDateString()}
                           </span>
                         </TableCell>
-                        <TableCell className="text-xs">
-                          <span className="font-semibold">{buyerName}</span>
-                          <span className="block text-[10px] text-muted-foreground uppercase">{sale.buyerType}</span>
-                        </TableCell>
-                        <TableCell className="text-xs max-w-[200px] truncate">
-                          {sale.items.map((it: any) => `${it.productName} (x${it.quantity})`).join(', ')}
+                        <TableCell className="text-xs space-y-1.5 py-3">
+                          <div className="flex flex-col gap-0.5">
+                            {sale.buyerUserId ? (
+                              <Link
+                                href={`/admin/users/${sale.buyerUserId}`}
+                                className="font-semibold text-slate-900 hover:text-primary transition-colors flex items-center gap-1 group w-fit"
+                              >
+                                {buyerName}
+                                <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                              </Link>
+                            ) : (
+                              <span className="font-semibold text-zinc-900">{buyerName}</span>
+                            )}
+                            {sale.buyerType === 'dealer' && sale.shopName && (
+                              <span className="text-[10px] font-bold text-primary">{sale.shopName}</span>
+                            )}
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600 font-bold uppercase w-fit">{sale.buyerType}</span>
+                          </div>
+                          <div className="text-[11px] text-zinc-600 font-medium leading-relaxed max-w-sm">
+                            <span className="text-muted-foreground font-semibold">Items: </span>
+                            {orderItemsStr}
+                          </div>
+                          <div className="text-[11px] text-zinc-600 flex items-center gap-1">
+                            <span className="text-muted-foreground font-semibold">Logistics: </span>
+                            <MapPin className="h-3 w-3 text-primary/70 inline" />
+                            {sale.distributionDistrict}
+                          </div>
                         </TableCell>
                         <TableCell className="font-bold text-xs text-primary">{sale.grandTotal.toLocaleString()}</TableCell>
-                        <TableCell>
-                          <button
-                            onClick={() => handleTogglePayment(sale)}
-                            className="transition-transform active:scale-95 duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-sm"
-                            title="Click to toggle payment status"
-                          >
-                            {sale.paymentStatus === 'paid' && (
-                              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 cursor-pointer">Paid</Badge>
+                        <TableCell className="text-xs">
+                          <div className="flex flex-col gap-1.5">
+                            <button
+                              onClick={() => handleTogglePayment(sale)}
+                              className="w-fit transition-transform active:scale-95 duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-sm"
+                              title="Click to toggle payment status"
+                            >
+                              {sale.paymentStatus === 'paid' && (
+                                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 cursor-pointer">Paid</Badge>
+                              )}
+                              {sale.paymentStatus === 'partially-paid' && (
+                                <Badge variant="outline" className="bg-secondary/50 text-secondary-foreground border-secondary/20 hover:bg-secondary/60 cursor-pointer">Partial ({sale.paidAmount})</Badge>
+                              )}
+                              {sale.paymentStatus === 'unpaid' && (
+                                <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20 cursor-pointer">Unpaid</Badge>
+                              )}
+                            </button>
+                            <span className="text-[10px] text-zinc-500 font-bold uppercase">{sale.paymentMethod}</span>
+                            {['bkash', 'nagad'].includes(sale.paymentMethod) && (
+                              <div className="text-[9px] text-zinc-600 bg-muted px-1.5 py-1 rounded w-fit flex flex-col gap-0.5 leading-normal">
+                                {sale.paymentNumber && <div>Num: <span className="font-bold">{sale.paymentNumber}</span></div>}
+                                {sale.transactionNumber && <div>Trx: <span className="font-bold">{sale.transactionNumber}</span></div>}
+                              </div>
                             )}
-                            {sale.paymentStatus === 'partially-paid' && (
-                              <Badge variant="outline" className="bg-secondary/50 text-secondary-foreground border-secondary/20 hover:bg-secondary/60 cursor-pointer">Partial ({sale.paidAmount})</Badge>
+                            {sale.paymentMethod === 'bank-transfer' && (
+                              <div className="text-[9px] text-zinc-600 bg-muted px-1.5 py-1 rounded w-fit flex flex-col gap-0.5 leading-normal">
+                                {sale.bankName && <div>Bank: <span className="font-bold">{sale.bankName}</span></div>}
+                                {sale.transactionNumber && <div>Ref: <span className="font-bold">{sale.transactionNumber}</span></div>}
+                              </div>
                             )}
-                            {sale.paymentStatus === 'unpaid' && (
-                              <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20 cursor-pointer">Unpaid</Badge>
-                            )}
-                          </button>
+                          </div>
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className={`capitalize ${
@@ -315,12 +365,7 @@ export default function SalesPage() {
                             {sale.status || 'pending'}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-xs">
-                          <span className="flex items-center gap-1 text-muted-foreground">
-                            <MapPin className="h-3.5 w-3.5 text-primary/70" />
-                            {sale.distributionDistrict}
-                          </span>
-                        </TableCell>
+
                         <TableCell className="text-center">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -456,6 +501,27 @@ export default function SalesPage() {
                   )}
                 </div>
               </div>
+
+              {['bkash', 'nagad', 'bank-transfer'].includes(selectedSale.paymentMethod) && (
+                <>
+                  <div className="h-px bg-zinc-200 dark:bg-zinc-800" />
+                  <div>
+                    <span className="text-muted-foreground block text-xs font-medium mb-1">Payment Verification Details</span>
+                    <div className="bg-amber-500/10 dark:bg-amber-500/5 p-3 rounded-lg border border-amber-500/20 text-xs space-y-1">
+                      <div>Payment Option: <span className="font-bold text-zinc-950 dark:text-zinc-50 uppercase">{selectedSale.paymentMethod}</span></div>
+                      {selectedSale.paymentMethod === 'bank-transfer' && (
+                        <div>Bank Name: <span className="font-bold text-zinc-950 dark:text-zinc-50">{selectedSale.bankName || 'N/A'}</span></div>
+                      )}
+                      {['bkash', 'nagad'].includes(selectedSale.paymentMethod) && selectedSale.paymentNumber && (
+                        <div>Payment/Sender Number: <span className="font-bold text-zinc-950 dark:text-zinc-50">{selectedSale.paymentNumber}</span></div>
+                      )}
+                      {selectedSale.transactionNumber && (
+                        <div>Transaction ID / Ref: <span className="font-bold text-zinc-950 dark:text-zinc-50">{selectedSale.transactionNumber}</span></div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
 
               <div className="h-px bg-zinc-200 dark:bg-zinc-800" />
 

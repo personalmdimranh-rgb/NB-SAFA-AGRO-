@@ -5,7 +5,7 @@ import connectToDatabase from '@/lib/db';
 import User from '@/models/User';
 import Dealer from '@/models/Dealer';
 import Link from 'next/link';
-import { Home, ShoppingBag, Receipt, Coins, LogOut, ShieldAlert } from 'lucide-react';
+import { Home, ShoppingBag, Receipt, Coins, LogOut, ShieldAlert, User as UserIcon, Settings } from 'lucide-react';
 import { UserSidebarFooter } from '@/components/layout/UserNav';
 import { Logo } from '@/components/ui/logo';
 
@@ -63,6 +63,12 @@ export default async function DealerLayout({ children }: { children: React.React
             </Link>
             <Link href="/dealer/commission" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-primary-foreground/10 transition-colors">
               <Coins className="h-4 w-4" /> Commission Wallet
+            </Link>
+            <Link href="/dealer/profile" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-primary-foreground/10 transition-colors">
+              <UserIcon className="h-4 w-4" /> Profile Info
+            </Link>
+            <Link href="/dealer/settings" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-primary-foreground/10 transition-colors">
+              <Settings className="h-4 w-4" /> Account Settings
             </Link>
           </nav>
         </div>

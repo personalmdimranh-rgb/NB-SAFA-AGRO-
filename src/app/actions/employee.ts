@@ -267,8 +267,36 @@ export async function processBulkPayroll(employeeIds: string[], monthYearStr: st
 
 export async function getEmployees() {
   await connectToDatabase();
-  const employees = await Employee.find().sort({ joiningDate: -1 });
-  return JSON.parse(JSON.stringify(employees));
+  const employees = await Employee.find().sort({ joiningDate: -1 }).lean();
+  
+  // Lookup corresponding User entries by email/phone
+  const emails = employees.map(emp => emp.email).filter(Boolean);
+  const phones = employees.map(emp => emp.phone).filter(Boolean);
+  
+  const users = await User.find({
+    $or: [
+      { email: { $in: emails } },
+      { phone: { $in: phones } }
+    ]
+  }).select('_id email phone').lean();
+  
+  const userMapByEmail = new Map(users.filter(u => u.email).map(u => [u.email, u._id.toString()]));
+  const userMapByPhone = new Map(users.filter(u => u.phone).map(u => [u.phone, u._id.toString()]));
+  
+  const enrichedEmployees = employees.map(emp => {
+    let userId = null;
+    if (emp.email && userMapByEmail.has(emp.email)) {
+      userId = userMapByEmail.get(emp.email);
+    } else if (emp.phone && userMapByPhone.has(emp.phone)) {
+      userId = userMapByPhone.get(emp.phone);
+    }
+    return {
+      ...emp,
+      userId
+    };
+  });
+
+  return JSON.parse(JSON.stringify(enrichedEmployees));
 }
 
 export async function getAttendanceByDate(dateStr: string) {
@@ -277,6 +305,19 @@ export async function getAttendanceByDate(dateStr: string) {
   targetDate.setUTCHours(0, 0, 0, 0);
 
   const employees = await Employee.find().sort({ joiningDate: -1 });
+
+  // Lookup matching User entries by email/phone for all employees
+  const emails = employees.map(emp => emp.email).filter(Boolean);
+  const phones = employees.map(emp => emp.phone).filter(Boolean);
+  const users = await User.find({
+    $or: [
+      { email: { $in: emails } },
+      { phone: { $in: phones } }
+    ]
+  }).select('_id email phone').lean();
+  
+  const userMapByEmail = new Map(users.filter(u => u.email).map(u => [u.email, u._id.toString()]));
+  const userMapByPhone = new Map(users.filter(u => u.phone).map(u => [u.phone, u._id.toString()]));
 
   const report = await Promise.all(
     employees.map(async (emp) => {
@@ -300,12 +341,20 @@ export async function getAttendanceByDate(dateStr: string) {
         record = { date: targetDate, status: defaultStatus };
       }
 
+      let userId = null;
+      if (emp.email && userMapByEmail.has(emp.email)) {
+        userId = userMapByEmail.get(emp.email);
+      } else if (emp.phone && userMapByPhone.has(emp.phone)) {
+        userId = userMapByPhone.get(emp.phone);
+      }
+
       return {
         _id: emp._id.toString(),
         name: emp.name,
         phone: emp.phone,
         designation: emp.designation,
         status: record.status,
+        userId,
       };
     })
   );

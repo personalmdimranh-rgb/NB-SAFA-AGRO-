@@ -67,6 +67,7 @@ interface UserData {
   totalOrders: number;
   totalSpent: number;
   lastOrderDate?: string;
+  shopName?: string;
 }
 
 export default function UsersPage() {
@@ -383,6 +384,9 @@ export default function UsersPage() {
                       </Link>
                       {user.phone && user.phone !== 'N/A' && (
                         <span className="text-[11px] text-muted-foreground font-mono font-medium">{user.phone}</span>
+                      )}
+                      {user.role === 'dealer' && user.shopName && (
+                        <span className="text-[11px] font-bold text-primary">{user.shopName}</span>
                       )}
                       {user.addresses && user.addresses.length > 0 && (
                         <span className="text-[10px] text-muted-foreground truncate max-w-[200px] mt-0.5">

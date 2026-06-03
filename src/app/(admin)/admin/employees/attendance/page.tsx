@@ -17,6 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import Link from 'next/link';
 import {
   ClipboardCheck,
   Calendar,
@@ -26,6 +27,7 @@ import {
   Clock,
   BarChart3,
   RefreshCw,
+  ArrowRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -37,6 +39,7 @@ interface AttendanceReport {
   phone: string;
   designation: string;
   status: AttendanceStatus | null;
+  userId?: string | null;
 }
 
 export default function AttendancePage() {
@@ -215,7 +218,17 @@ export default function AttendancePage() {
                     {paginatedEmployees.map((emp) => (
                       <TableRow key={emp._id}>
                         <TableCell className="font-semibold text-xs text-primary">
-                          {emp.name}
+                          {emp.userId ? (
+                            <Link
+                              href={`/admin/users/${emp.userId}`}
+                              className="font-semibold text-slate-900 hover:text-primary transition-colors flex items-center gap-1 group w-fit"
+                            >
+                              {emp.name}
+                              <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                            </Link>
+                          ) : (
+                            emp.name
+                          )}
                           <span className="block text-[10px] text-muted-foreground font-normal italic">{emp.phone}</span>
                         </TableCell>
                         <TableCell className="text-xs font-semibold text-zinc-600">{emp.designation}</TableCell>
@@ -393,7 +406,19 @@ export default function AttendancePage() {
                         }
                       >
                         <TableCell className="text-xs text-muted-foreground pl-4">{(currentReportPage - 1) * pageSize + index + 1}</TableCell>
-                        <TableCell className="font-semibold text-sm text-zinc-800">{emp.name}</TableCell>
+                         <TableCell className="font-semibold text-sm text-zinc-800">
+                           {emp.userId ? (
+                             <Link
+                               href={`/admin/users/${emp.userId}`}
+                               className="font-semibold text-slate-900 hover:text-primary transition-colors flex items-center gap-1 group w-fit"
+                             >
+                               {emp.name}
+                               <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                             </Link>
+                           ) : (
+                             emp.name
+                           )}
+                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">{emp.phone}</TableCell>
                         <TableCell className="text-xs font-medium text-zinc-600">{emp.designation}</TableCell>
                         <TableCell className="text-center">

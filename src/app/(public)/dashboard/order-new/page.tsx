@@ -7,9 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShoppingBag, ArrowRightCircle, Plus, Trash2, ShieldAlert } from 'lucide-react';
+import { ShoppingBag, ArrowRightCircle, Plus, Trash2, ShieldAlert, Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
+import { contactConfig } from '@/lib/contact-config';
 
 interface OrderItem {
   productName: string;
@@ -26,11 +27,24 @@ export default function FarmerPlaceOrder() {
 
   // Form states
   const [items, setItems] = useState<OrderItem[]>([
-    { productName: 'Premium Silage Bag (40kg)', productType: 'bag', quantity: 10, unitPrice: 380 }
+    { productName: 'Premium Silage Bag (40kg)', productType: 'bag', quantity: 100, unitPrice: 380 }
   ]);
   const [paidAmount, setPaidAmount] = useState('0');
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank-transfer' | 'bkash' | 'nagad'>('cash');
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank-transfer' | 'bkash' | 'nagad' | 'cod' | 'due'>('bank-transfer');
+  const [estimatedPaymentDate, setEstimatedPaymentDate] = useState('');
+  const [paymentNumber, setPaymentNumber] = useState('');
+  const [transactionNumber, setTransactionNumber] = useState('');
+  const [bankName, setBankName] = useState('');
+  const [mfsVerificationType, setMfsVerificationType] = useState<'number' | 'trx'>('number');
+  const [copiedText, setCopiedText] = useState<string | null>(null);
   const [distributionDistrict, setDistributionDistrict] = useState('');
+
+  const copyToClipboard = (text: string, type: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedText(type);
+    toast.success('Copied to clipboard!');
+    setTimeout(() => setCopiedText(null), 2000);
+  };
 
   const loadProfile = async () => {
     try {
@@ -80,6 +94,7 @@ export default function FarmerPlaceOrder() {
   const grandTotal = subtotal;
   const paidVal = parseFloat(paidAmount) || 0;
   const dueAmount = Math.max(0, grandTotal - paidVal);
+  const isPaymentExcessive = paidVal > grandTotal;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,8 +105,15 @@ export default function FarmerPlaceOrder() {
       return;
     }
 
+    if (paidVal > grandTotal) {
+      toast.error('Payment amount cannot be greater than the Grand Total BDT.');
+      return;
+    }
+
     // Credit Line Check
-    const remainingLimit = farmer.creditLimit - farmer.currentDues;
+    const creditLimit = farmer?.creditLimit ?? 0;
+    const currentDues = farmer?.currentDues ?? 0;
+    const remainingLimit = creditLimit - currentDues;
     if (dueAmount > remainingLimit) {
       Swal.fire({
         title: 'Credit Limit Blocked',
@@ -99,6 +121,33 @@ export default function FarmerPlaceOrder() {
         icon: 'error'
       });
       return;
+    }
+
+    if (paymentMethod === 'due' && !estimatedPaymentDate) {
+      toast.error('Please specify an estimated payment date.');
+      return;
+    }
+
+    if ((paymentMethod === 'bkash' || paymentMethod === 'nagad')) {
+      if (mfsVerificationType === 'number' && !paymentNumber) {
+        toast.error('Please enter your Payment Number for verification.');
+        return;
+      }
+      if (mfsVerificationType === 'trx' && !transactionNumber) {
+        toast.error('Please enter the Transaction ID (TxnID) for verification.');
+        return;
+      }
+    }
+
+    if (paymentMethod === 'bank-transfer') {
+      if (!bankName) {
+        toast.error('Please enter the Bank Name.');
+        return;
+      }
+      if (!transactionNumber) {
+        toast.error('Please enter the Transaction ID / Ref.');
+        return;
+      }
     }
 
     const confirmResult = await Swal.fire({
@@ -124,6 +173,12 @@ export default function FarmerPlaceOrder() {
         discount: 0,
         paidAmount: paidVal,
         paymentMethod,
+        estimatedPaymentDate: paymentMethod === 'due' ? estimatedPaymentDate : undefined,
+        paymentNumber: (['bkash', 'nagad'].includes(paymentMethod) && mfsVerificationType === 'number') ? paymentNumber : undefined,
+        transactionNumber: (['bkash', 'nagad'].includes(paymentMethod) && mfsVerificationType === 'trx') 
+          ? transactionNumber 
+          : (paymentMethod === 'bank-transfer' ? transactionNumber : undefined),
+        bankName: paymentMethod === 'bank-transfer' ? bankName : undefined,
         distributionDistrict: distributionDistrict || 'Unknown',
       });
 
@@ -133,8 +188,12 @@ export default function FarmerPlaceOrder() {
           text: `Your order has been recorded as Invoice ${res.sale?.invoiceNumber}.`,
           icon: 'success'
         });
-        setItems([{ productName: 'Premium Silage Bag (40kg)', productType: 'bag', quantity: 10, unitPrice: 380 }]);
+        setItems([{ productName: 'Premium Silage Bag (40kg)', productType: 'bag', quantity: 100, unitPrice: 380 }]);
         setPaidAmount('0');
+        setEstimatedPaymentDate('');
+        setPaymentNumber('');
+        setTransactionNumber('');
+        setBankName('');
         loadProfile();
       }
     } catch (err: any) {
@@ -218,15 +277,22 @@ export default function FarmerPlaceOrder() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
               <div>
                 <label className="text-xs font-semibold text-primary mb-1 block">Payment Method</label>
-                <Select value={paymentMethod} onValueChange={(val: any) => setPaymentMethod(val)}>
+                <Select value={paymentMethod} onValueChange={(val: any) => {
+                  setPaymentMethod(val);
+                  if (val === 'due' || val === 'cod') {
+                    setPaidAmount('0');
+                  }
+                }}>
                   <SelectTrigger className="border-border">
                     <SelectValue placeholder="Select Method" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="cash">Cash Settlement</SelectItem>
+                    <SelectItem value="cod">Cash on Delivery (COD)</SelectItem>
+                    <SelectItem value="due">Due / Credit</SelectItem>
                     <SelectItem value="bank-transfer">Bank Direct Transfer</SelectItem>
-                    <SelectItem value="bkash">bKash Merchant</SelectItem>
-                    <SelectItem value="nagad">Nagad Merchant</SelectItem>
+                    <SelectItem value="bkash">bKash</SelectItem>
+                    <SelectItem value="nagad">Nagad</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -242,6 +308,169 @@ export default function FarmerPlaceOrder() {
                 />
               </div>
             </div>
+
+            {/* Dynamic payment info fields */}
+            {paymentMethod === 'due' && (
+              <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/10">
+                <label className="text-xs font-semibold text-primary mb-1 block">Estimated Payment Date</label>
+                <Input
+                  type="date"
+                  value={estimatedPaymentDate}
+                  onChange={(e) => setEstimatedPaymentDate(e.target.value)}
+                  className="border-border"
+                  required
+                />
+              </div>
+            )}
+
+            {(paymentMethod === 'bkash' || paymentMethod === 'nagad') && (
+              <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/10 space-y-3">
+                <div className="text-xs text-muted-foreground leading-relaxed flex flex-col gap-1.5">
+                  <span className="font-bold text-primary capitalize">{paymentMethod} Guideline:</span> 
+                  <div className="flex items-center bg-white p-2 rounded border w-fit">
+                    <span className="flex items-center gap-1.5">
+                      Send money to: <strong className="text-zinc-900 font-bold">{contactConfig.bkashNagadNumber}</strong>
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-5 w-5 text-primary hover:bg-primary/5 shrink-0 inline-flex"
+                        onClick={() => copyToClipboard(contactConfig.bkashNagadNumber, 'number')}
+                      >
+                        {copiedText === 'number' ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                      </Button>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 items-center border-t pt-2">
+                  <span className="text-[11px] font-bold text-zinc-700">Verification Via:</span>
+                  <label className="flex items-center gap-1.5 text-xs text-zinc-700 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="mfsVerificationType"
+                      value="number"
+                      checked={mfsVerificationType === 'number'}
+                      onChange={() => setMfsVerificationType('number')}
+                      className="accent-primary"
+                    />
+                    Payment Number
+                  </label>
+                  <label className="flex items-center gap-1.5 text-xs text-zinc-700 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="mfsVerificationType"
+                      value="trx"
+                      checked={mfsVerificationType === 'trx'}
+                      onChange={() => setMfsVerificationType('trx')}
+                      className="accent-primary"
+                    />
+                    Transaction ID
+                  </label>
+                </div>
+
+                <div>
+                  {mfsVerificationType === 'number' ? (
+                    <div>
+                      <label className="text-[10px] font-bold text-primary mb-0.5 block">Payment Number (Account)</label>
+                      <Input
+                        type="text"
+                        placeholder="01XXXXXXXXX"
+                        value={paymentNumber}
+                        onChange={(e) => setPaymentNumber(e.target.value)}
+                        className="border-border h-9"
+                        required
+                      />
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="text-[10px] font-bold text-primary mb-0.5 block">Transaction ID (TxnID)</label>
+                      <Input
+                        type="text"
+                        placeholder="e.g. TRX123456"
+                        value={transactionNumber}
+                        onChange={(e) => setTransactionNumber(e.target.value)}
+                        className="border-border h-9"
+                        required
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {paymentMethod === 'bank-transfer' && (
+              <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/10 space-y-3">
+                <div className="text-xs text-muted-foreground leading-relaxed flex flex-col gap-1.5">
+                  <span className="font-bold text-primary">Bank details:</span> 
+                  <div className="text-xs text-muted-foreground leading-relaxed space-y-1.5 bg-white p-2.5 rounded border">
+                    <div>
+                      Bank Name: <strong className="text-zinc-900 font-semibold">{contactConfig.bankDetails.bankName}</strong>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span>Account Name: <strong className="text-zinc-900 font-semibold">{contactConfig.bankDetails.accountName}</strong></span>
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-5 w-5 text-primary hover:bg-primary/5 shrink-0 inline-flex align-middle"
+                        onClick={() => copyToClipboard(contactConfig.bankDetails.accountName, 'bank_acc_name')}
+                      >
+                        {copiedText === 'bank_acc_name' ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span>Account: <strong className="text-zinc-900 font-semibold">{contactConfig.bankDetails.accountNo}</strong></span>
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-5 w-5 text-primary hover:bg-primary/5 shrink-0 inline-flex align-middle"
+                        onClick={() => copyToClipboard(contactConfig.bankDetails.accountNo, 'bank')}
+                      >
+                        {copiedText === 'bank' ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span>Routing Number: <strong className="text-zinc-900 font-semibold">{contactConfig.bankDetails.routingNo}</strong></span>
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-5 w-5 text-primary hover:bg-primary/5 shrink-0 inline-flex align-middle"
+                        onClick={() => copyToClipboard(contactConfig.bankDetails.routingNo, 'bank_routing')}
+                      >
+                        {copiedText === 'bank_routing' ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] font-bold text-primary mb-0.5 block">Your Bank Name</label>
+                    <Input
+                      type="text"
+                      placeholder="e.g. Islami Bank, DBBL, etc."
+                      value={bankName}
+                      onChange={(e) => setBankName(e.target.value)}
+                      className="border-border h-9"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-primary mb-0.5 block">Transaction ID / Ref</label>
+                    <Input
+                      type="text"
+                      placeholder="e.g. TXN987654"
+                      value={transactionNumber}
+                      onChange={(e) => setTransactionNumber(e.target.value)}
+                      className="border-border h-9"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -285,17 +514,17 @@ export default function FarmerPlaceOrder() {
               </h4>
               <div className="text-[11px] grid grid-cols-2 gap-1 text-muted-foreground">
                 <span>Remaining Limit:</span>
-                <span className="font-semibold text-right text-zinc-700">৳{(farmer.creditLimit - farmer.currentDues).toLocaleString()}</span>
+                <span className="font-semibold text-right text-zinc-700">৳{((farmer?.creditLimit ?? 0) - (farmer?.currentDues ?? 0)).toLocaleString()}</span>
                 <span>Project Dues:</span>
                 <span className="font-semibold text-right text-zinc-700">৳{dueAmount.toLocaleString()}</span>
                 <span>Verification:</span>
-                <span className={`font-bold text-right ${dueAmount > (farmer.creditLimit - farmer.currentDues) ? 'text-rose-600' : 'text-primary'}`}>
-                  {dueAmount > (farmer.creditLimit - farmer.currentDues) ? 'Exceeded' : 'Approved'}
+                <span className={`font-bold text-right ${isPaymentExcessive || dueAmount > ((farmer?.creditLimit ?? 0) - (farmer?.currentDues ?? 0)) ? 'text-rose-600' : 'text-primary'}`}>
+                  {isPaymentExcessive ? 'Invalid Amount' : (dueAmount > ((farmer?.creditLimit ?? 0) - (farmer?.currentDues ?? 0)) ? 'Exceeded' : 'Approved')}
                 </span>
               </div>
             </div>
 
-            <Button type="submit" disabled={submitting} className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-2">
+            <Button type="submit" disabled={submitting || isPaymentExcessive} className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-2">
               {submitting ? 'Submitting Order...' : 'Submit Order Request'}
             </Button>
           </CardContent>

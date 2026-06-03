@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { Pagination } from '@/components/ui/pagination';
 import { getDealers, approveDealer, registerDealer, deleteDealer, updateDealer } from '@/app/actions/dealer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +21,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { divisions, bdDivisions, bdLocations } from '@/lib/bd-locations';
-import { Users, UserCheck, PlusCircle, MoreVertical, Edit, Trash2 } from 'lucide-react';
+import { Users, UserCheck, PlusCircle, MoreVertical, Edit, Trash2, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 
@@ -283,7 +284,17 @@ export default function DealersAdminPage() {
                       <TableRow key={d._id}>
                         <TableCell className="text-xs text-muted-foreground">{(currentPage - 1) * pageSize + index + 1}</TableCell>
                         <TableCell className="font-semibold text-sm text-primary">
-                          {u.name || 'Unknown'}
+                          {u._id ? (
+                            <Link
+                              href={`/admin/users/${u._id}`}
+                              className="font-semibold text-slate-900 hover:text-primary transition-colors flex items-center gap-1 group w-fit"
+                            >
+                              {u.name || 'Unknown'}
+                              <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                            </Link>
+                          ) : (
+                            u.name || 'Unknown'
+                          )}
                           <span className="block text-[10px] text-muted-foreground font-normal italic">
                             {d.shopName} · {d.address?.district || 'No District'}
                           </span>

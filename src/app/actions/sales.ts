@@ -22,7 +22,11 @@ export async function createSale(data: {
   }[];
   discount: number;
   paidAmount: number;
-  paymentMethod: 'cash' | 'bank-transfer' | 'bkash' | 'nagad';
+  paymentMethod: 'cash' | 'bank-transfer' | 'bkash' | 'nagad' | 'cod' | 'due';
+  estimatedPaymentDate?: string;
+  paymentNumber?: string;
+  transactionNumber?: string;
+  bankName?: string;
   distributionDistrict: string;
   date?: string;
 }) {
@@ -94,11 +98,14 @@ export async function createSale(data: {
     dueAmount = grandTotal - data.paidAmount;
 
     // Atomically update dealer stats with credit-limit enforcement (prevention of race conditions)
+    // Only check credit limit if the transaction results in new/additional dues (dueAmount > 0)
+    const dealerQuery: any = { _id: data.buyerId };
+    if (dueAmount > 0) {
+      dealerQuery.$expr = { $lte: [{ $add: ['$currentDues', dueAmount] }, '$creditLimit'] };
+    }
+
     const updatedDealer = await Dealer.findOneAndUpdate(
-      {
-        _id: data.buyerId,
-        $expr: { $lte: [{ $add: ['$currentDues', dueAmount] }, '$creditLimit'] },
-      },
+      dealerQuery,
       {
         $inc: {
           currentDues: dueAmount,
@@ -120,12 +127,15 @@ export async function createSale(data: {
     dueAmount = grandTotal - data.paidAmount;
 
     // Atomically update farmer stats with credit-limit enforcement (prevention of race conditions)
+    // Only check credit limit if the transaction results in new/additional dues (dueAmount > 0)
+    const farmerQuery: any = { _id: data.buyerId };
+    if (dueAmount > 0) {
+      farmerQuery.$expr = { $lte: [{ $add: ['$currentDues', dueAmount] }, '$creditLimit'] };
+    }
+
     const totalQty = data.items.reduce((acc, item) => acc + item.quantity, 0);
     const updatedFarmer = await Farmer.findOneAndUpdate(
-      {
-        _id: data.buyerId,
-        $expr: { $lte: [{ $add: ['$currentDues', dueAmount] }, '$creditLimit'] },
-      },
+      farmerQuery,
       {
         $inc: {
           currentDues: dueAmount,
@@ -184,6 +194,10 @@ export async function createSale(data: {
     dueAmount,
     paymentStatus,
     paymentMethod: data.paymentMethod,
+    estimatedPaymentDate: data.estimatedPaymentDate ? new Date(data.estimatedPaymentDate) : undefined,
+    paymentNumber: data.paymentNumber,
+    transactionNumber: data.transactionNumber,
+    bankName: data.bankName,
     distributionDistrict: data.distributionDistrict,
     date: data.date ? new Date(data.date) : new Date(),
   });
@@ -305,19 +319,33 @@ export async function getSales() {
     sales.map(async (sale) => {
       let buyerName = 'Unknown';
       let shopName = '';
+      let buyerUserId = '';
       if (sale.buyerType === 'dealer') {
         const dealer = await Dealer.findById(sale.buyerId).populate('userId', 'name');
         buyerName = (dealer?.userId as any)?.name || 'Unknown Dealer';
         shopName = dealer?.shopName || '';
+        const uid = dealer?.userId;
+        if (uid) {
+          buyerUserId = (uid as any)._id ? (uid as any)._id.toString() : uid.toString();
+        }
       } else {
         const farmer = await Farmer.findById(sale.buyerId);
         buyerName = farmer?.name || 'Unknown Farmer';
+        if (farmer?.phone) {
+          const user = await User.findOne({ phone: farmer.phone });
+          buyerUserId = user?._id?.toString() || '';
+        }
+        if (!buyerUserId && farmer) {
+          const user = await User.findOne({ name: farmer.name, role: 'user' });
+          buyerUserId = user?._id?.toString() || '';
+        }
       }
       const s = sale.toObject();
       return {
         ...s,
         buyerName,
         shopName,
+        buyerUserId,
       };
     })
   );

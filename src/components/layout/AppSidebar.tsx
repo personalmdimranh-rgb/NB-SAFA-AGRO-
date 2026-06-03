@@ -55,6 +55,22 @@ const data = {
       ],
     },
     {
+      title: "My Account",
+      url: "#",
+      icon: Users,
+      roles: ['super_admin', 'admin', 'manager', 'staff'],
+      items: [
+        {
+          title: "My Profile",
+          url: "/admin/profile",
+        },
+        {
+          title: "Change Password",
+          url: "/admin/profile/settings",
+        },
+      ],
+    },
+    {
       title: "Accounts & P&L",
       url: "#",
       icon: FileText,

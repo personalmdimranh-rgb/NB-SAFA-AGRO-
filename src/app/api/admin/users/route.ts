@@ -51,6 +51,14 @@ export async function GET(req: NextRequest) {
         }
       },
       {
+        $lookup: {
+          from: 'dealers',
+          localField: '_id',
+          foreignField: 'userId',
+          as: 'dealerProfile'
+        }
+      },
+      {
         $project: {
           name: 1,
           email: 1,
@@ -62,7 +70,8 @@ export async function GET(req: NextRequest) {
           lastActive: 1,
           totalOrders: { $size: '$userOrders' },
           totalSpent: { $sum: '$userOrders.totalAmount' },
-          lastOrderDate: { $max: '$userOrders.createdAt' }
+          lastOrderDate: { $max: '$userOrders.createdAt' },
+          shopName: { $arrayElemAt: ['$dealerProfile.shopName', 0] }
         }
       },
       { $sort: { createdAt: -1 } }
