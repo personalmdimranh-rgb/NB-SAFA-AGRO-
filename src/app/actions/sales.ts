@@ -350,7 +350,7 @@ export async function getSales() {
           buyerUserId = user?._id?.toString() || '';
         }
         if (!buyerUserId && farmer) {
-          const user = await User.findOne({ name: farmer.name, role: 'user' });
+          const user = await User.findOne({ name: farmer.name, role: 'farmer' });
           buyerUserId = user?._id?.toString() || '';
         }
       }
