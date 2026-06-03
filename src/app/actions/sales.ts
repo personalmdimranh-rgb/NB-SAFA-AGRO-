@@ -29,6 +29,7 @@ export async function createSale(data: {
   bankName?: string;
   distributionDistrict: string;
   date?: string;
+  orderType?: 'manual' | 'by-user';
 }) {
   const session = await auth();
   if (!session || !session.user) {
@@ -199,6 +200,7 @@ export async function createSale(data: {
     transactionNumber: data.transactionNumber,
     bankName: data.bankName,
     distributionDistrict: data.distributionDistrict,
+    orderType: data.orderType || 'by-user',
     date: data.date ? new Date(data.date) : new Date(),
   });
 

@@ -174,6 +174,7 @@ export default function DealerPlaceOrder() {
           : (paymentMethod === 'bank-transfer' ? transactionNumber : undefined),
         bankName: paymentMethod === 'bank-transfer' ? bankName : undefined,
         distributionDistrict: distributionDistrict || 'Unknown',
+        orderType: 'by-user',
       });
 
       if (res.success) {

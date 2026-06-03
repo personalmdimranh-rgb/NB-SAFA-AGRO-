@@ -27,6 +27,7 @@ export interface ISale extends Document {
   bankName?: string;
   distributionDistrict: string;
   status?: 'pending' | 'approved' | 'ready to deliver' | 'release to deliver' | 'delivery complete' | 'cancel';
+  orderType?: 'manual' | 'by-user';
   date: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -64,6 +65,7 @@ const SaleSchema: Schema<ISale> = new Schema(
       enum: ['pending', 'approved', 'ready to deliver', 'release to deliver', 'delivery complete', 'cancel'], 
       default: 'pending' 
     },
+    orderType: { type: String, enum: ['manual', 'by-user'], default: 'by-user' },
     date: { type: Date, default: Date.now }
   },
   { timestamps: true }

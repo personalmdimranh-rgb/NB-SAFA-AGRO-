@@ -293,6 +293,13 @@ export default function SalesPage() {
                             <Calendar className="h-3 w-3" />
                             {new Date(sale.date).toLocaleDateString()}
                           </span>
+                          <span className={`inline-block text-[9px] font-extrabold uppercase px-1 py-0.2 rounded mt-1 border ${
+                            sale.orderType === 'manual' 
+                              ? 'bg-amber-100 text-amber-800 border-amber-200' 
+                              : 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                          }`}>
+                            {sale.orderType === 'manual' ? 'manual' : 'by user'}
+                          </span>
                         </TableCell>
                         <TableCell className="text-xs space-y-1.5 py-3">
                           <div className="flex flex-col gap-0.5">
