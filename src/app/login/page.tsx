@@ -78,8 +78,10 @@ export default function LoginPage() {
         const session = await getSession();
         const role = (session?.user as any)?.role;
         
-        if (role === 'admin' || role === 'super_admin' || role === 'manager' || role === 'staff') {
+        if (role === 'admin' || role === 'super_admin' || role === 'manager') {
           router.push('/admin/dashboard');
+        } else if (role === 'staff') {
+          router.push('/staff/dashboard');
         } else if (role === 'director') {
           router.push('/director/dashboard');
         } else if (role === 'dealer') {
