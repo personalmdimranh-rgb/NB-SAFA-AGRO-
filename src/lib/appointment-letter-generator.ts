@@ -94,8 +94,11 @@ export async function generateAppointmentLetterPDF(employee: any, settings: any)
     ["Net Monthly Take-home", `BDT ${netSalary.toLocaleString()}`]
   ];
 
+  const bodyHeight = doc.getTextDimensions(splitBody).h || (splitBody.length * 4.5);
+  const tableStartY = 112 + bodyHeight + 6;
+
   autoTable(doc, {
-    startY: 135,
+    startY: tableStartY,
     head: [["Salary Component", "Amount (Monthly)"]],
     body: salaryRows,
     theme: "grid",

@@ -115,21 +115,25 @@ export async function POST(req: NextRequest) {
           creditLimit: 0,
           currentDues: 0
         });
-      } else if (selectedRole === 'farmer') {
-        await Farmer.create({
-          name,
-          phone,
-          address: {
-            village: address,
-            thana: thana,
-            district: district
-          },
-          cattleCount: Number(cattleCount) || 0,
-          purchaseCount: 0,
-          totalPurchasedQty: 0,
-          creditLimit: 0,
-          currentDues: 0
-        });
+      } else if (selectedRole === 'farmer' || selectedRole === 'user') {
+        const existingFarmer = await Farmer.findOne({ phone });
+        if (!existingFarmer) {
+          await Farmer.create({
+            name,
+            phone,
+            address: {
+              village: address || '',
+              division: division || '',
+              thana: thana || '',
+              district: district || ''
+            },
+            cattleCount: Number(cattleCount) || 0,
+            purchaseCount: 0,
+            totalPurchasedQty: 0,
+            creditLimit: 0,
+            currentDues: 0
+          });
+        }
       } else if (selectedRole === 'staff') {
         await Employee.create({
           name,

@@ -95,28 +95,60 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         
         try {
           const isSuperAdmin = user.email === 'imranshuvo101@gmail.com';
-          const savedUser = await User.findOneAndUpdate(
-            { email: user.email },
-            { 
-              $set: {
-                name: user.name || 'Unknown',
-                image: user.image || '',
-                googleId: account.providerAccountId,
-                ...(isSuperAdmin ? { role: 'super_admin' } : {})
-              },
-              $setOnInsert: {
-                ...(!isSuperAdmin ? { role: 'user' } : {}),
-                status: 'active',
-                phone: 'N/A',
-              }
-            },
-            { upsert: true, new: true }
-          );
+          let dbUser = await User.findOne({ email: user.email });
+          
+          if (!dbUser) {
+            dbUser = new User({
+              name: user.name || 'Unknown',
+              email: user.email,
+              image: user.image || '',
+              googleId: account.providerAccountId,
+              role: isSuperAdmin ? 'super_admin' : 'user',
+              status: 'active',
+              phone: 'N/A'
+            });
+            await dbUser.save();
+            
+            // Set phone to a unique value to avoid duplicate key index conflict in Farmer profile
+            dbUser.phone = `G-${dbUser._id.toString().slice(-8)}`;
+            await dbUser.save();
+          } else {
+            dbUser.name = user.name || dbUser.name;
+            dbUser.image = user.image || dbUser.image;
+            dbUser.googleId = account.providerAccountId;
+            if (isSuperAdmin) {
+              dbUser.role = 'super_admin';
+            }
+            await dbUser.save();
+          }
 
-          if (savedUser) {
-            user.id = savedUser._id.toString();
-            if (user.email === 'imranshuvo101@gmail.com') {
+          if (dbUser) {
+            user.id = dbUser._id.toString();
+            if (dbUser.email === 'imranshuvo101@gmail.com') {
               (user as any).role = 'super_admin';
+            }
+            
+            // Auto create Farmer profile for the user
+            if (dbUser.role === 'user') {
+              const Farmer = (await import('./models/Farmer')).default;
+              const existingFarmer = await Farmer.findOne({ phone: dbUser.phone });
+              if (!existingFarmer) {
+                await Farmer.create({
+                  name: dbUser.name,
+                  phone: dbUser.phone,
+                  address: {
+                    village: '',
+                    division: '',
+                    thana: '',
+                    district: ''
+                  },
+                  cattleCount: 0,
+                  purchaseCount: 0,
+                  totalPurchasedQty: 0,
+                  creditLimit: 0,
+                  currentDues: 0
+                });
+              }
             }
           }
           return true;

@@ -28,6 +28,12 @@ export default function StaffDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
+  const [dateRange, setDateRange] = useState(() => {
+    const now = new Date();
+    const firstDay = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    return { start: firstDay, end: today };
+  });
 
   const loadData = async () => {
     try {
@@ -42,8 +48,10 @@ export default function StaffDashboard() {
   };
 
   useEffect(() => {
-    loadData();
-  }, [session]);
+    if (session?.user?.email) {
+      loadData();
+    }
+  }, [session?.user?.email]);
 
   const handleDownloadNiyogpatra = async () => {
     if (!data?.employee) return;
@@ -81,28 +89,53 @@ export default function StaffDashboard() {
   const grossSalary = basic + allowance;
   const standardNetSalary = basic + allowance - deductions;
 
-  // 1. Calculate Current Month Live Estimate
+  // 1. Calculate Current Month Live Estimate with dynamic defaults
   const now = new Date();
+  const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0));
   const currentMonthStr = now.toLocaleString('default', { month: 'long', year: 'numeric' });
-  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   
-  const startDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0));
-  const endDate = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999));
+  const currentMonthStart = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0));
+  const currentMonthEnd = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999));
 
-  const currentMonthRecords = (employee.attendanceRecords || []).filter((r: any) => {
+  const joining = employee.joiningDate ? new Date(employee.joiningDate) : new Date();
+  const joiningDateUTC = new Date(Date.UTC(joining.getFullYear(), joining.getMonth(), joining.getDate(), 0, 0, 0, 0));
+
+  const existingRecordsMap = new Map<string, string>();
+  (employee.attendanceRecords || []).forEach((r: any) => {
     const d = new Date(r.date);
-    return d >= startDate && d <= endDate;
+    const dateStr = `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+    existingRecordsMap.set(dateStr, r.status);
   });
 
-  const absentsCount = currentMonthRecords.filter((r: any) => r.status === 'absent').length;
-  const presentCount = currentMonthRecords.filter((r: any) => r.status === 'present').length;
-  const leaveCount = currentMonthRecords.filter((r: any) => r.status === 'leave').length;
+  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const weekendDays = employee.weekend || ['friday'];
+
+  // Calculate Current Month stats for overview cards
+  const mTrackingStart = joiningDateUTC > currentMonthStart ? joiningDateUTC : currentMonthStart;
+  const mTrackingEnd = today < currentMonthEnd ? today : new Date(Date.UTC(currentMonthEnd.getFullYear(), currentMonthEnd.getMonth(), currentMonthEnd.getDate(), 0, 0, 0, 0));
+  
+  let mPresent = 0;
+  let mAbsent = 0;
+  let mLeave = 0;
+  for (let d = new Date(mTrackingStart); d <= mTrackingEnd; d.setUTCDate(d.getUTCDate() + 1)) {
+    const dateStr = `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+    const status = existingRecordsMap.get(dateStr);
+    if (status) {
+      if (status === 'present') mPresent++;
+      else if (status === 'absent') mAbsent++;
+      else if (status === 'leave') mLeave++;
+    } else {
+      const dayOfWeek = dayNames[d.getUTCDay()];
+      if (weekendDays.includes(dayOfWeek)) mLeave++;
+      else mPresent++;
+    }
+  }
 
   let attendanceDeduction = 0;
   const allowed = employee.allowedAbsent ?? 1;
   const rate = employee.absentDeductionRate ?? 0;
-  if (absentsCount > allowed) {
-    attendanceDeduction = (absentsCount - allowed) * rate;
+  if (mAbsent > allowed) {
+    attendanceDeduction = (mAbsent - allowed) * rate;
   }
   const currentMonthEstimatedNet = Math.max(0, standardNetSalary - attendanceDeduction);
 
@@ -113,11 +146,31 @@ export default function StaffDashboard() {
   };
 
   // 3. Overall Attendance Stats
-  const totalRecords = employee.attendanceRecords?.length || 0;
-  const overallAbsents = employee.attendanceRecords?.filter((r: any) => r.status === 'absent').length || 0;
-  const overallPresents = employee.attendanceRecords?.filter((r: any) => r.status === 'present').length || 0;
-  const overallLeaves = employee.attendanceRecords?.filter((r: any) => r.status === 'leave').length || 0;
-  const attendanceRate = totalRecords > 0 ? Math.round((overallPresents / totalRecords) * 100) : 100;
+  const mTotalDays = mPresent + mAbsent;
+  const attendanceRate = mTotalDays > 0 ? Math.round((mPresent / mTotalDays) * 100) : 100;
+
+  // Calculate Filtered Stats based on dateRange (for custom selector card)
+  const filterStart = new Date(dateRange.start + 'T00:00:00Z');
+  const filterEnd = new Date(dateRange.end + 'T23:59:59Z');
+  const fTrackingStart = joiningDateUTC > filterStart ? joiningDateUTC : filterStart;
+  const fTrackingEnd = today < filterEnd ? today : filterEnd;
+
+  let presentCount = 0;
+  let absentsCount = 0;
+  let leaveCount = 0;
+  for (let d = new Date(fTrackingStart); d <= fTrackingEnd; d.setUTCDate(d.getUTCDate() + 1)) {
+    const dateStr = `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+    const status = existingRecordsMap.get(dateStr);
+    if (status) {
+      if (status === 'present') presentCount++;
+      else if (status === 'absent') absentsCount++;
+      else if (status === 'leave') leaveCount++;
+    } else {
+      const dayOfWeek = dayNames[d.getUTCDay()];
+      if (weekendDays.includes(dayOfWeek)) leaveCount++;
+      else presentCount++;
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -213,17 +266,9 @@ export default function StaffDashboard() {
                 <span className="text-muted-foreground">Phone Number:</span>
                 <span className="font-semibold text-zinc-950 font-mono">{employee.phone || '—'}</span>
               </div>
-              <div className="flex justify-between border-b pb-2">
+              <div className="flex justify-between">
                 <span className="text-muted-foreground">Address:</span>
                 <span className="font-semibold text-zinc-800 text-right">{employee.address || '—'}</span>
-              </div>
-              <div className="flex justify-between border-b pb-2">
-                <span className="text-muted-foreground">Weekend:</span>
-                <span className="font-bold text-primary capitalize">{(employee.weekend || []).join(', ')}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Allowed Absents:</span>
-                <span className="font-semibold text-zinc-800">{employee.allowedAbsent ?? 1} days/month</span>
               </div>
             </CardContent>
           </Card>
@@ -260,12 +305,35 @@ export default function StaffDashboard() {
         <div className="lg:col-span-2 space-y-6">
           {/* Current Month Attendance Summary */}
           <Card className="border-primary/10 shadow-sm bg-white/60">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-2 border-b border-primary/5">
               <CardTitle className="text-sm font-bold text-primary flex items-center gap-1.5">
-                <CalendarDays className="h-4 w-4" /> Current Month ({currentMonthStr}) Attendance
+                <CalendarDays className="h-4 w-4" /> Attendance Summary &amp; History
               </CardTitle>
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <div className="flex items-center gap-1 text-xs">
+                  <span className="text-muted-foreground whitespace-nowrap">From:</span>
+                  <input
+                    type="date"
+                    value={dateRange.start}
+                    onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                    className="border border-primary/20 rounded px-2 py-1 text-xs bg-white text-zinc-950 focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  <span className="text-muted-foreground whitespace-nowrap">To:</span>
+                  <input
+                    type="date"
+                    value={dateRange.end}
+                    onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                    className="border border-primary/20 rounded px-2 py-1 text-xs bg-white text-zinc-950 focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-4">
+              <p className="text-[11px] text-muted-foreground mb-3">
+                Showing records from <span className="font-semibold text-zinc-800">{new Date(dateRange.start).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}</span> to <span className="font-semibold text-zinc-800">{new Date(dateRange.end).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}</span>:
+              </p>
               <div className="grid grid-cols-3 gap-2 text-center mb-4">
                 <div className="bg-green-50/50 border border-green-100 rounded-lg p-2.5">
                   <p className="text-[10px] font-bold text-green-600 uppercase">Present</p>
@@ -282,11 +350,11 @@ export default function StaffDashboard() {
               </div>
 
               {/* Show warning about absent penalty if any */}
-              {absentsCount > allowed && (
+              {mAbsent > allowed && (
                 <div className="flex items-start gap-2 bg-rose-50/80 border border-rose-100 rounded-lg p-3 text-xs text-rose-800">
                   <Info className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold">Absent Penalty Warning:</span> You have logged <strong className="font-black">{absentsCount} absents</strong> this month, exceeding your allowed threshold of <strong className="font-bold">{allowed} day</strong>. An attendance penalty of <strong>৳{((absentsCount - allowed) * rate).toLocaleString()} BDT</strong> (৳{rate}/day) will be deducted from your payout.
+                    <span className="font-bold">Absent Penalty Warning:</span> You have logged <strong className="font-black">{mAbsent} absents</strong> this month, exceeding your allowed threshold of <strong className="font-bold">{allowed} day</strong>. An attendance penalty of <strong>৳{((mAbsent - allowed) * rate).toLocaleString()} BDT</strong> (৳{rate}/day) will be deducted from your payout.
                   </div>
                 </div>
               )}

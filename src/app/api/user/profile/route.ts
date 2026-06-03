@@ -57,6 +57,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 });
     }
 
+    const oldPhone = user.phone;
     user.name = name;
     if (image !== undefined) user.image = image;
     if (phone !== undefined) user.phone = phone;
@@ -77,6 +78,23 @@ export async function PUT(req: NextRequest) {
     }
 
     await user.save();
+
+    // Also update corresponding Farmer profile if it exists
+    const Farmer = (await import('@/models/Farmer')).default;
+    const farmer = await Farmer.findOne({ phone: oldPhone });
+    if (farmer) {
+      farmer.name = name;
+      if (phone !== undefined) farmer.phone = phone;
+      if (address) {
+        farmer.address = {
+          village: address.street || farmer.address?.village,
+          division: address.division || farmer.address?.division,
+          thana: address.city || farmer.address?.thana,
+          district: address.state || farmer.address?.district
+        };
+      }
+      await farmer.save();
+    }
 
     const userObj = user.toObject();
     delete userObj.password;
