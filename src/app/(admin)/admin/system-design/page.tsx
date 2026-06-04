@@ -317,6 +317,26 @@ export default function SuperConfigPage() {
                   className="w-full h-12 rounded-xl border px-4 focus:ring-2 focus:ring-primary outline-none text-sm"
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="ga4-id" className="font-bold text-xs uppercase tracking-tight opacity-70">GA4 Measurement ID (G-XXXX)</Label>
+                <input 
+                  id="ga4-id"
+                  value={settings?.googleAnalyticsId || ''} 
+                  onChange={(e) => setSettings({...(settings ?? {}), googleAnalyticsId: e.target.value})}
+                  placeholder="G-XXXXXXXXXX"
+                  className="w-full h-12 rounded-xl border px-4 focus:ring-2 focus:ring-primary outline-none text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ga4-property-id" className="font-bold text-xs uppercase tracking-tight opacity-70">GA4 Property ID (Analytics)</Label>
+                <input 
+                  id="ga4-property-id"
+                  value={settings?.googleAnalyticsPropertyId || ''} 
+                  onChange={(e) => setSettings({...(settings ?? {}), googleAnalyticsPropertyId: e.target.value})}
+                  placeholder="e.g. 534447077"
+                  className="w-full h-12 rounded-xl border px-4 focus:ring-2 focus:ring-primary outline-none text-sm"
+                />
+              </div>
            </CardContent>
         </Card>
 
@@ -345,6 +365,14 @@ export default function SuperConfigPage() {
                   <Label htmlFor="fb-test-code" className="font-bold text-xs">FB Test Event Code</Label>
                   <input id="fb-test-code" value={settings?.facebookTestEventCode || ''} onChange={(e) => setSettings({...settings, facebookTestEventCode: e.target.value})} className="w-full h-12 rounded-xl border px-4 text-sm" />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sc-api-url" className="font-bold text-xs">Search Console ID / URL (for Analytics)</Label>
+                <input id="sc-api-url" value={settings?.googleSearchConsoleId || ''} onChange={(e) => setSettings({...settings, googleSearchConsoleId: e.target.value})} placeholder="e.g. https://www.example.com/ or sc-domain:example.com" className="w-full h-12 rounded-xl border px-4 text-sm" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="search-console-meta" className="font-bold text-xs">Search Console Meta Tag (for Verification)</Label>
+                <input id="search-console-meta" value={settings?.searchConsoleMeta || ''} onChange={(e) => setSettings({...settings, searchConsoleMeta: e.target.value})} className="w-full h-12 rounded-xl border px-4 text-sm" />
               </div>
            </CardContent>
         </Card>
@@ -714,6 +742,39 @@ export default function SuperConfigPage() {
                   </Select>
                 </div>
            </CardContent>
+         </Card>
+ 
+        {/* Super Admin Note Section */}
+        <Card className="lg:col-span-3 w-full border-none shadow-2xl bg-white/80 backdrop-blur-xl overflow-hidden rounded-3xl">
+          <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-5 md:p-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-lg shrink-0">
+                <Database className="w-5 h-5 md:w-6 md:h-6" />
+              </div>
+              <div>
+                <CardTitle className="text-xl md:text-2xl font-bold leading-tight">Super Admin Note</CardTitle>
+                <CardDescription className="text-indigo-100 text-xs md:text-sm mt-1">
+                  Save project credentials, API keys, and system notes securely.
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-5 md:p-8">
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                Credentials & System Notes
+              </Label>
+              <textarea
+                value={settings?.superAdminNote || ''}
+                onChange={(e) => setSettings({
+                  ...(settings ?? {}),
+                  superAdminNote: e.target.value
+                })}
+                placeholder="Enter database URLs, credentials, courier secrets, or private dev notes..."
+                className="w-full min-h-[200px] p-4 rounded-xl border-2 border-gray-100 bg-gray-50 focus:border-indigo-500 focus:bg-white outline-none transition-all resize-y font-mono text-sm shadow-inner"
+              />
+            </div>
+          </CardContent>
         </Card>
 
       </div>

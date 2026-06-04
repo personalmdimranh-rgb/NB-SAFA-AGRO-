@@ -90,6 +90,7 @@ export interface IGlobalSettings extends Document {
     expiryDate: Date;
     status: 'Active' | 'Expired' | 'Suspended';
   };
+  superAdminNote?: string;
   footerNavigation?: {
     label: string;
     href: string;
@@ -135,6 +136,7 @@ const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
       expiryDate: { type: Date, index: true },
       status: { type: String, enum: ['Active', 'Expired', 'Suspended'], default: 'Active' },
     },
+    superAdminNote: { type: String, default: '' },
     footerNavigation: [
       {
         label: { type: String },
