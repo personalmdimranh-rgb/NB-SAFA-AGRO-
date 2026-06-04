@@ -1,5 +1,4 @@
 import { MetadataRoute } from "next";
-import { headers } from "next/headers";
 import connectToDatabase from "@/lib/db";
 import Blog from "@/models/Blog";
 
@@ -30,13 +29,7 @@ const getDynamicRoutes = async (baseUrl: string): Promise<MetadataRoute.Sitemap>
 };
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const headersList = await headers();
-  const host = headersList.get('host') || 'localhost';
-
-  // Detect protocol safely
-  const forwardedProto = headersList.get('x-forwarded-proto');
-  const protocol = forwardedProto || (host.includes('localhost') ? 'http' : 'https');
-  const baseUrl = `${protocol}://${host}`;
+  const baseUrl = "https://www.nbsafaagro.com";
 
   const dynamicRoutes = await getDynamicRoutes(baseUrl);
 
