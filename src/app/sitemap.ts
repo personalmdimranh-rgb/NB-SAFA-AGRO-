@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next";
 import connectToDatabase from "@/lib/db";
 import Blog from "@/models/Blog";
+import LandingPage from "@/models/LandingPage";
 
 export const dynamic = "force-dynamic";
 
@@ -28,10 +29,36 @@ const getDynamicRoutes = async (baseUrl: string): Promise<MetadataRoute.Sitemap>
   }
 };
 
+const getLandingPageRoutes = async (baseUrl: string): Promise<MetadataRoute.Sitemap> => {
+  try {
+    await connectToDatabase();
+
+    const pages = await LandingPage.find({ isActive: true }, "slug updatedAt")
+      .sort({ updatedAt: -1 })
+      .lean()
+      .exec();
+
+    const pageRoutes: MetadataRoute.Sitemap = pages.map((item: any) => ({
+      url: `${baseUrl}/lp/${item.slug}`,
+      lastModified: item.updatedAt || new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    }));
+
+    return pageRoutes;
+  } catch (error) {
+    console.error("Error generating dynamic landing page sitemap routes:", error);
+    return [];
+  }
+};
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://www.nbsafaagro.com";
 
-  const dynamicRoutes = await getDynamicRoutes(baseUrl);
+  const [dynamicRoutes, landingPageRoutes] = await Promise.all([
+    getDynamicRoutes(baseUrl),
+    getLandingPageRoutes(baseUrl),
+  ]);
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {
@@ -45,6 +72,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/about`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/team`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/faq`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.6,
     },
     {
       url: `${baseUrl}/contact`,
@@ -66,5 +111,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  return [...staticRoutes, ...dynamicRoutes];
+  return [...staticRoutes, ...dynamicRoutes, ...landingPageRoutes];
 }
