@@ -130,7 +130,11 @@ export default function PayrollPage() {
 
     try {
       setProcessingId(employee._id);
-      await processPayroll(employee._id, monthYear);
+      const res = await processPayroll(employee._id, monthYear);
+      if (res && 'error' in res) {
+        toast.error('Failed to process payroll: ' + res.error);
+        return;
+      }
       toast.success(`Salary payout of ৳${net.toLocaleString()} to ${employee.name} for ${monthYear} posted successfully!`);
       loadData();
     } catch (err: any) {
@@ -185,6 +189,10 @@ export default function PayrollPage() {
     try {
       setBulkProcessing(true);
       const res = await processBulkPayroll(Array.from(selectedIds), monthYear);
+      if (res && 'error' in res) {
+        toast.error('Bulk disbursal failed: ' + res.error);
+        return;
+      }
 
       const paid = res.results.filter((r: any) => !r.skipped);
       const skipped = res.results.filter((r: any) => r.skipped);

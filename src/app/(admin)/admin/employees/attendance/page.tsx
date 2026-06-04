@@ -145,7 +145,11 @@ export default function AttendancePage() {
 
     try {
       setSubmitting(true);
-      await logAttendance(records, date);
+      const res = await logAttendance(records, date);
+      if (res && 'error' in res) {
+        toast.error('Failed to save attendance: ' + res.error);
+        return;
+      }
       toast.success('Attendance records saved successfully!');
       setHasSubmittedOnce(true);
       // Refresh report for the submitted date
@@ -164,7 +168,11 @@ export default function AttendancePage() {
       return;
     }
     try {
-      await logAttendance([{ employeeId, status }], reportDate);
+      const res = await logAttendance([{ employeeId, status }], reportDate);
+      if (res && 'error' in res) {
+        toast.error('Failed to update status: ' + res.error);
+        return;
+      }
       toast.success('Attendance updated successfully');
       await loadReport(reportDate);
     } catch (err: any) {
