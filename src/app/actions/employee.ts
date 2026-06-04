@@ -74,16 +74,19 @@ export async function logAttendance(records: { employeeId: string; status: 'pres
   for (const record of records) {
     const employee = await Employee.findById(record.employeeId);
     if (employee) {
-      employee.attendanceRecords = employee.attendanceRecords.filter((att) => {
+      const filtered = (employee.attendanceRecords || []).filter((att) => {
+        if (!att.date) return false;
         const attDate = new Date(att.date);
         attDate.setUTCHours(0, 0, 0, 0);
         return attDate.getTime() !== targetDate.getTime();
       });
 
+      employee.attendanceRecords = filtered;
       employee.attendanceRecords.push({
         date: targetDate,
         status: record.status,
       });
+      employee.markModified('attendanceRecords');
 
       await employee.save();
     }
@@ -122,7 +125,7 @@ export async function processPayroll(employeeId: string, monthYearStr: string) {
 
   await connectToDatabase();
 
-  const dbUser = await User.findOne({ email: session.user?.email });
+  const dbUser = await User.findById((session.user as any).id);
   if (!dbUser) throw new Error('Logged-in administrator user record not found in database');
 
   const employee = await Employee.findById(employeeId);
@@ -179,6 +182,7 @@ export async function processPayroll(employeeId: string, monthYearStr: string) {
 
   // Mark this month as paid
   employee.paidMonths = [...(employee.paidMonths || []), monthYearStr];
+  employee.markModified('paidMonths');
   await employee.save();
 
   revalidatePath('/admin/employees');
@@ -195,7 +199,7 @@ export async function processBulkPayroll(employeeIds: string[], monthYearStr: st
 
   await connectToDatabase();
 
-  const dbUser = await User.findOne({ email: session.user?.email });
+  const dbUser = await User.findById((session.user as any).id);
   if (!dbUser) throw new Error('Logged-in administrator user record not found in database');
 
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -253,6 +257,7 @@ export async function processBulkPayroll(employeeIds: string[], monthYearStr: st
     await ledgerTx.save();
 
     employee.paidMonths = [...(employee.paidMonths || []), monthYearStr];
+    employee.markModified('paidMonths');
     await employee.save();
 
     results.push({ employeeId, name: employee.name, amount: netSalary });

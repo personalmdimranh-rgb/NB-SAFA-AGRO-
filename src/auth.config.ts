@@ -12,6 +12,7 @@ export default {
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
+        session.user.email = token.email as string;
         (session.user as any).role = token.role ?? 'farmer';
         (session.user as any).phone = token.phone as string;
         (session.user as any).status = (token.status as string) ?? 'active';
