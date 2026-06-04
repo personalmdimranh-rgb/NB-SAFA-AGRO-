@@ -34,6 +34,7 @@ import "./prosemirror.css";
 import Script from "next/script";
 import { PWARegistry } from "@/components/pwa-registry";
 import GoogleTagManager from "./components/GoogleTagManager";
+import GoogleAnalytics from "./components/GoogleAnalytics";
 import { SmoothScroll } from "@/components/layout/SmoothScroll";
 import { ScrollProgress } from "@/components/layout/ScrollProgress";
 import FacebookPixel from "./components/FacebookPixel";
@@ -268,6 +269,20 @@ export default async function RootLayout({
         <link rel="preload" as="image" href="/assets/login_banner_v2.webp" />
         <link rel="preload" as="image" href="/assets/register_banner_v2.webp" />
         <link rel="preload" as="image" href="/assets/forgetpassrod.webp" />
+        {settings?.searchConsoleMeta && (
+          settings.searchConsoleMeta.startsWith('<meta') ? (
+            <span dangerouslySetInnerHTML={{ __html: settings.searchConsoleMeta }} />
+          ) : (
+            <meta name="google-site-verification" content={settings.searchConsoleMeta} />
+          )
+        )}
+        {settings?.facebookDomainVerification && (
+          settings.facebookDomainVerification.startsWith('<meta') ? (
+            <span dangerouslySetInnerHTML={{ __html: settings.facebookDomainVerification }} />
+          ) : (
+            <meta name="facebook-domain-verification" content={settings.facebookDomainVerification} />
+          )
+        )}
       </head>
       <body
         className="antialiased min-h-full flex flex-col overflow-x-hidden font-sans"
@@ -282,6 +297,10 @@ export default async function RootLayout({
         <Providers settings={settings}>
           {settings?.googleTagManagerId && (
             <GoogleTagManager gtmId={settings.googleTagManagerId} />
+          )}
+
+          {settings?.googleAnalyticsId && (
+            <GoogleAnalytics gaId={settings.googleAnalyticsId} />
           )}
 
           <Suspense fallback={null}>
