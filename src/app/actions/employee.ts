@@ -332,12 +332,6 @@ export async function getAttendanceByDate(dateStr: string) {
         const dayOfWeek = dayNames[targetDate.getUTCDay()];
         const isWeekend = (emp.weekend || ['friday']).includes(dayOfWeek);
         const defaultStatus = isWeekend ? 'leave' : 'present';
-
-        emp.attendanceRecords.push({
-          date: targetDate,
-          status: defaultStatus,
-        });
-        await emp.save();
         record = { date: targetDate, status: defaultStatus };
       }
 

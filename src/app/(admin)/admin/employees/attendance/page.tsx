@@ -130,7 +130,7 @@ export default function AttendancePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (role === 'manager') {
-      toast.error("You don't have permission");
+      toast.error("You are not permitted");
       return;
     }
     const records = Object.entries(statusMap).map(([employeeId, status]) => ({
@@ -160,7 +160,7 @@ export default function AttendancePage() {
 
   const handleUpdateSingleAttendance = async (employeeId: string, status: AttendanceStatus) => {
     if (role === 'manager') {
-      toast.error("You don't have permission");
+      toast.error("You are not permitted");
       return;
     }
     try {

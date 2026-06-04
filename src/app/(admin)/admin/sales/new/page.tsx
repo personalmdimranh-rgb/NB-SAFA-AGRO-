@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ShoppingCart, Plus, Trash2, AlertCircle, ShieldAlert, Copy, Check } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 import { contactConfig } from '@/lib/contact-config';
@@ -21,6 +22,9 @@ interface SaleItem {
 }
 
 export default function NewOrderPage() {
+  const { data: session } = useSession();
+  const role = (session?.user as any)?.role;
+
   const [dealers, setDealers] = useState<any[]>([]);
   const [farmers, setFarmers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,6 +109,10 @@ export default function NewOrderPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (role === 'manager') {
+      toast.error("You don't have permission");
+      return;
+    }
     if (!buyerId) {
       toast.error('Please select a dealer or farmer');
       return;

@@ -301,7 +301,7 @@ export async function getResolutions() {
 
 export async function getDividendPayouts() {
   const session = await auth();
-  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
+  if (!session || !['super_admin', 'admin', 'manager', 'staff', 'director'].includes((session.user as any).role)) {
     throw new Error('Unauthorized');
   }
 
