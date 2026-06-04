@@ -149,36 +149,7 @@ export function UserMenu({ user }: { user: any }) {
               </div>
             </div>
           </DropdownMenuLabel>
-          <DropdownMenuSeparator />          {['super_admin', 'admin', 'manager'].includes(role) && (
-            <>
-              <DropdownMenuItem asChild>
-                <Link href="/admin/profile" className="cursor-pointer font-semibold text-primary">
-                  <span className="flex items-center">
-                    <svg
-                      className="mr-2 h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
-                    My Profile
-                  </span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/admin/profile/settings" className="cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" /> Account Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-            </>
-          )}
+          <DropdownMenuSeparator />
           {/* Super Admin Options */}
           {role === 'super_admin' && (
             <>
