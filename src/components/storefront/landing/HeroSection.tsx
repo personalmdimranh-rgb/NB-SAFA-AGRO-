@@ -74,13 +74,11 @@ export default function HeroSection() {
 
           <div className="flex flex-wrap gap-3 pt-2 md:pt-4">
             <Button asChild size="sm" className="bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs md:text-sm px-4 md:px-6 py-2 md:py-2.5 rounded-lg shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-300">
-              <Link href="/login" className="flex items-center gap-1.5">
+              <Link href="/register" className="flex items-center gap-1.5">
                 <UserPlus className="h-3.5 w-3.5" /> Dealer Registration <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="sm" className="border-border hover:bg-muted text-foreground text-xs md:text-sm font-semibold px-4 rounded-lg transition-all duration-300">
-              <Link href="/login">Corporate Board Access</Link>
-            </Button>
+
           </div>
         </motion.div>
 
