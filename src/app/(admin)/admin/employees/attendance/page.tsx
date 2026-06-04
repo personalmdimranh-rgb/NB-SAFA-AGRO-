@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Pagination } from '@/components/ui/pagination';
-import { getEmployees, logAttendance, getAttendanceByDate } from '@/app/actions/employee';
+import { getEmployees, logAttendance, getAttendanceByDate, checkAttendanceLogged } from '@/app/actions/employee';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,6 +56,7 @@ export default function AttendancePage() {
   const [submitting, setSubmitting] = useState(false);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [statusMap, setStatusMap] = useState<Record<string, AttendanceStatus>>({});
+  const [isSubmittedForDate, setIsSubmittedForDate] = useState(false);
 
   // Report state
   const [reportData, setReportData] = useState<AttendanceReport[]>([]);
@@ -82,6 +83,15 @@ export default function AttendancePage() {
     const weekends = emp.weekend || ['friday'];
     return weekends.includes(dayOfWeek) ? 'leave' : 'present';
   };
+
+  const checkSubmissionStatus = useCallback(async (d: string) => {
+    try {
+      const logged = await checkAttendanceLogged(d);
+      setIsSubmittedForDate(logged);
+    } catch (err) {
+      console.error('Failed to check submission status:', err);
+    }
+  }, []);
 
   const loadData = async () => {
     await Promise.resolve();
@@ -111,7 +121,12 @@ export default function AttendancePage() {
   useEffect(() => {
     loadData();
     loadReport(reportDate);
+    checkSubmissionStatus(date);
   }, []);
+
+  useEffect(() => {
+    checkSubmissionStatus(date);
+  }, [date, checkSubmissionStatus]);
 
   useEffect(() => {
     if (employees.length > 0) {
@@ -152,6 +167,7 @@ export default function AttendancePage() {
       }
       toast.success('Attendance records saved successfully!');
       setHasSubmittedOnce(true);
+      setIsSubmittedForDate(true);
       // Refresh report for the submitted date
       setReportDate(date);
       await loadReport(date);
@@ -258,18 +274,19 @@ export default function AttendancePage() {
                               value={statusMap[emp._id] || 'present'}
                               onValueChange={(val: any) => handleStatusChange(emp._id, val)}
                               className="flex gap-6"
+                              disabled={isSubmittedForDate}
                             >
                               <div className="flex items-center space-x-1.5 cursor-pointer">
-                                <RadioGroupItem value="present" id={`present-${emp._id}`} className="text-primary border-primary/30" />
-                                <Label htmlFor={`present-${emp._id}`} className="text-xs font-bold text-primary cursor-pointer">Present</Label>
+                                <RadioGroupItem value="present" id={`present-${emp._id}`} className="text-primary border-primary/30" disabled={isSubmittedForDate} />
+                                <Label htmlFor={`present-${emp._id}`} className={`text-xs font-bold cursor-pointer ${isSubmittedForDate ? 'text-zinc-400' : 'text-primary'}`}>Present</Label>
                               </div>
                               <div className="flex items-center space-x-1.5 cursor-pointer">
-                                <RadioGroupItem value="absent" id={`absent-${emp._id}`} className="text-destructive border-destructive/30" />
-                                <Label htmlFor={`absent-${emp._id}`} className="text-xs font-bold text-destructive cursor-pointer">Absent</Label>
+                                <RadioGroupItem value="absent" id={`absent-${emp._id}`} className="text-destructive border-destructive/30" disabled={isSubmittedForDate} />
+                                <Label htmlFor={`absent-${emp._id}`} className={`text-xs font-bold cursor-pointer ${isSubmittedForDate ? 'text-zinc-400' : 'text-destructive'}`}>Absent</Label>
                               </div>
                               <div className="flex items-center space-x-1.5 cursor-pointer">
-                                <RadioGroupItem value="leave" id={`leave-${emp._id}`} className="text-secondary-foreground border-secondary/30" />
-                                <Label htmlFor={`leave-${emp._id}`} className="text-xs font-bold text-secondary-foreground cursor-pointer">Leave</Label>
+                                <RadioGroupItem value="leave" id={`leave-${emp._id}`} className="text-secondary-foreground border-secondary/30" disabled={isSubmittedForDate} />
+                                <Label htmlFor={`leave-${emp._id}`} className={`text-xs font-bold cursor-pointer ${isSubmittedForDate ? 'text-zinc-400' : 'text-secondary-foreground'}`}>Leave</Label>
                               </div>
                             </RadioGroup>
                           </div>
@@ -298,9 +315,22 @@ export default function AttendancePage() {
         </Card>
 
         {employees.length > 0 && (
-          <div className="flex justify-end">
-            <Button type="submit" disabled={submitting} className="bg-primary hover:bg-primary/90 text-white font-bold px-6">
-              {submitting ? 'Saving attendance...' : 'Submit Attendance Sheet'}
+          <div className="flex justify-end items-center gap-4">
+            {isSubmittedForDate && (
+              <span className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg">
+                ⚠️ Attendance already submitted for this date. Update entries in the report table below if needed.
+              </span>
+            )}
+            <Button 
+              type="submit" 
+              disabled={submitting || isSubmittedForDate} 
+              className={`font-bold px-6 h-10 ${
+                isSubmittedForDate 
+                  ? 'bg-zinc-200 text-zinc-500 cursor-not-allowed hover:bg-zinc-200 border border-zinc-300' 
+                  : 'bg-primary hover:bg-primary/90 text-white'
+              }`}
+            >
+              {submitting ? 'Saving attendance...' : isSubmittedForDate ? 'Attendance Sheet Submitted' : 'Submit Attendance Sheet'}
             </Button>
           </div>
         )}

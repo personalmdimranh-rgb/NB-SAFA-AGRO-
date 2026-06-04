@@ -376,6 +376,18 @@ export async function getAttendanceByDate(dateStr: string) {
   return JSON.parse(JSON.stringify(report));
 }
 
+export async function checkAttendanceLogged(dateStr: string): Promise<boolean> {
+  await connectToDatabase();
+  const targetDate = new Date(dateStr);
+  targetDate.setUTCHours(0, 0, 0, 0);
+
+  const count = await Employee.countDocuments({
+    'attendanceRecords.date': targetDate
+  });
+
+  return count > 0;
+}
+
 export async function updateEmployee(
   employeeId: string,
   data: {
