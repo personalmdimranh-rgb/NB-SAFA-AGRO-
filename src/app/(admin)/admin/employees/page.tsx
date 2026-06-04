@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Pagination } from '@/components/ui/pagination';
 import { getEmployees, registerEmployee, updateEmployee, deleteEmployee, processPayroll } from '@/app/actions/employee';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +29,9 @@ import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 
 export default function EmployeesPage() {
+  const { data: session } = useSession();
+  const role = (session?.user as any)?.role;
+
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -124,6 +128,10 @@ export default function EmployeesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (role === 'manager') {
+      toast.error("You don't have permission");
+      return;
+    }
     if (!name || !phone || !designation || !basic || !employeeId) {
       toast.error('Name, Phone, Employee ID, Designation, and Basic Salary are required.');
       return;
@@ -179,6 +187,10 @@ export default function EmployeesPage() {
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (role === 'manager') {
+      toast.error("You don't have permission");
+      return;
+    }
     if (!editName || !editPhone || !editDesignation || !editBasic || !editEmployeeId) {
       toast.error('Name, Phone, Employee ID, Designation, and Basic Salary are required.');
       return;
@@ -214,6 +226,10 @@ export default function EmployeesPage() {
   };
 
   const handleDelete = async (emp: any) => {
+    if (role === 'manager') {
+      toast.error("You don't have permission");
+      return;
+    }
     const result = await Swal.fire({
       title: 'Remove Employee?',
       html: `<p class="text-sm text-gray-600">This will permanently remove <strong>${emp.name}</strong> (${emp.designation}) from the workforce database.</p>`,
@@ -234,6 +250,10 @@ export default function EmployeesPage() {
   };
 
   const handleProcessPayroll = async (emp: any) => {
+    if (role === 'manager') {
+      toast.error("You don't have permission");
+      return;
+    }
     const now = new Date();
     const monthYear = now.toLocaleString('default', { month: 'long', year: 'numeric' });
     const net = emp.salaryStructure.basic + emp.salaryStructure.allowance - emp.salaryStructure.deductions;

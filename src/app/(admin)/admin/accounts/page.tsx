@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Pagination } from '@/components/ui/pagination';
 import { createTransaction, getLedgerBalances, getTransactions, deleteTransaction, updateTransaction } from '@/app/actions/accounts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,6 +31,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export default function AccountsPage() {
+  const { data: session } = useSession();
+  const role = (session?.user as any)?.role;
+
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -87,6 +91,10 @@ export default function AccountsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (role === 'manager') {
+      toast.error("You don't have permission");
+      return;
+    }
     if (!category || !amount || parseFloat(amount) <= 0) {
       toast.error('Please enter a valid category and amount');
       return;
@@ -148,6 +156,10 @@ export default function AccountsPage() {
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (role === 'manager') {
+      toast.error("You don't have permission");
+      return;
+    }
     if (!editCategory || !editAmount || parseFloat(editAmount) <= 0) {
       toast.error('Please enter a valid category and amount');
       return;
@@ -178,6 +190,10 @@ export default function AccountsPage() {
   };
 
   const handleDelete = async (tx: any) => {
+    if (role === 'manager') {
+      toast.error("You don't have permission");
+      return;
+    }
     const result = await Swal.fire({
       title: 'Delete Transaction?',
       html: `<p class="text-sm text-gray-600">This will permanently remove the <strong>${tx.type}</strong> entry of <strong>৳${tx.amount.toLocaleString()}</strong> (${tx.category}).</p>`,

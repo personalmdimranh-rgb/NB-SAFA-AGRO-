@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Pagination } from '@/components/ui/pagination';
 import { getEmployees, processPayroll, processBulkPayroll } from '@/app/actions/employee';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +16,9 @@ import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 
 export default function PayrollPage() {
+  const { data: session } = useSession();
+  const role = (session?.user as any)?.role;
+
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -103,6 +107,10 @@ export default function PayrollPage() {
 
   // Individual disburse
   const handlePaySalary = async (employee: any) => {
+    if (role === 'manager') {
+      toast.error("You don't have permission");
+      return;
+    }
     if (isPaid(employee)) return;
 
     const { basic, allowance, deductions } = employee.salaryStructure;
@@ -134,6 +142,10 @@ export default function PayrollPage() {
 
   // Bulk disburse
   const handleBulkDisburse = async () => {
+    if (role === 'manager') {
+      toast.error("You don't have permission");
+      return;
+    }
     if (selectedIds.size === 0) return;
 
     const selectedEmps = employees.filter((emp) => selectedIds.has(emp._id));

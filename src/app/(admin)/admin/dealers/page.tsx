@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Pagination } from '@/components/ui/pagination';
 import { getDealers, approveDealer, registerDealer, deleteDealer, updateDealer } from '@/app/actions/dealer';
@@ -26,6 +27,9 @@ import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 
 export default function DealersAdminPage() {
+  const { data: session } = useSession();
+  const role = (session?.user as any)?.role;
+
   const [dealers, setDealers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -137,6 +141,10 @@ export default function DealersAdminPage() {
   };
 
   const handleApprove = async (userId: string, dealerName: string) => {
+    if (role === 'manager') {
+      toast.error("You don't have permission");
+      return;
+    }
     const result = await Swal.fire({
       title: 'Approve Dealer?',
       text: `Are you sure you want to approve ${dealerName} as a registered dealer?`,
@@ -158,6 +166,10 @@ export default function DealersAdminPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (role === 'manager') {
+      toast.error("You don't have permission");
+      return;
+    }
     if (!name || !email || !phone || !shopName || !addressLine || !division || !district || !thana) {
       toast.error('Name, Email, Phone, Shop Name, and Address fields are required.');
       return;
@@ -206,6 +218,10 @@ export default function DealersAdminPage() {
   };
 
   const handleDelete = async (dealer: any) => {
+    if (role === 'manager') {
+      toast.error("You don't have permission");
+      return;
+    }
     const u = dealer.userId || {};
     const result = await Swal.fire({
       title: 'Remove Dealer?',

@@ -13,7 +13,7 @@ import { useSession } from 'next-auth/react';
 export default function ResolutionsPage() {
   const { data: session } = useSession();
   const role = (session?.user as any)?.role;
-  const canPostResolution = ['super_admin', 'admin', 'director', 'manager'].includes(role);
+  const canPostResolution = ['super_admin', 'admin', 'director'].includes(role);
 
   const [resolutions, setResolutions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +45,10 @@ export default function ResolutionsPage() {
 
   const handleCreateResolution = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (role === 'manager') {
+      toast.error("You don't have permission");
+      return;
+    }
     if (!resTitle || !resContent) {
       toast.error('Resolution Title and Content are required');
       return;

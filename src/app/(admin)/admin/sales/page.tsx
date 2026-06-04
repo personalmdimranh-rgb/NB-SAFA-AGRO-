@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { Pagination } from '@/components/ui/pagination';
 import { getSales, deleteSale, togglePaymentStatus, updateSaleStatus } from '@/app/actions/sales';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +22,9 @@ import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 
 export default function SalesPage() {
+  const { data: session } = useSession();
+  const role = (session?.user as any)?.role;
+
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -165,6 +169,10 @@ export default function SalesPage() {
   };
 
   const handleTogglePayment = async (sale: any) => {
+    if (role === 'manager') {
+      toast.error('You are not permitted to edit');
+      return;
+    }
     try {
       const res = await togglePaymentStatus(sale._id);
       if (res.success) {
@@ -177,6 +185,10 @@ export default function SalesPage() {
   };
 
   const handleUpdateStatus = async (saleId: string, status: string) => {
+    if (role === 'manager') {
+      toast.error('You are not permitted to edit');
+      return;
+    }
     try {
       const res = await updateSaleStatus(saleId, status);
       if (res.success) {
@@ -189,6 +201,10 @@ export default function SalesPage() {
   };
 
   const handleDelete = async (sale: any) => {
+    if (role === 'manager') {
+      toast.error('You are not permitted to edit');
+      return;
+    }
     const result = await Swal.fire({
       title: 'Delete Invoice?',
       html: `<p class="text-sm text-gray-600">This will permanently delete invoice <strong>${sale.invoiceNumber}</strong> of <strong>${sale.grandTotal.toLocaleString()}</strong>.</p>`,

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { getProductionBatches, logProductionBatch } from '@/app/actions/production';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,9 @@ interface RawMaterial {
 }
 
 export default function ProductionPage() {
+  const { data: session } = useSession();
+  const role = (session?.user as any)?.role;
+
   const [batches, setBatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -74,6 +78,10 @@ export default function ProductionPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (role === 'manager') {
+      toast.error("You don't have permission");
+      return;
+    }
     if (materials.some(m => !m.materialName || m.quantity <= 0 || m.cost <= 0)) {
       toast.error('Please enter valid details for all raw materials');
       return;

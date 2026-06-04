@@ -219,16 +219,8 @@ export function UserMenu({ user }: { user: any }) {
                   <LayoutDashboard className="mr-2 h-4 w-4" /> Manager Dashboard
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/admin/inventory/production" className="cursor-pointer">
-                  <ShoppingBag className="mr-2 h-4 w-4" /> Silage Production
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/admin/products" className="cursor-pointer">
-                  <Package className="mr-2 h-4 w-4" /> Product Catalog
-                </Link>
-              </DropdownMenuItem>
+
+
             </>
           )}
 

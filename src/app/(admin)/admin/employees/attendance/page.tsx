@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Pagination } from '@/components/ui/pagination';
 import { getEmployees, logAttendance, getAttendanceByDate } from '@/app/actions/employee';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,6 +44,9 @@ interface AttendanceReport {
 }
 
 export default function AttendancePage() {
+  const { data: session } = useSession();
+  const role = (session?.user as any)?.role;
+
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -125,6 +129,10 @@ export default function AttendancePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (role === 'manager') {
+      toast.error("You don't have permission");
+      return;
+    }
     const records = Object.entries(statusMap).map(([employeeId, status]) => ({
       employeeId,
       status,
@@ -151,6 +159,10 @@ export default function AttendancePage() {
   };
 
   const handleUpdateSingleAttendance = async (employeeId: string, status: AttendanceStatus) => {
+    if (role === 'manager') {
+      toast.error("You don't have permission");
+      return;
+    }
     try {
       await logAttendance([{ employeeId, status }], reportDate);
       toast.success('Attendance updated successfully');

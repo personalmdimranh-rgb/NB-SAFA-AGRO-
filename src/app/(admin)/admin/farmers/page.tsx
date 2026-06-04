@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Pagination } from '@/components/ui/pagination';
 import { getFarmers, createFarmer, updateFarmer, deleteFarmer } from '@/app/actions/farmer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,6 +28,9 @@ import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 
 export default function FarmersPage() {
+  const { data: session } = useSession();
+  const role = (session?.user as any)?.role;
+
   const [farmers, setFarmers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -108,6 +112,10 @@ export default function FarmersPage() {
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (role === 'manager') {
+      toast.error("You don't have permission");
+      return;
+    }
     if (!name || !phone || !addressLine || !division || !district || !thana) {
       toast.error('Name, Phone and Address fields are required.');
       return;
@@ -150,6 +158,10 @@ export default function FarmersPage() {
   };
 
   const handleDelete = async (farmer: any) => {
+    if (role === 'manager') {
+      toast.error("You don't have permission");
+      return;
+    }
     const result = await Swal.fire({
       title: 'Delete Farmer Profile?',
       html: `<p class="text-sm text-gray-600">This will permanently remove <strong>${farmer.name}</strong> from the database.</p>`,
