@@ -4,7 +4,7 @@ export const contactConfig = {
   phone: "+880 1711-583424",
   email: "jahanggiralom1@gmail.com",
   facebookUrl: "https://www.facebook.com/nbshafaAgroltdbd",
-  whatsappUrl: "https://wa.me/8801711583424",
+  whatsappUrl: "wa.me/8801711583424",
   bkashNagadNumber: "01919011101",
   bankDetails: {
     accountNo: "1403122014080",
