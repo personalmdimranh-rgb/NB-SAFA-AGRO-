@@ -65,7 +65,13 @@ export default function HeroV2({ banners }: HeroSliderProps) {
   const scrollTo = (index: number) => emblaApi?.scrollTo(index);
   const scrollNext = () => emblaApi?.scrollNext();
 
-  if (slides.length === 0) return null;
+  if (slides.length === 0) {
+    return (
+      <section className="relative w-full aspect-video md:aspect-auto md:h-[600px] lg:h-screen overflow-hidden bg-neutral-950 animate-pulse flex items-center justify-center">
+        <div className="w-full h-full bg-gradient-to-r from-neutral-900 via-neutral-950 to-neutral-900" />
+      </section>
+    );
+  }
 
   return (
     <section className="relative w-full aspect-video md:aspect-auto md:h-[600px] lg:h-screen overflow-hidden bg-transparent font-jost">
