@@ -121,6 +121,10 @@ const data = {
           url: "/admin/sales",
         },
         {
+          title: "Shop Orders",
+          url: "/admin/orders",
+        },
+        {
           title: "Dealer Portal Admin",
           url: "/admin/dealers",
         },

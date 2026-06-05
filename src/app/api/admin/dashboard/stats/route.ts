@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
 
     // Dynamically import models to avoid issues if some don't exist yet
     let Sale: any = null;
+    let Order: any = null;
     let LedgerTransaction: any = null;
     let ProductionBatch: any = null;
     let Employee: any = null;
@@ -41,6 +42,7 @@ export async function GET(req: NextRequest) {
     let Farmer: any = null;
 
     try { Sale = (await import('@/models/Sale')).default; } catch {}
+    try { Order = (await import('@/models/Order')).default; } catch {}
     try { LedgerTransaction = (await import('@/models/LedgerTransaction')).default; } catch {}
     try { ProductionBatch = (await import('@/models/ProductionBatch')).default; } catch {}
     try { Employee = (await import('@/models/Employee')).default; } catch {}
@@ -228,6 +230,15 @@ export async function GET(req: NextRequest) {
       totalPendingDividends = pendingDividends[0]?.total || 0;
     }
 
+    // 8. Pending Shop Orders Count
+    let pendingShopOrdersCount = 0;
+    if (Order) {
+      pendingShopOrdersCount = await Order.countDocuments({
+        status: 'Order Placed',
+        deletedAt: null
+      });
+    }
+
     return NextResponse.json({
       stats: {
         totalSalesRevenue,
@@ -244,6 +255,7 @@ export async function GET(req: NextRequest) {
         activeDealers,
         totalFarmers,
         pendingOrdersCount,
+        pendingShopOrdersCount,
         totalPendingDividends,
       },
       recentSales,

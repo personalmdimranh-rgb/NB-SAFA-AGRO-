@@ -52,6 +52,9 @@ function SuccessContent() {
             st: orderData.shippingAddress?.state,
             country: 'bd'
           }, orderData._id);
+        } else if (res.status === 401) {
+          // Guest checkout: allow displaying success screen using the URL order ID
+          setFetchError(false);
         } else {
           setFetchError(true);
           setOrder(null);
@@ -76,7 +79,7 @@ function SuccessContent() {
     );
   }
 
-  if (fetchError || !order) {
+  if (fetchError) {
     return (
       <div className="container px-4 md:px-6 py-24 flex flex-col items-center text-center mx-auto">
         <h1 className="text-2xl font-bold text-destructive mb-4">Error Loading Order</h1>

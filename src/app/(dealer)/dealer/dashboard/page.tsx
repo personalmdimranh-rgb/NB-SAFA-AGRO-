@@ -3,17 +3,19 @@
 import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { getDealerDashboardSummary } from '@/app/actions/dealer';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { DollarSign, ShieldCheck, Wallet, RefreshCw, Calendar, TrendingUp } from 'lucide-react';
+import { DollarSign, ShieldCheck, Wallet, RefreshCw, Calendar, TrendingUp, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import OrderTrackerModal from '@/components/user/OrderTrackerModal';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function DealerDashboard() {
   const { data: session } = useSession();
   const [data, setData] = useState<any>(null);
+  const [onlineOrders, setOnlineOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSale, setSelectedSale] = useState<any>(null);
   const [trackerOpen, setTrackerOpen] = useState(false);
@@ -22,6 +24,14 @@ export default function DealerDashboard() {
     if (!session?.user?.id) return;
     try {
       setLoading(true);
+      
+      // Fetch online orders
+      const ordersRes = await fetch('/api/orders');
+      if (ordersRes.ok) {
+        const ordersData = await ordersRes.json();
+        setOnlineOrders(ordersData);
+      }
+
       const res = await getDealerDashboardSummary((session.user as any).id);
       setData(res);
     } catch (err: any) {
@@ -116,91 +126,190 @@ export default function DealerDashboard() {
         </Card>
       </div>
 
-      {/* Recent Orders */}
-      <Card className="border-border bg-card/70">
-        <CardHeader>
-          <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" /> Recent Sales History
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {recentSales.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground text-xs">You haven't placed any orders yet. Click "Place Order" to get started.</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Invoice</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Items Ordered</TableHead>
-                    <TableHead>Subtotal</TableHead>
-                    <TableHead>Commission Discount</TableHead>
-                    <TableHead>Grand Total</TableHead>
-                    <TableHead>Due Balance</TableHead>
-                    <TableHead>Payment</TableHead>
-                    <TableHead>Order Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentSales.map((sale: any) => (
-                    <TableRow key={sale._id}>
-                      <TableCell className="font-bold text-xs text-zinc-900">{sale.invoiceNumber}</TableCell>
-                      <TableCell className="whitespace-nowrap font-medium text-xs">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3 text-muted-foreground" />
-                          {new Date(sale.date).toLocaleDateString()}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-xs max-w-[200px] truncate">
-                        {sale.items.map((it: any) => `${it.productName} (x${it.quantity})`).join(', ')}
-                      </TableCell>
-                      <TableCell className="text-xs font-semibold">৳{sale.subtotal.toLocaleString()}</TableCell>
-                      <TableCell className="text-xs font-semibold text-primary">-৳{sale.commissionApplied.toLocaleString()}</TableCell>
-                      <TableCell className="text-xs font-bold text-primary">৳{sale.grandTotal.toLocaleString()}</TableCell>
-                      <TableCell className="text-xs font-bold text-rose-700">৳{sale.dueAmount.toLocaleString()}</TableCell>
-                      <TableCell>
-                        {sale.paymentStatus === 'paid' && (
-                          <Badge className="bg-primary/10 text-primary">Paid</Badge>
-                        )}
-                        {sale.paymentStatus === 'partially-paid' && (
-                          <Badge className="bg-amber-50 text-amber-700">Partial</Badge>
-                        )}
-                        {sale.paymentStatus === 'unpaid' && (
-                          <Badge className="bg-rose-50 text-rose-700">Unpaid</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className={`capitalize ${
-                            sale.status === 'delivery complete' ? 'bg-primary/10 text-primary border-primary/20' :
-                            sale.status === 'cancel' ? 'bg-destructive/10 text-destructive border-destructive/20' :
-                            sale.status === 'pending' ? 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20' :
-                            'bg-blue-500/10 text-blue-600 border-blue-500/20'
-                          }`}>
-                            {sale.status || 'pending'}
-                          </Badge>
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            className="h-7 px-2 text-[10px] text-primary hover:text-primary hover:bg-primary/5 font-bold gap-1 border border-primary/10 rounded-md"
-                            onClick={() => {
-                              setSelectedSale(sale);
-                              setTrackerOpen(true);
-                            }}
-                          >
-                            Track
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Tabs to show offline sales & online shop orders */}
+      <Tabs defaultValue="offline" className="w-full">
+        <TabsList className="grid grid-cols-2 w-full max-w-[400px] bg-muted">
+          <TabsTrigger value="offline" className="font-bold">Dealer Invoices</TabsTrigger>
+          <TabsTrigger value="online" className="font-bold">Online Shop Orders</TabsTrigger>
+        </TabsList>
+
+        {/* Offline Dealer Invoices */}
+        <TabsContent value="offline" className="mt-4">
+          <Card className="border-border bg-card/70">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-primary" /> Dealer Distribution History
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {recentSales.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground text-xs">You haven't placed any distribution orders yet.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Invoice</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Items Ordered</TableHead>
+                        <TableHead>Subtotal</TableHead>
+                        <TableHead>Commission Discount</TableHead>
+                        <TableHead>Grand Total</TableHead>
+                        <TableHead>Due Balance</TableHead>
+                        <TableHead>Payment</TableHead>
+                        <TableHead>Order Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {recentSales.map((sale: any) => (
+                        <TableRow key={sale._id}>
+                          <TableCell className="font-bold text-xs text-zinc-900">{sale.invoiceNumber}</TableCell>
+                          <TableCell className="whitespace-nowrap font-medium text-xs">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3 text-muted-foreground" />
+                              {new Date(sale.date).toLocaleDateString()}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-xs max-w-[200px] truncate">
+                            {sale.items.map((it: any) => `${it.productName} (x${it.quantity})`).join(', ')}
+                          </TableCell>
+                          <TableCell className="text-xs font-semibold">৳{sale.subtotal.toLocaleString()}</TableCell>
+                          <TableCell className="text-xs font-semibold text-primary">-৳{sale.commissionApplied.toLocaleString()}</TableCell>
+                          <TableCell className="text-xs font-bold text-primary">৳{sale.grandTotal.toLocaleString()}</TableCell>
+                          <TableCell className="text-xs font-bold text-rose-700">৳{sale.dueAmount.toLocaleString()}</TableCell>
+                          <TableCell>
+                            {sale.paymentStatus === 'paid' && (
+                              <Badge className="bg-primary/10 text-primary">Paid</Badge>
+                            )}
+                            {sale.paymentStatus === 'partially-paid' && (
+                              <Badge className="bg-amber-50 text-amber-700">Partial</Badge>
+                            )}
+                            {sale.paymentStatus === 'unpaid' && (
+                              <Badge className="bg-rose-50 text-rose-700">Unpaid</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className={`capitalize ${
+                                sale.status === 'delivery complete' ? 'bg-primary/10 text-primary border-primary/20' :
+                                sale.status === 'cancel' ? 'bg-destructive/10 text-destructive border-destructive/20' :
+                                sale.status === 'pending' ? 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20' :
+                                'bg-blue-500/10 text-blue-600 border-blue-500/20'
+                              }`}>
+                                {sale.status || 'pending'}
+                              </Badge>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-7 px-2 text-[10px] text-primary hover:text-primary hover:bg-primary/5 font-bold gap-1 border border-primary/10 rounded-md"
+                                onClick={() => {
+                                  setSelectedSale(sale);
+                                  setTrackerOpen(true);
+                                }}
+                              >
+                                Track
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Online Shop Orders */}
+        <TabsContent value="online" className="mt-4">
+          <Card className="border-border bg-card/70">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5 text-primary" /> Online Shop Orders History
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {onlineOrders.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground text-xs">You haven't placed any online shop orders yet.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Order ID</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Items</TableHead>
+                        <TableHead>Grand Total</TableHead>
+                        <TableHead>Payment Method</TableHead>
+                        <TableHead>Payment Status</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {onlineOrders.map((order: any) => (
+                        <TableRow key={order._id}>
+                          <TableCell className="font-bold text-xs text-primary hover:underline">
+                            <button
+                              onClick={() => {
+                                setSelectedSale(order);
+                                setTrackerOpen(true);
+                              }}
+                            >
+                              #{order.shortId || order._id.slice(-8).toUpperCase()}
+                            </button>
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap font-medium text-xs">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3 text-muted-foreground" />
+                              {new Date(order.createdAt).toLocaleDateString()}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-xs max-w-[200px] truncate">
+                            {order.items?.map((it: any) => `${it.name} (x${it.quantity})`).join(', ')}
+                          </TableCell>
+                          <TableCell className="text-xs font-bold">৳{(order.totalAmount ?? 0).toLocaleString()}</TableCell>
+                          <TableCell className="text-xs font-medium uppercase">{order.paymentMethod}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={`capitalize ${
+                              order.paymentStatus === 'Paid' ? 'bg-green-500/10 text-green-700 border-green-500/20' : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'
+                            }`}>
+                              {order.paymentStatus}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className={`capitalize whitespace-nowrap ${
+                                order.status === 'Delivered' ? 'bg-primary/10 text-primary border-primary/20' :
+                                order.status === 'Cancelled' ? 'bg-destructive/10 text-destructive border-destructive/20' :
+                                order.status === 'Order Placed' ? 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20' :
+                                'bg-blue-500/10 text-blue-600 border-blue-500/20'
+                              }`}>
+                                {order.status || 'Order Placed'}
+                              </Badge>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 px-2 text-[10px] text-primary hover:text-primary hover:bg-primary/5 font-bold gap-1 border border-primary/10 rounded-md"
+                                onClick={() => {
+                                  setSelectedSale(order);
+                                  setTrackerOpen(true);
+                                }}
+                              >
+                                Track
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <OrderTrackerModal 
         isOpen={trackerOpen} 

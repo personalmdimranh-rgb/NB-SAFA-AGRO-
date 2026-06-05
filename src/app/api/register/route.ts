@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const selectedRole = ['farmer', 'dealer', 'staff', 'director'].includes(role) ? role : 'farmer';
+    const selectedRole = ['farmer', 'dealer', 'staff', 'director', 'user'].includes(role) ? role : 'user';
     let dbRole = selectedRole;
     if (normalizedEmail === 'imranshuvo101@gmail.com') {
       dbRole = 'super_admin';
@@ -76,8 +76,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // De-activate staff, dealer, and director accounts until admin approves them
-    const status = ['dealer', 'staff', 'director'].includes(dbRole) ? 'inactive' : 'active';
+    // De-activate staff, dealer, director, and farmer accounts until admin approves them
+    const status = ['dealer', 'staff', 'director', 'farmer'].includes(dbRole) ? 'inactive' : 'active';
 
     const user = await User.create({
       name,

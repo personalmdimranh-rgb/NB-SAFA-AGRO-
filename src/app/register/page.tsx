@@ -85,7 +85,7 @@ export default function RegisterPage() {
       thana: '',
       password: '',
       confirmPassword: '',
-      role: 'farmer',
+      role: 'user',
       shopName: '',
       tradeLicense: '',
       nidNumber: '',
@@ -221,7 +221,8 @@ export default function RegisterPage() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent alignItemWithTrigger={false} className="w-[var(--radix-select-trigger-width)] min-w-[280px]">
-                            <SelectItem value="farmer">Regular User / Customer (Farmer)</SelectItem>
+                            <SelectItem value="user">General Customer (Retail User)</SelectItem>
+                            <SelectItem value="farmer">Agro Farmer (Requires Approval)</SelectItem>
                             <SelectItem value="dealer">Approved Dealer / Distributor</SelectItem>
                             <SelectItem value="director">Director / Investor</SelectItem>
                           </SelectContent>

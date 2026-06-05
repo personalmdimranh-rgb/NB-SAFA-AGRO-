@@ -414,6 +414,11 @@ export default function Navbar() {
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
+                            <Link href="/admin/orders" className="cursor-pointer">
+                              <Truck className="mr-2 h-4 w-4" /> Manage Orders
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
                             <Link href="/admin/system-design" className="cursor-pointer">
                               <Settings className="mr-2 h-4 w-4" /> Infrastructure & Marketing
                             </Link>

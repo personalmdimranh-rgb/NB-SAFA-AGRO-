@@ -51,7 +51,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // 1. First, apply base logic from authConfig
       if (user) {
         token.id = user.id;
-        token.role = (user as any).role ?? 'farmer';
+        token.role = (user as any).role ?? 'user';
         token.image = user.image || token.picture;
       }
 
@@ -68,7 +68,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               await dbUser.save();
             }
             token.id = dbUser._id.toString();
-            token.role = dbUser.role ?? 'farmer';
+            token.role = dbUser.role ?? 'user';
             token.status = dbUser.status ?? 'active';
             token.phone = dbUser.phone;
             token.image = dbUser.image || user.image || token.picture;
@@ -104,7 +104,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               email: user.email,
               image: user.image || '',
               googleId: account.providerAccountId,
-              role: isSuperAdmin ? 'super_admin' : 'farmer',
+              role: isSuperAdmin ? 'super_admin' : 'user',
               status: 'active',
               phone: 'N/A'
             });

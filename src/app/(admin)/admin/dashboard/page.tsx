@@ -518,13 +518,20 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── KPI Grid (top row) ──────────────────────────────────────────── */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
         <KpiCard
-          title="Pending Orders"
+          title="Pending Sales"
           value={String(stats?.pendingOrdersCount || 0)}
-          sub="Unresolved dealer & farmer orders"
+          sub="Unresolved offline & dealer sales"
           icon={Clock}
           href="/admin/sales"
+        />
+        <KpiCard
+          title="Pending Shop Orders"
+          value={String(stats?.pendingShopOrdersCount || 0)}
+          sub="Unresolved online shop orders"
+          icon={ShoppingCart}
+          href="/admin/orders"
         />
         <KpiCard
           title="Net Profit"

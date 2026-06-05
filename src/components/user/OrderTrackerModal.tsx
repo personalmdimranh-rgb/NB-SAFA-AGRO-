@@ -35,7 +35,27 @@ export default function OrderTrackerModal({ isOpen, onOpenChange, sale }: OrderT
     { key: 'delivery complete', label: 'Delivered', description: 'Received successfully', icon: CheckCircle2 }
   ];
 
-  const currentStatus = sale.status || 'pending';
+  // Normalize fields between Sale schema and Order schema
+  const displayId = sale.invoiceNumber || sale.shortId || (sale._id ? sale._id.slice(-8).toUpperCase() : 'N/A');
+  const displayDate = sale.date || sale.createdAt || new Date();
+  const displayDistrict = sale.distributionDistrict || sale.shippingAddress?.city || sale.shippingAddress?.division || 'N/A';
+  const displayTotal = sale.grandTotal ?? sale.totalAmount ?? 0;
+  const displayDues = sale.dueAmount ?? 0;
+
+  // Normalize status value
+  let rawStatus = sale.status || 'pending';
+  const orderStatusMap: Record<string, string> = {
+    'Order Placed': 'pending',
+    'Confirmed': 'approved',
+    'Paid': 'approved',
+    'Ready for Delivery': 'ready to deliver',
+    'Released for Delivery': 'release to deliver',
+    'Delivered': 'delivery complete',
+    'Cancelled': 'cancel',
+    'cancel': 'cancel'
+  };
+
+  const currentStatus = orderStatusMap[rawStatus] || rawStatus.toLowerCase();
   const isCanceled = currentStatus === 'cancel';
   
   // Find index of current status
@@ -50,11 +70,11 @@ export default function OrderTrackerModal({ isOpen, onOpenChange, sale }: OrderT
               Order Tracking
             </DialogTitle>
             <Badge variant="outline" className="font-bold border-primary/20 text-primary bg-primary/5 uppercase text-[10px]">
-              {sale.invoiceNumber}
+              #{displayId}
             </Badge>
           </div>
           <DialogDescription className="text-xs text-zinc-500">
-            Track real-time shipment and processing status for this invoice.
+            Track real-time shipment and processing status for this order.
           </DialogDescription>
         </DialogHeader>
 
@@ -120,12 +140,14 @@ export default function OrderTrackerModal({ isOpen, onOpenChange, sale }: OrderT
 
         <div className="border-t border-zinc-100 pt-4 flex flex-col gap-2.5">
           <div className="text-[11px] text-zinc-500 flex justify-between">
-            <span>District: <strong className="text-zinc-800">{sale.distributionDistrict}</strong></span>
-            <span>Date: <strong className="text-zinc-800">{new Date(sale.date).toLocaleDateString()}</strong></span>
+            <span>District/City: <strong className="text-zinc-800">{displayDistrict}</strong></span>
+            <span>Date: <strong className="text-zinc-800">{new Date(displayDate).toLocaleDateString()}</strong></span>
           </div>
           <div className="text-[11px] text-zinc-500 flex justify-between">
-            <span>Grand Total: <strong className="text-zinc-800">৳{(sale.grandTotal ?? 0).toLocaleString()} BDT</strong></span>
-            <span>Dues Logged: <strong className="text-rose-700">৳{(sale.dueAmount ?? 0).toLocaleString()} BDT</strong></span>
+            <span>Grand Total: <strong className="text-zinc-800">৳{Math.round(displayTotal).toLocaleString()} BDT</strong></span>
+            {displayDues > 0 && (
+              <span>Dues Logged: <strong className="text-rose-700">৳{Math.round(displayDues).toLocaleString()} BDT</strong></span>
+            )}
           </div>
         </div>
       </DialogContent>
