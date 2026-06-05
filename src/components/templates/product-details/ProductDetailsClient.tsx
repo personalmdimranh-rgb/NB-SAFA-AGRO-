@@ -12,7 +12,8 @@ import {
   Trash2,
   Settings,
   PlusCircle,
-  Loader2
+  Loader2,
+  Heart
 } from 'lucide-react';
 import { generateHtml } from '@/lib/server-html';
 import { RatingStars } from '@/components/ui/rating-stars';
@@ -21,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { addToCart } from '@/store/slices/cartSlice';
+import { toggleWishlist } from '@/store/slices/wishlistSlice';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
 import { Suspense } from 'react';
@@ -53,7 +55,9 @@ interface ProductDetailsClientProps {
 
 export default function ProductDetailsClient({ product }: ProductDetailsClientProps) {
   const dispatch = useAppDispatch();
-  const { data: session } = useSession();  const router = useRouter();
+  const { data: session, status } = useSession();  const router = useRouter();
+  const wishlist = useAppSelector((state) => state.wishlist.items);
+  const isInWishlist = wishlist.includes(product?._id);
   const isAdmin = (session?.user as any)?.role === 'admin';
 
   const [quantity, setQuantity] = useState(1);
@@ -278,6 +282,59 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
     const success = handleAddToCart();
     if (success) {
       router.push('/checkout');
+    }
+  };
+
+  const handleFavorite = async () => {
+    if (!product?._id) return;
+
+    if (status === 'unauthenticated') {
+      toast.error('Please login to add to wishlist');
+      return;
+    }
+
+    // Toggle locally (optimistic update)
+    dispatch(toggleWishlist(product._id));
+
+    // Determine the message based on the NEW state
+    const willBeInWishlist = !isInWishlist;
+    const successMsg = willBeInWishlist ? 'Added to wishlist' : 'Removed from wishlist';
+
+    // If authenticated, update database and wait for response
+    try {
+      const res = await fetch('/api/wishlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: product._id }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to update wishlist server-side');
+      }
+
+      // Only show success toast after server confirmation
+      toast.success(successMsg);
+
+      if (willBeInWishlist) {
+        // Track AddToWishlist
+        fbEvent('AddToWishlist', {
+          content_name: product.name,
+          content_category: product.categories?.[0]?.name || 'Uncategorized',
+          content_ids: [product._id],
+          content_type: 'product',
+          value: displaySalePrice || displayPrice,
+          currency: 'BDT'
+        }, {
+          em: session?.user?.email || undefined,
+          ph: (session?.user as any)?.phone || undefined,
+          fn: session?.user?.name || undefined
+        });
+      }
+    } catch (err) {
+      console.error('API toggle error:', err);
+      // Rollback optimistic update
+      dispatch(toggleWishlist(product._id));
+      toast.error('Failed to sync wishlist. Please try again.');
     }
   };
 
@@ -601,7 +658,7 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
 
         {/* Action Buttons */}
         <div className="flex flex-col gap-4 py-8 sm:py-6 border-t">
-          {/* Row 1: Quantity */}
+          {/* Row 1: Quantity and Wishlist */}
           <div className="flex items-center gap-4">
             <div className="flex items-center border rounded-full overflow-hidden h-12 bg-muted/50">
               <Button
@@ -623,6 +680,16 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
+
+            <Button
+              size="icon"
+              variant="outline"
+              className="h-12 w-12 rounded-full transition-all hover:scale-110 active:scale-95 flex-shrink-0"
+              onClick={handleFavorite}
+              aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+            >
+              <Heart className={`h-5 w-5 transition-colors ${isInWishlist ? 'fill-destructive text-destructive' : 'text-muted-foreground'}`} />
+            </Button>
           </div>
 
           {/* Row 2: Add to Cart and Buy Now */}

@@ -2,12 +2,13 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { ShoppingCart, Minus, Plus, Star, MoreVertical, Edit, Trash2, Settings, PlusCircle, ShieldCheck, Truck, RefreshCw, Share2 } from 'lucide-react';
+import { ShoppingCart, Minus, Plus, Star, MoreVertical, Edit, Trash2, Settings, PlusCircle, ShieldCheck, Truck, RefreshCw, Share2, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { addToCart } from '@/store/slices/cartSlice';
+import { toggleWishlist } from '@/store/slices/wishlistSlice';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
 import ReviewsSection from '@/components/storefront/ReviewsSection';
@@ -39,7 +40,9 @@ interface ProductDetailsV2ClientProps {
 
 export default function ProductDetailsV2Client({ product }: ProductDetailsV2ClientProps) {
   const dispatch = useAppDispatch();
-  const { data: session } = useSession();  const router = useRouter();
+  const { data: session, status } = useSession();  const router = useRouter();
+  const wishlist = useAppSelector((state) => state.wishlist.items);
+  const isInWishlist = wishlist.includes(product?._id);
   const isAdmin = (session?.user as any)?.role === 'admin';
 
   const [quantity, setQuantity] = useState(1);
@@ -127,6 +130,43 @@ export default function ProductDetailsV2Client({ product }: ProductDetailsV2Clie
     return true;
   };
 
+
+  const handleFavorite = async () => {
+    if (!product?._id) return;
+
+    if (status === 'unauthenticated') {
+      toast.error('Please login to add to wishlist');
+      return;
+    }
+
+    // Toggle locally (optimistic update)
+    dispatch(toggleWishlist(product._id));
+
+    // Determine the message based on the NEW state
+    const willBeInWishlist = !isInWishlist;
+    const successMsg = willBeInWishlist ? 'Added to wishlist' : 'Removed from wishlist';
+
+    // If authenticated, update database and wait for response
+    try {
+      const res = await fetch('/api/wishlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: product._id }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to update wishlist server-side');
+      }
+
+      // Only show success toast after server confirmation
+      toast.success(successMsg);
+    } catch (err) {
+      console.error('API toggle error:', err);
+      // Rollback optimistic update
+      dispatch(toggleWishlist(product._id));
+      toast.error('Failed to sync wishlist. Please try again.');
+    }
+  };
 
   const handleShare = async () => {
     const shareData = { title: product.name, url: window.location.href };
@@ -295,8 +335,11 @@ export default function ProductDetailsV2Client({ product }: ProductDetailsV2Clie
                    {displayStock > 0 ? 'Inquire & Add' : 'Sold Out'}
                 </Button>
              </div>
-             <div className="flex gap-4">
-                <Button variant="outline" className="h-14 flex-1 rounded-2xl gap-2 font-black uppercase text-[10px] tracking-widest" onClick={handleShare}>
+             <div className="grid grid-cols-2 gap-4">
+                <Button variant="outline" className="h-14 rounded-2xl gap-2 font-black uppercase text-[10px] tracking-widest" onClick={handleFavorite}>
+                   <Heart className={`h-4 w-4 ${isInWishlist ? 'fill-primary text-primary' : ''}`} /> Wishlist
+                </Button>
+                <Button variant="outline" className="h-14 rounded-2xl gap-2 font-black uppercase text-[10px] tracking-widest" onClick={handleShare}>
                    <Share2 className="h-4 w-4" /> Share
                 </Button>
              </div>

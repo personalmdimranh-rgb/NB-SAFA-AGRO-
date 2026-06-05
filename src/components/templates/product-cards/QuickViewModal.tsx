@@ -9,8 +9,9 @@ import { Button } from '@/components/ui/button';
 import { ShoppingCart, Heart, X, Plus, Minus } from 'lucide-react';
 import { RatingStars } from '@/components/ui/rating-stars';
 import { useState, useMemo, useEffect } from 'react';
-import { useAppDispatch } from '@/store/hooks';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { addToCart } from '@/store/slices/cartSlice';
+import { toggleWishlist } from '@/store/slices/wishlistSlice';
 import { toast } from 'sonner';
 import { fbEvent } from '@/lib/fpixel';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +27,9 @@ interface QuickViewModalProps {
 
 export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps) {
   const dispatch = useAppDispatch();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const wishlist = useAppSelector((state) => state.wishlist.items);
+  const isInWishlist = wishlist.includes(product?._id);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -151,7 +154,7 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
     } else {
       toast.success(`${product.name} added to cart`);
     }
-    
+
     onClose();
   };
 
@@ -162,7 +165,7 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-5xl w-[95vw] p-0 overflow-hidden bg-white border-none rounded-none shadow-2xl [&>button:not(.custom-close)]:hidden">
-        <button 
+        <button
           onClick={onClose}
           className="custom-close absolute right-4 top-4 z-[100] p-2 bg-red-500 hover:bg-red-600 text-white rounded-sm shadow-xl transition-all"
         >
@@ -345,21 +348,33 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
                 Buy Now
               </Button>
 
-              <button 
-                onClick={() => {
-                  fbEvent('AddToWishlist', {
-                    content_name: product.name,
-                    content_category: product.categories?.[0]?.name || 'Uncategorized',
-                    content_ids: [product._id],
-                    content_type: 'product',
-                    value: displaySalePrice ?? displayPrice,
-                    currency: 'BDT'
-                  });
-                  toast.success('Added to wishlist');
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (status === 'unauthenticated') {
+                    toast.error('Please login to add to wishlist');
+                    return;
+                  }
+                  dispatch(toggleWishlist(product._id));
+                  if (!isInWishlist) {
+                    fbEvent('AddToWishlist', {
+                      content_name: product.name,
+                      content_category: product.categories?.[0]?.name || 'Uncategorized',
+                      content_ids: [product._id],
+                      content_type: 'product',
+                      value: displaySalePrice ?? displayPrice,
+                      currency: 'BDT'
+                    }, {
+                      em: session?.user?.email || undefined,
+                      ph: (session?.user as any)?.phone || undefined,
+                      fn: session?.user?.name || undefined
+                    });
+                  }
+                  toast.success(isInWishlist ? 'Removed from wishlist' : 'Added to wishlist');
                 }}
                 className="h-12 w-12 flex items-center justify-center border border-gray-200 rounded-none hover:bg-gray-50 hover:border-gray-900 transition-all"
               >
-                <Heart className="h-5 w-5 text-gray-400" />
+                <Heart className={`h-5 w-5 ${isInWishlist ? 'fill-current text-primary' : 'text-gray-400'}`} />
               </button>
             </div>
           </div>
