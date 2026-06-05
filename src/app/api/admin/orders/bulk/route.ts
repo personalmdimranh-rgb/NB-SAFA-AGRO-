@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import connectToDatabase from '@/lib/db';
 import Order from '@/models/Order';
+import User from '@/models/User';
+import LedgerTransaction from '@/models/LedgerTransaction';
 import { auth } from '@/auth';
 
 const ALLOWED_ORDER_STATUSES = ['Order Placed', 'Confirmed', 'Paid', 'Ready for Delivery', 'Released for Delivery', 'Cancelled', 'Delivered'];
@@ -70,6 +72,10 @@ export async function PATCH(req: NextRequest) {
     try {
       const becomesValid = ['Confirmed', 'Paid', 'Delivered'].includes(status || '');
 
+      const dbUser = await User.findOne({ email: session?.user?.email }).session(dbSession);
+      const isIdValid = mongoose.isValidObjectId((session?.user as any)?.id);
+      const recorderId = dbUser?._id || (isIdValid ? new mongoose.Types.ObjectId((session?.user as any)?.id) : new mongoose.Types.ObjectId());
+
       for (const id of ids) {
         const updateObj: any = {};
         if (status) updateObj.status = status;
@@ -93,7 +99,10 @@ export async function PATCH(req: NextRequest) {
               { $set: updateObj },
               { session: dbSession, new: true }
             );
-            if (fallbackOrder) modifiedCount++;
+            if (fallbackOrder) {
+              order = fallbackOrder;
+              modifiedCount++;
+            }
           }
         } else {
           // Regular update when not becoming a valid sale
@@ -102,7 +111,38 @@ export async function PATCH(req: NextRequest) {
             { $set: updateObj },
             { session: dbSession, new: true }
           );
-          if (regularOrder) modifiedCount++;
+          if (regularOrder) {
+            order = regularOrder;
+            modifiedCount++;
+          }
+        }
+
+        // --- LEDGER INTEGRATION ---
+        if (order) {
+          const nextPaymentStatus = paymentStatus || order.paymentStatus;
+          const nextStatus = status || order.status;
+          const orderShortId = order.shortId || order._id.toString().slice(-8).toUpperCase();
+          const ledgerDescription = `Payment for order #${orderShortId}`;
+
+
+
+          if (nextPaymentStatus === 'Paid' || nextStatus === 'Delivered') {
+            const existingLedger = await LedgerTransaction.findOne({ description: ledgerDescription }).session(dbSession);
+            if (!existingLedger) {
+              const isCash = ['cod', 'cash'].includes((order.paymentMethod || '').toLowerCase());
+              await LedgerTransaction.create([{
+                date: new Date(),
+                type: 'income',
+                source: isCash ? 'cash' : 'bank',
+                category: 'Product Sale',
+                amount: order.totalAmount,
+                description: ledgerDescription,
+                recordedBy: recorderId,
+              }], { session: dbSession });
+            }
+          } else if (nextStatus === 'Cancelled' || nextPaymentStatus === 'Failed') {
+            await LedgerTransaction.deleteMany({ description: ledgerDescription }).session(dbSession);
+          }
         }
       }
 
@@ -124,32 +164,41 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-    try {
-      const session = await auth();
-      if (!session || !(['admin', 'super_admin'].includes((session?.user as any)?.role))) {
-        return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-      }
-  
-      const { ids } = await req.json();
-  
-      const idError = validateIds(ids);
-      if (idError) {
-        return NextResponse.json({ message: idError }, { status: 400 });
-      }
-  
-      await connectToDatabase();
-  
-      const result = await Order.updateMany(
-        { _id: { $in: ids } },
-        { $set: { deletedAt: new Date() } }
-      );
-  
-      return NextResponse.json({ 
-        message: `${result.modifiedCount} orders soft-deleted successfully`,
-        count: result.modifiedCount 
-      });
-    } catch (error) {
-      console.error('Bulk Delete Error:', error);
-      return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+  try {
+    const session = await auth();
+    if (!session || !(['admin', 'super_admin'].includes((session?.user as any)?.role))) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
+
+    const { ids } = await req.json();
+
+    const idError = validateIds(ids);
+    if (idError) {
+      return NextResponse.json({ message: idError }, { status: 400 });
+    }
+
+    await connectToDatabase();
+
+    // Delete corresponding ledger entries
+    for (const id of ids) {
+      const order = await Order.findById(id);
+      if (order) {
+        const orderShortId = order.shortId || order._id.toString().slice(-8).toUpperCase();
+        await LedgerTransaction.deleteMany({ description: `Payment for order #${orderShortId}` });
+      }
+    }
+
+    const result = await Order.updateMany(
+      { _id: { $in: ids } },
+      { $set: { deletedAt: new Date() } }
+    );
+
+    return NextResponse.json({ 
+      message: `${result.modifiedCount} orders soft-deleted successfully`,
+      count: result.modifiedCount 
+    });
+  } catch (error) {
+    console.error('Bulk Delete Error:', error);
+    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
+}

@@ -17,6 +17,8 @@ export const CACHE_TAGS = {
   faqs: 'faqs',
   settings: 'settings',
   coupons: 'coupons',
+  products: 'products',
+  categories: 'categories',
 };
 
 // --- BLOGS ---

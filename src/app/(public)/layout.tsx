@@ -1,7 +1,6 @@
 import React from 'react';
 import { Metadata } from 'next';
-import { auth } from '@/auth';
-import PublicHeader from '@/components/layout/PublicHeader';
+import NavbarV2 from '@/components/templates/navbars/NavbarV2';
 import PublicFooter from '@/components/layout/PublicFooter';
 
 export const metadata: Metadata = {
@@ -38,12 +37,10 @@ export const metadata: Metadata = {
 };
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
-
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       {/* Public Header Navigation */}
-      <PublicHeader session={session} />
+      <NavbarV2 />
 
       {/* Main Content Area */}
       <main className="flex-1">{children}</main>

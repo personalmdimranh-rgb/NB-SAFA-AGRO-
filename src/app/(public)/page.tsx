@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import HeroSection from '@/components/storefront/landing/HeroSection';
+import HeroV2 from '@/components/templates/heros/HeroV2';
 import NutritionalGoldTabs from '@/components/storefront/landing/NutritionalGoldTabs';
 import RoiCalculator from '@/components/storefront/landing/RoiCalculator';
 import OperationalStats from '@/components/storefront/landing/OperationalStats';
@@ -13,6 +13,7 @@ import HarvestingJourney from '@/components/storefront/landing/HarvestingJourney
 import SafetyStandards from '@/components/storefront/landing/SafetyStandards';
 import RecentBlogs from '@/components/storefront/landing/RecentBlogs';
 import { FAQSection } from '@/components/storefront/FAQSection';
+import { ProductCarouselSection } from '@/components/storefront/ProductCarouselSection';
 
 interface FAQ {
   id: string;
@@ -26,8 +27,24 @@ interface FAQ {
 
 export default function ShafaAgroLandingPage() {
   const [faqs, setFaqs] = useState<FAQ[]>([]);
+  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+  const [banners, setBanners] = useState<any[]>([]);
 
   useEffect(() => {
+    fetch('/api/banners')
+      .then(res => res.json())
+      .then(data => {
+        setBanners(data || []);
+      })
+      .catch(err => console.error('Failed to fetch banners:', err));
+
+    fetch('/api/products?featured=true&limit=8')
+      .then(res => res.json())
+      .then(data => {
+        setFeaturedProducts(data.products || []);
+      })
+      .catch(err => console.error('Failed to fetch featured products:', err));
+
     fetch('/api/faqs')
       .then(async res => {
         if (res.ok) return res.json();
@@ -67,7 +84,16 @@ export default function ShafaAgroLandingPage() {
 
   return (
     <div className="flex flex-col min-h-screen font-sans bg-background text-foreground overflow-x-hidden selection:bg-primary/30 selection:text-foreground">
-      <HeroSection />
+      <HeroV2 banners={banners} />
+      {featuredProducts.length > 0 && (
+        <ProductCarouselSection
+          title="Featured Products"
+          description="Explore our best-selling and most popular products hand-picked just for you."
+          products={featuredProducts}
+          viewAllLink="/shop"
+          cardStyle="v6"
+        />
+      )}
       <NutritionalGoldTabs />
       <RoiCalculator />
       <OperationalStats />

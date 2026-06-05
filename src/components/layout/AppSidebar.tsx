@@ -55,6 +55,26 @@ const data = {
       ],
     },
     {
+      title: "Product Management",
+      url: "#",
+      icon: ShoppingBag,
+      roles: ['super_admin', 'admin', 'manager'],
+      items: [
+        {
+          title: "All Products",
+          url: "/admin/products",
+        },
+        {
+          title: "Add Product",
+          url: "/admin/products/new",
+        },
+        {
+          title: "Categories",
+          url: "/admin/categories",
+        },
+      ],
+    },
+    {
       title: "My Account",
       url: "#",
       icon: Users,
@@ -181,6 +201,14 @@ const data = {
       icon: ImageIcon,
       roles: ['super_admin', 'admin', 'manager'],
       items: [
+        {
+          title: "Banners",
+          url: "/admin/cms/banners",
+        },
+        {
+          title: "Testimonials",
+          url: "/admin/cms/testimonials",
+        },
         {
           title: "FAQs",
           url: "/admin/cms/faqs",

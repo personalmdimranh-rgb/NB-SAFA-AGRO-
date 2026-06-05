@@ -6,6 +6,8 @@ export interface ISlider extends Document {
   image: string;
   ctaText?: string;
   ctaLink?: string;
+  secondaryBtnText?: string;
+  secondaryBtnLink?: string;
   order: number;
   isActive: boolean;
   createdAt: Date;
@@ -19,6 +21,8 @@ const SliderSchema: Schema<ISlider> = new Schema(
     image: { type: String, required: true },
     ctaText: { type: String },
     ctaLink: { type: String },
+    secondaryBtnText: { type: String },
+    secondaryBtnLink: { type: String },
     order: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
   },
