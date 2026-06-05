@@ -15,20 +15,6 @@ export const proxy = auth(async (req) => {
   const isDealerRoute = nextUrl.pathname.startsWith("/dealer");
   const isAuthRoute = nextUrl.pathname.startsWith("/login") || nextUrl.pathname.startsWith("/register");
 
-  // Redirect legacy NB SAFA AGRO e-commerce routes to new NB Safa Agro home
-  const isLegacyEcommerceRoute = [
-    "/shop",
-    "/cart",
-    "/checkout",
-    "/wishlist",
-    "/product",
-    "/categories"
-  ].some(route => nextUrl.pathname.startsWith(route));
-
-  if (isLegacyEcommerceRoute) {
-    return NextResponse.redirect(new URL("/", nextUrl));
-  }
-
   // 1. Redirection for logged-in users on Auth routes (Login/Register)
   if (isAuthRoute && isLoggedIn) {
     if (role === "admin" || role === "super_admin" || role === "manager" || role === "staff") {
