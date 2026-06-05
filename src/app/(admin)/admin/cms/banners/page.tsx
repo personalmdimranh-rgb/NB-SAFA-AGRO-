@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -11,9 +10,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, Edit, Trash, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
 import Swal from 'sweetalert2';
 
 interface Banner {
@@ -42,7 +42,7 @@ export default function BannersPage() {
       }
       const data = await response.json();
       setBanners(data);
-    } catch {
+    } catch (error) {
       toast.error('Failed to fetch banners');
     } finally {
       setLoading(false);
@@ -53,34 +53,16 @@ export default function BannersPage() {
     fetchBanners();
   }, []);
 
-  const handleStatusToggle = async (id: string, currentStatus: boolean) => {
-    try {
-      const res = await fetch(`/api/admin/banners/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive: !currentStatus }),
-      });
-
-      if (res.ok) {
-        toast.success(`Banner status updated successfully`);
-        fetchBanners();
-      } else {
-        toast.error('Failed to update banner status');
-      }
-    } catch {
-      toast.error('Error updating status');
-    }
-  };
-
-  const handleDelete = async (id: string, bannerTitle: string) => {
+  const handleDelete = async (id: string, title: string) => {
     const result = await Swal.fire({
       title: 'Are you sure?',
-      text: `You are about to delete banner "${bannerTitle}". This action cannot be undone!`,
+      text: `You are about to delete the banner "${title}". This action cannot be undone!`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#00D1B2',
       cancelButtonColor: '#d33',
       confirmButtonText: 'Yes, delete it!',
+      background: '#fff',
       customClass: {
         popup: 'rounded-xl',
         confirmButton: 'rounded-lg px-4 py-2 font-bold',
@@ -100,9 +82,28 @@ export default function BannersPage() {
         } else {
           toast.error('Failed to delete banner');
         }
-      } catch {
+      } catch (error) {
         toast.error('Error deleting banner');
       }
+    }
+  };
+
+  const toggleStatus = async (id: string, currentStatus: boolean) => {
+    try {
+      const response = await fetch(`/api/admin/banners/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !currentStatus }),
+      });
+
+      if (response.ok) {
+        toast.success(`Banner ${!currentStatus ? 'activated' : 'deactivated'}`);
+        fetchBanners();
+      } else {
+        toast.error('Failed to update status');
+      }
+    } catch (error) {
+      toast.error('Error updating status');
     }
   };
 
@@ -110,8 +111,8 @@ export default function BannersPage() {
     <div className="flex flex-col gap-6 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Homepage Banners</h1>
-          <p className="text-muted-foreground text-sm">Manage the active sliders displayed on the landing page</p>
+          <h1 className="text-2xl font-bold tracking-tight">Promotional Banners</h1>
+          <p className="text-muted-foreground text-sm">Manage banners appearing in the homepage hero slider</p>
         </div>
         <Link href="/admin/cms/banners/new">
           <Button>
@@ -124,18 +125,19 @@ export default function BannersPage() {
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="w-[120px]">Image</TableHead>
-              <TableHead>Title & Subtitle</TableHead>
-              <TableHead>CTA Details</TableHead>
+              <TableHead className="w-[180px]">Preview</TableHead>
+              <TableHead>Title</TableHead>
               <TableHead>Order</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Primary CTA</TableHead>
+              <TableHead>Secondary CTA</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-40 text-center">
+                <TableCell colSpan={7} className="h-40 text-center">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     <p className="text-sm text-muted-foreground">Loading banners...</p>
@@ -144,14 +146,12 @@ export default function BannersPage() {
               </TableRow>
             ) : banners.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-40 text-center">
+                <TableCell colSpan={7} className="h-40 text-center">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <p className="text-lg font-medium">No banners found</p>
-                    <p className="text-sm text-muted-foreground">Add your first homepage banner to get started.</p>
+                    <p className="text-sm text-muted-foreground">Add your first promotional banner to get started.</p>
                     <Link href="/admin/cms/banners/new" className="mt-2">
-                      <Button variant="outline" size="sm">
-                        Add Banner
-                      </Button>
+                      <Button variant="outline" size="sm">Add Banner</Button>
                     </Link>
                   </div>
                 </TableCell>
@@ -160,43 +160,21 @@ export default function BannersPage() {
               banners.map((banner) => (
                 <TableRow key={banner._id} className="group hover:bg-muted/30 transition-colors">
                   <TableCell>
-                    <div className="h-16 aspect-video overflow-hidden rounded-md border bg-muted relative">
-                      {banner.image ? (
-                        <img 
-                          src={banner.image} 
-                          alt={banner.title} 
-                          className="h-full w-full object-cover" 
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center">
-                          <ImageIcon className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                      )}
+                    <div className="aspect-[21/9] w-full overflow-hidden rounded-md border bg-muted relative">
+                      <img 
+                        src={banner.image} 
+                        alt={banner.title} 
+                        className="absolute inset-0 h-full w-full object-cover" 
+                      />
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
-                      <span className="font-semibold text-sm line-clamp-1">{banner.title}</span>
+                      <span className="font-semibold">{banner.title}</span>
                       {banner.subtitle && (
-                        <span className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{banner.subtitle}</span>
+                        <span className="text-xs text-muted-foreground line-clamp-1">{banner.subtitle}</span>
                       )}
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    {banner.ctaText ? (
-                      <div className="flex flex-col text-xs">
-                        <span className="font-semibold text-primary">Primary: {banner.ctaText}</span>
-                        <span className="text-muted-foreground truncate max-w-[150px] mb-1">{banner.ctaLink}</span>
-                        {banner.secondaryBtnText && (
-                          <>
-                            <span className="font-semibold text-foreground">Secondary: {banner.secondaryBtnText}</span>
-                            <span className="text-muted-foreground truncate max-w-[150px]">{banner.secondaryBtnLink}</span>
-                          </>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground italic">None</span>
-                    )}
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="font-mono">
@@ -205,13 +183,29 @@ export default function BannersPage() {
                   </TableCell>
                   <TableCell>
                     <button 
-                      onClick={() => handleStatusToggle(banner._id, banner.isActive)}
+                      onClick={() => toggleStatus(banner._id, banner.isActive)}
                       className="transition-opacity hover:opacity-80"
                     >
                       <Badge variant={banner.isActive ? 'default' : 'secondary'} className="cursor-pointer">
                         {banner.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     </button>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-sm font-medium">{banner.ctaText || 'Shop Now'}</span>
+                      <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">
+                        {banner.ctaLink || 'No link'}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-sm font-medium">{banner.secondaryBtnText || 'Contact'}</span>
+                      <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">
+                        {banner.secondaryBtnLink || 'No link'}
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
