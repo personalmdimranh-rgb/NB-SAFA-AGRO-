@@ -15,7 +15,10 @@ import {
   Mic,
   MicOff,
   Package,
-  Heart
+  Heart,
+  Users,
+  ShoppingBag,
+  Calendar
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppSelector } from '@/store/hooks';
@@ -303,7 +306,77 @@ export default function NavbarV2() {
                         </>
                       )}
 
-                      {(session.user as { role?: string })?.role === 'user' && (
+                      {(session.user as { role?: string })?.role === 'manager' && (
+                        <>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/dashboard" className="cursor-pointer">
+                              <LayoutDashboard className="mr-2 h-4 w-4" /> Manager Dashboard
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/inventory/production" className="cursor-pointer">
+                              <ShoppingBag className="mr-2 h-4 w-4" /> Silage Production
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/products" className="cursor-pointer">
+                              <Package className="mr-2 h-4 w-4" /> Product Catalog
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      {(session.user as { role?: string })?.role === 'staff' && (
+                        <>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/dashboard" className="cursor-pointer">
+                              <LayoutDashboard className="mr-2 h-4 w-4" /> Staff Dashboard
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/employees/attendance" className="cursor-pointer">
+                              <Calendar className="mr-2 h-4 w-4" /> Log Attendance
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/sales" className="cursor-pointer">
+                              <Truck className="mr-2 h-4 w-4" /> Sales Ledger
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      {(session.user as { role?: string })?.role === 'director' && (
+                        <>
+                          <DropdownMenuItem asChild>
+                            <Link href="/dashboard/director" className="cursor-pointer">
+                              <LayoutDashboard className="mr-2 h-4 w-4" /> Director Dashboard
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      {(session.user as { role?: string })?.role === 'dealer' && (
+                        <>
+                          <DropdownMenuItem asChild>
+                            <Link href="/dealer/dashboard" className="cursor-pointer">
+                              <LayoutDashboard className="mr-2 h-4 w-4" /> Dealer Dashboard
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/dealer/order-new" className="cursor-pointer">
+                              <Package className="mr-2 h-4 w-4" /> Order Silage
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/dealer/commission" className="cursor-pointer">
+                              <Users className="mr-2 h-4 w-4" /> My Commission
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      {((session.user as { role?: string })?.role === 'user' || (session.user as { role?: string })?.role === 'farmer') && (
                         <>
                           <DropdownMenuItem asChild>
                             <Link href="/dashboard" className="cursor-pointer">
