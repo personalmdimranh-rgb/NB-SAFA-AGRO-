@@ -26,6 +26,7 @@ import { useSession } from 'next-auth/react';
 import { Suspense } from 'react';
 import ReviewsSection from '@/components/storefront/ReviewsSection';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { contactConfig } from '@/lib/contact-config';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -280,7 +281,7 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
     }
   };
 
-  const [whatsappNumber, setWhatsappNumber] = useState<string | null>(null);
+  const [whatsappNumber, setWhatsappNumber] = useState<string | null>(contactConfig.whatsappUrl || null);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -288,7 +289,9 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
         const res = await fetch('/api/settings');
         if (res.ok) {
           const data = await res.json();
-          setWhatsappNumber(data.socialLinks?.whatsapp || null);
+          if (data.socialLinks?.whatsapp) {
+            setWhatsappNumber(data.socialLinks.whatsapp);
+          }
         }
       } catch (err) {
         console.error('Error fetching settings:', err);

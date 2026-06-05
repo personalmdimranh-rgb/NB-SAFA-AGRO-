@@ -101,7 +101,7 @@ export default function CheckoutPage() {
           fetch('/api/user/profile'),
           fetch('/api/settings')
         ]);
-        
+
         if (profileRes.ok) {
           const profileData = await profileRes.json();
           setProfile(profileData);
@@ -124,7 +124,7 @@ export default function CheckoutPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ items })
           }).catch(() => null);
-          
+
           if (syncRes && syncRes.ok) {
             const data = await syncRes.json();
             setSyncData({ validItems: data.validItems, hasInsufficientStock: data.hasInsufficientStock });
@@ -160,7 +160,7 @@ export default function CheckoutPage() {
       });
       hasTrackedInitiate.current = true;
     }
-  }, [isHydrated, items, totalAmount]); 
+  }, [isHydrated, items, totalAmount]);
 
   const submissionSucceededRef = useRef(false);
   const [canRedirect, setCanRedirect] = useState(false);
@@ -183,26 +183,26 @@ export default function CheckoutPage() {
     try {
       const orderData = {
         items: items.map(item => ({
-            product: item.productId,
-            name: item.name,
-            quantity: item.quantity,
-            price: item.price,
-            image: item.image,
-            color: item.color,
-            size: item.size
+          product: item.productId,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          image: item.image,
+          color: item.color,
+          size: item.size
         })),
         shippingAddress: {
-            fullName: values.fullName,
-            phone: values.phone,
-            email: profile?.email || `${values.phone}@store.com`,
-            street: values.street,
-            city: values.shippingRegion === 'Inside Dhaka' ? 'Dhaka' : 'Outside Dhaka',
-            state: values.shippingRegion === 'Inside Dhaka' ? 'Dhaka' : 'Outside Dhaka',
-            division: values.shippingRegion === 'Inside Dhaka' ? 'Dhaka' : 'Outside Dhaka',
-            district: values.shippingRegion === 'Inside Dhaka' ? 'Dhaka' : 'Outside Dhaka',
-            thana: values.shippingRegion === 'Inside Dhaka' ? 'Dhaka' : 'Outside Dhaka',
-            zipCode: '0000',
-            country: 'Bangladesh'
+          fullName: values.fullName,
+          phone: values.phone,
+          email: profile?.email || `${values.phone}@store.com`,
+          street: values.street,
+          city: values.shippingRegion === 'Inside Dhaka' ? 'Dhaka' : 'Outside Dhaka',
+          state: values.shippingRegion === 'Inside Dhaka' ? 'Dhaka' : 'Outside Dhaka',
+          division: values.shippingRegion === 'Inside Dhaka' ? 'Dhaka' : 'Outside Dhaka',
+          district: values.shippingRegion === 'Inside Dhaka' ? 'Dhaka' : 'Outside Dhaka',
+          thana: values.shippingRegion === 'Inside Dhaka' ? 'Dhaka' : 'Outside Dhaka',
+          zipCode: '0000',
+          country: 'Bangladesh'
         },
         paymentMethod: values.paymentMethod,
         deliveryCharge: deliveryCharge,
@@ -224,7 +224,7 @@ export default function CheckoutPage() {
       if (response.ok) {
         const order = await response.json();
         submissionSucceededRef.current = true;
-        
+
         if (values.paymentMethod === 'Online') {
           const initRes = await fetch('/api/payment/init', {
             method: 'POST',
@@ -261,7 +261,7 @@ export default function CheckoutPage() {
   const applyCoupon = async (codeToUse?: string) => {
     const code = codeToUse || couponCode;
     if (!code.trim()) return;
-    
+
     setApplyingCoupon(true);
     try {
       const res = await fetch('/api/coupons/validate', {
@@ -300,10 +300,10 @@ export default function CheckoutPage() {
 
   const freeDeliveryThreshold = settings?.freeDeliveryThreshold || 0;
   const isFreeDelivery = freeDeliveryThreshold > 0 && totalAmount >= freeDeliveryThreshold;
-  
+
   const chargeInsideDhaka = settings?.deliveryChargeInsideDhaka || 60;
   const chargeOutsideDhaka = settings?.deliveryChargeOutsideDhaka || 120;
-  
+
   const totalProductDiscount = items.reduce((sum, item) => {
     const itemBasePrice = item.basePrice || item.price;
     return sum + Math.max(0, itemBasePrice - item.price) * item.quantity;
@@ -314,28 +314,28 @@ export default function CheckoutPage() {
   ) : 0;
 
   const totalAfterCoupon = Math.max(0, totalAmount + deliveryCharge - couponDiscount);
-  const walletAmountToUse = useWallet && profile?.walletBalance 
-    ? Math.min(profile.walletBalance, totalAfterCoupon) 
+  const walletAmountToUse = useWallet && profile?.walletBalance
+    ? Math.min(profile.walletBalance, totalAfterCoupon)
     : 0;
 
   const finalTotal = totalAfterCoupon - walletAmountToUse;
 
   const watchedFields = form.watch();
   const isFormValid = !!(
-    watchedFields.fullName?.trim() && 
-    watchedFields.phone?.trim() && 
-    watchedFields.street?.trim() && 
+    watchedFields.fullName?.trim() &&
+    watchedFields.phone?.trim() &&
+    watchedFields.street?.trim() &&
     watchedFields.shippingRegion &&
     (watchedFields.paymentMethod !== 'Manual' || (selectedMethod?.id && (manualDetails.senderNumber || manualDetails.transactionId)))
   );
 
   const handleUpdateQuantity = (item: any, delta: number) => {
-      if (item.quantity + delta === 0) {
-          dispatch(removeFromCart({ productId: item.productId, color: item.color, size: item.size }));
-          toast.info(`${item.name} removed from cart`);
-      } else {
-          dispatch(addToCart({ ...item, quantity: delta }));
-      }
+    if (item.quantity + delta === 0) {
+      dispatch(removeFromCart({ productId: item.productId, color: item.color, size: item.size }));
+      toast.info(`${item.name} removed from cart`);
+    } else {
+      dispatch(addToCart({ ...item, quantity: delta }));
+    }
   };
 
   if (!isHydrated) return (
@@ -373,7 +373,7 @@ export default function CheckoutPage() {
                             </p>
                           )}
                         </div>
-                        <button 
+                        <button
                           onClick={() => {
                             dispatch(removeFromCart({ productId: item.productId, color: item.color, size: item.size }));
                             toast.info(`${item.name} removed from cart`);
@@ -384,18 +384,18 @@ export default function CheckoutPage() {
                           <X className="h-3.5 w-3.5" />
                         </button>
                       </div>
-                      
+
                       <div className="flex items-center justify-between">
                         <div className="flex items-center border rounded-full bg-muted/50 scale-90 -ml-2">
-                          <button 
-                            type="button" 
+                          <button
+                            type="button"
                             onClick={() => handleUpdateQuantity(item, -1)}
                             className="h-7 w-7 flex items-center justify-center hover:bg-muted rounded-full transition-colors"
                           >
                             <Minus className="h-3 w-3" />
                           </button>
                           <span className="w-6 text-center text-xs font-bold">{item.quantity}</span>
-                          <button 
+                          <button
                             type="button"
                             onClick={() => handleUpdateQuantity(item, 1)}
                             className="h-7 w-7 flex items-center justify-center hover:bg-muted rounded-full transition-colors"
@@ -463,7 +463,7 @@ export default function CheckoutPage() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="shippingRegion"
@@ -524,28 +524,28 @@ export default function CheckoutPage() {
                   {/* Coupon Section */}
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
-                      <Input 
-                        placeholder="Coupon Code" 
+                      <Input
+                        placeholder="Coupon Code"
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                         disabled={!!appliedCoupon || applyingCoupon}
                         className="h-10 text-xs"
                       />
                       {appliedCoupon ? (
-                        <Button 
-                          type="button" 
-                          variant="destructive" 
-                          size="sm" 
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
                           onClick={() => removeCoupon()}
                           className="h-10 px-3"
                         >
                           Remove
                         </Button>
                       ) : (
-                        <Button 
-                          type="button" 
-                          size="sm" 
-                          onClick={() => applyCoupon()} 
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => applyCoupon()}
                           disabled={applyingCoupon || !couponCode}
                           className="h-10 px-4"
                         >
@@ -615,7 +615,7 @@ export default function CheckoutPage() {
                                 <p className="text-xs font-normal text-muted-foreground mt-1">Pay when you receive the product.</p>
                               </FormLabel>
                             </FormItem>
-                            
+
                             {settings?.paymentConfig?.activeMethod === 'sslcommerz' && (
                               <FormItem className="flex items-center space-x-3 space-y-0 border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors">
                                 <FormControl>
@@ -628,19 +628,19 @@ export default function CheckoutPage() {
                               </FormItem>
                             )}
 
-                            {(settings?.manualPaymentConfig?.bkash?.active || 
-                              settings?.manualPaymentConfig?.nagad?.active || 
+                            {(settings?.manualPaymentConfig?.bkash?.active ||
+                              settings?.manualPaymentConfig?.nagad?.active ||
                               settings?.manualPaymentConfig?.rocket?.active) && (
-                              <FormItem className="flex items-center space-x-3 space-y-0 border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors">
-                                <FormControl>
-                                  <RadioGroupItem value="Manual" />
-                                </FormControl>
-                                <FormLabel className="font-bold flex-1 cursor-pointer">
-                                  Manual Payment (MFS)
-                                  <p className="text-xs font-normal text-muted-foreground mt-1">Send money manually to complete order.</p>
-                                </FormLabel>
-                              </FormItem>
-                            )}
+                                <FormItem className="flex items-center space-x-3 space-y-0 border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors">
+                                  <FormControl>
+                                    <RadioGroupItem value="Manual" />
+                                  </FormControl>
+                                  <FormLabel className="font-bold flex-1 cursor-pointer">
+                                    Manual Payment (MFS)
+                                    <p className="text-xs font-normal text-muted-foreground mt-1">Send money manually to complete order.</p>
+                                  </FormLabel>
+                                </FormItem>
+                              )}
                           </RadioGroup>
                         </FormControl>
                         <FormMessage />
@@ -655,15 +655,14 @@ export default function CheckoutPage() {
                         if (!config?.active) return null;
                         const isSelected = selectedMethod?.id === method;
                         return (
-                          <div 
-                            key={method} 
+                          <div
+                            key={method}
                             onClick={() => {
                               setSelectedMethod({ id: method, ...config });
                               setShowPaymentModal(true);
                             }}
-                            className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center gap-2 hover:bg-muted/50 ${
-                              isSelected ? 'border-primary bg-primary/5' : 'border-muted'
-                            }`}
+                            className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center gap-2 hover:bg-muted/50 ${isSelected ? 'border-primary bg-primary/5' : 'border-muted'
+                              }`}
                           >
                             <p className="text-xs font-bold uppercase">{method}</p>
                           </div>
@@ -676,9 +675,9 @@ export default function CheckoutPage() {
                     <div className="p-4 border rounded-lg bg-primary/5 border-primary/20">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <input 
-                            type="checkbox" 
-                            id="use-wallet" 
+                          <input
+                            type="checkbox"
+                            id="use-wallet"
                             checked={useWallet}
                             onChange={(e) => setUseWallet(e.target.checked)}
                             className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
@@ -694,13 +693,12 @@ export default function CheckoutPage() {
                   )}
                 </CardContent>
                 <CardFooter className="pt-2 border-t flex flex-col gap-3">
-                  <Button 
+                  <Button
                     type="submit"
-                    className={`w-full h-14 rounded-full font-black uppercase tracking-widest text-sm transition-all ${
-                      isFormValid && !syncData?.hasInsufficientStock
-                      ? 'bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95' 
-                      : 'bg-muted text-muted-foreground cursor-not-allowed opacity-70'
-                    }`}
+                    className={`w-full h-14 rounded-full font-black uppercase tracking-widest text-sm transition-all ${isFormValid && !syncData?.hasInsufficientStock
+                        ? 'bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95'
+                        : 'bg-muted text-muted-foreground cursor-not-allowed opacity-70'
+                      }`}
                     disabled={loading || !isFormValid || syncData?.hasInsufficientStock}
                   >
                     {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <CheckCircle2 className="mr-2 h-5 w-5" />}
@@ -738,18 +736,16 @@ export default function CheckoutPage() {
               <button
                 type="button"
                 onClick={() => setPaymentDetailTab('phone')}
-                className={`flex-1 pb-1.5 text-xs font-bold text-center border-b-2 transition-all ${
-                  paymentDetailTab === 'phone' ? 'border-primary text-primary' : 'border-transparent text-slate-500'
-                }`}
+                className={`flex-1 pb-1.5 text-xs font-bold text-center border-b-2 transition-all ${paymentDetailTab === 'phone' ? 'border-primary text-primary' : 'border-transparent text-slate-500'
+                  }`}
               >
                 Phone Number
               </button>
               <button
                 type="button"
                 onClick={() => setPaymentDetailTab('trx')}
-                className={`flex-1 pb-1.5 text-xs font-bold text-center border-b-2 transition-all ${
-                  paymentDetailTab === 'trx' ? 'border-primary text-primary' : 'border-transparent text-slate-500'
-                }`}
+                className={`flex-1 pb-1.5 text-xs font-bold text-center border-b-2 transition-all ${paymentDetailTab === 'trx' ? 'border-primary text-primary' : 'border-transparent text-slate-500'
+                  }`}
               >
                 TrxID
               </button>
@@ -759,19 +755,19 @@ export default function CheckoutPage() {
               {paymentDetailTab === 'phone' ? (
                 <div className="space-y-1.5">
                   <Label className="text-xs">Send from Phone Number</Label>
-                  <Input 
-                    placeholder="e.g. 017XXXXXXXX" 
+                  <Input
+                    placeholder="e.g. 017XXXXXXXX"
                     value={manualDetails.senderNumber}
-                    onChange={(e) => setManualDetails({...manualDetails, senderNumber: e.target.value})}
+                    onChange={(e) => setManualDetails({ ...manualDetails, senderNumber: e.target.value })}
                   />
                 </div>
               ) : (
                 <div className="space-y-1.5">
                   <Label className="text-xs">Transaction ID (TrxID)</Label>
-                  <Input 
-                    placeholder="e.g. 8N7A6D5C" 
+                  <Input
+                    placeholder="e.g. 8N7A6D5C"
                     value={manualDetails.transactionId}
-                    onChange={(e) => setManualDetails({...manualDetails, transactionId: e.target.value.toUpperCase()})}
+                    onChange={(e) => setManualDetails({ ...manualDetails, transactionId: e.target.value.toUpperCase() })}
                   />
                 </div>
               )}
@@ -780,7 +776,7 @@ export default function CheckoutPage() {
 
           <DialogFooter className="flex flex-row gap-3">
             <Button variant="outline" onClick={() => setShowPaymentModal(false)} className="flex-1">Cancel</Button>
-            <Button 
+            <Button
               disabled={
                 paymentDetailTab === 'phone'
                   ? !manualDetails.senderNumber.trim()
@@ -796,7 +792,7 @@ export default function CheckoutPage() {
                   setShowPaymentModal(false);
                   toast.error('Please complete delivery information first.');
                 }
-              }} 
+              }}
               className="flex-1"
             >
               Confirm
