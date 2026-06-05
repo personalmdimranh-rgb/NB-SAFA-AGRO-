@@ -2,6 +2,7 @@ import React from 'react';
 import { Metadata } from 'next';
 import NavbarV2 from '@/components/templates/navbars/NavbarV2';
 import PublicFooter from '@/components/layout/PublicFooter';
+import { ScrollToTop } from '@/components/layout/ScrollToTop';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.nbsafaagro.com'),
@@ -47,6 +48,10 @@ export default async function PublicLayout({ children }: { children: React.React
 
       {/* Public Footer */}
       <PublicFooter />
+
+      {/* Scroll to Top & WhatsApp button */}
+      <ScrollToTop />
     </div>
   );
 }
+
