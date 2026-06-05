@@ -194,10 +194,8 @@ export default function CategoriesPage() {
             form.reset();
           }
         }}>
-        <DialogTrigger asChild>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" /> Add Category
-          </Button>
+        <DialogTrigger render={<Button />}>
+          <Plus className="mr-2 h-4 w-4" /> Add Category
         </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
