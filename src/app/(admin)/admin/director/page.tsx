@@ -238,18 +238,27 @@ export default function DirectorPanelPage() {
               <form onSubmit={handleLogInvestment} className="space-y-4 pt-2">
                 <div>
                   <label className="text-[10px] font-bold text-primary block mb-0.5">Select Director</label>
-                  <Select value={directorId} onValueChange={(val: any) => setDirectorId(val || '')}>
-                    <SelectTrigger className="border-border h-9">
-                      <SelectValue placeholder="Choose Director...">
-                        {directors.find((d) => d._id === directorId)?.name}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {directors.map((d) => (
-                        <SelectItem key={d._id} value={d._id}>{d.name} ({d.email})</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {directors.length === 0 ? (
+                    <div className="flex items-center gap-2 h-9 px-3 rounded-md border border-border bg-muted/40 text-xs text-muted-foreground">
+                      No directors registered yet —{' '}
+                      <a href="/admin/director/list" className="text-primary font-semibold underline underline-offset-2 hover:opacity-80">
+                        Add Director first
+                      </a>
+                    </div>
+                  ) : (
+                    <Select value={directorId} onValueChange={(val) => setDirectorId(val || '')}>
+                      <SelectTrigger className="border-border h-9">
+                        <SelectValue placeholder="Choose Director..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {directors.map((d) => (
+                          <SelectItem key={d._id} value={d._id}>
+                            {d.name} <span className="text-muted-foreground text-xs">({d.email})</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
 
                 <div>
