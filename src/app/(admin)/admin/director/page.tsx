@@ -249,7 +249,9 @@ export default function DirectorPanelPage() {
                   ) : (
                     <Select value={directorId} onValueChange={(val) => setDirectorId(val || '')}>
                       <SelectTrigger className="border-border h-9">
-                        <SelectValue placeholder="Choose Director..." />
+                        <span className={directorId ? 'text-foreground' : 'text-muted-foreground'}>
+                          {directorId ? (directors.find((d) => d._id === directorId)?.name || directorId) : 'Choose Director...'}
+                        </span>
                       </SelectTrigger>
                       <SelectContent>
                         {directors.map((d) => (
