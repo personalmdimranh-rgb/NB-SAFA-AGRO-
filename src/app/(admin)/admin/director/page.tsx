@@ -69,7 +69,8 @@ export default function DirectorPanelPage() {
 
       if (usersRes.ok) {
         const usersData = await usersRes.json();
-        setDirectors(usersData.users || []);
+        // API returns plain array when no `page` param, or {users:[]} when paginated
+        setDirectors(Array.isArray(usersData) ? usersData : (usersData.users || []));
       }
     } catch (err: any) {
       toast.error('Failed to load director data: ' + err.message);
