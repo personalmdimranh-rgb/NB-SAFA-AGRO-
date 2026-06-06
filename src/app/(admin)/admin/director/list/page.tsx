@@ -1,12 +1,32 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { registerDirector, deleteDirector } from '@/app/actions/director';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Users, Coins, Mail, Phone, Award, TrendingUp, Loader2, RefreshCw } from 'lucide-react';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { divisions, bdDivisions, bdLocations } from '@/lib/bd-locations';
+import {
+  Users, Coins, TrendingUp, PlusCircle, Loader2, RefreshCw,
+  Mail, Phone, Award, MoreVertical, Trash2, Eye,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import Swal from 'sweetalert2';
+import Link from 'next/link';
 
 interface DirectorDetail {
   name: string;
@@ -26,13 +46,44 @@ interface SummaryData {
   totalDirectors: number;
 }
 
+// We also need userIds for delete — fetch from users API
+interface DirectorUser {
+  _id: string;
+  name: string;
+  email: string;
+  phone: string;
+  status: string;
+}
+
 export default function DirectorListPage() {
+  const { data: session } = useSession();
+  const role = (session?.user as any)?.role;
+
   const [summary, setSummary] = useState<SummaryData | null>(null);
+  const [directorUsers, setDirectorUsers] = useState<DirectorUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Form state
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [addressLine, setAddressLine] = useState('');
+  const [division, setDivision] = useState('');
+  const [district, setDistrict] = useState('');
+  const [thana, setThana] = useState('');
+
+  const availableDistricts = division ? bdDivisions[division] || [] : [];
+  const availableThanas = district ? bdLocations[district] || [] : [];
+
+  const canManage = ['admin', 'super_admin'].includes(role || '');
 
   const loadData = async () => {
     try {
       setLoading(true);
+      // Fetch summary data
       const res = await fetch('/api/admin/director');
       if (!res.ok) {
         const err = await res.json();
@@ -40,8 +91,15 @@ export default function DirectorListPage() {
       }
       const data = await res.json();
       setSummary(data);
+
+      // Also fetch director users (for IDs needed for delete)
+      const usersRes = await fetch('/api/admin/users?role=director&limit=100');
+      if (usersRes.ok) {
+        const usersData = await usersRes.json();
+        setDirectorUsers(usersData.users || []);
+      }
     } catch (err: any) {
-      toast.error('Failed to load directors list: ' + (err.message || 'Unknown error'));
+      toast.error('Failed to load directors: ' + (err.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -50,6 +108,87 @@ export default function DirectorListPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  const resetForm = () => {
+    setName('');
+    setEmail('');
+    setPhone('');
+    setPassword('');
+    setAddressLine('');
+    setDivision('');
+    setDistrict('');
+    setThana('');
+  };
+
+  const openAddModal = () => {
+    resetForm();
+    setModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !email || !phone) {
+      toast.error('Name, Email, and Phone are required.');
+      return;
+    }
+    try {
+      setSubmitting(true);
+      await registerDirector({
+        name,
+        email,
+        phone,
+        password: password || undefined,
+        addressLine,
+        division,
+        district,
+        thana,
+      });
+      toast.success(`✅ Director "${name}" registered successfully!`);
+      setModalOpen(false);
+      resetForm();
+      loadData();
+    } catch (err: any) {
+      toast.error('Registration failed: ' + err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (userId: string, directorName: string) => {
+    const result = await Swal.fire({
+      title: 'Remove Director?',
+      html: `<p class="text-sm text-gray-600">This will permanently remove <strong>${directorName}</strong> and all their investment records from the system.</p>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, Remove!',
+      cancelButtonText: 'Cancel',
+      customClass: {
+        popup: 'rounded-3xl',
+        confirmButton: 'rounded-xl font-bold px-6 py-3',
+        cancelButton: 'rounded-xl font-bold px-6 py-3',
+      },
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await deleteDirector(userId);
+      toast.success(`Director "${directorName}" removed successfully.`);
+      loadData();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to remove director');
+    }
+  };
+
+  // Merge summary details with user IDs
+  const mergedDirectors = summary?.directorDetails.map((d) => {
+    const userRecord = directorUsers.find(
+      (u) => u.email.toLowerCase() === d.email.toLowerCase()
+    );
+    return { ...d, userId: userRecord?._id, status: userRecord?.status };
+  }) ?? [];
 
   if (loading) {
     return (
@@ -63,21 +202,35 @@ export default function DirectorListPage() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-primary">All Directors List</h1>
-          <p className="text-muted-foreground">Directory of farm shareholders, total capital contributions, and equity distribution.</p>
+          <p className="text-muted-foreground text-sm">
+            Directory of farm shareholders, total capital contributions, and equity distribution.
+          </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={loadData}
-          disabled={loading}
-          className="flex items-center gap-2 border-primary/30 hover:bg-primary/5"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadData}
+            disabled={loading}
+            className="flex items-center gap-2 border-primary/30 hover:bg-primary/5"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          {canManage && (
+            <Button
+              onClick={openAddModal}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold gap-2 shadow-md"
+              id="add-director-btn"
+            >
+              <PlusCircle className="h-4 w-4" />
+              Add Director
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -101,7 +254,9 @@ export default function DirectorListPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Total Capital</p>
-                  <p className="text-2xl font-black text-primary mt-1">৳{summary.totalInvestmentsSum.toLocaleString()}</p>
+                  <p className="text-2xl font-black text-primary mt-1">
+                    ৳{summary.totalInvestmentsSum.toLocaleString()}
+                  </p>
                 </div>
                 <div className="h-12 w-12 rounded-2xl bg-green-100 flex items-center justify-center">
                   <Coins className="h-6 w-6 text-green-600" />
@@ -114,7 +269,11 @@ export default function DirectorListPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Net Profit</p>
-                  <p className={`text-2xl font-black mt-1 ${summary.profitBeforeDividends >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                  <p
+                    className={`text-2xl font-black mt-1 ${
+                      summary.profitBeforeDividends >= 0 ? 'text-green-600' : 'text-red-500'
+                    }`}
+                  >
                     ৳{summary.profitBeforeDividends.toLocaleString()}
                   </p>
                 </div>
@@ -132,6 +291,9 @@ export default function DirectorListPage() {
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-primary flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" /> Shareholder Directory
+            <span className="ml-auto text-xs font-normal text-muted-foreground">
+              {mergedDirectors.length} registered
+            </span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -139,36 +301,60 @@ export default function DirectorListPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
-                  <TableHead className="text-xs font-bold uppercase">#</TableHead>
+                  <TableHead className="text-xs font-bold uppercase w-10">#</TableHead>
                   <TableHead className="text-xs font-bold uppercase">Name</TableHead>
                   <TableHead className="text-xs font-bold uppercase">Email</TableHead>
                   <TableHead className="text-xs font-bold uppercase">Phone</TableHead>
                   <TableHead className="text-xs font-bold uppercase text-right">Total Invested</TableHead>
                   <TableHead className="text-xs font-bold uppercase text-right">Equity Share</TableHead>
+                  <TableHead className="text-xs font-bold uppercase text-center w-16">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {!(summary?.directorDetails?.length) ? (
+                {mergedDirectors.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground py-12">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
                       <div className="flex flex-col items-center gap-2">
                         <Users className="h-10 w-10 text-muted-foreground/40" />
                         <p className="font-medium">No directors found in the system.</p>
-                        <p className="text-xs">Register directors from the User Management page.</p>
+                        {canManage && (
+                          <p className="text-xs">
+                            Click{' '}
+                            <button onClick={openAddModal} className="text-primary font-semibold underline">
+                              Add Director
+                            </button>{' '}
+                            to register the first director.
+                          </p>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
                 ) : (
-                  summary.directorDetails.map((d, idx) => (
+                  mergedDirectors.map((d, idx) => (
                     <TableRow key={d.email} className="hover:bg-muted/30 transition-colors">
-                      <TableCell className="text-muted-foreground font-mono text-sm">{idx + 1}</TableCell>
-                      <TableCell className="font-semibold text-primary">{d.name}</TableCell>
-                      <TableCell className="text-muted-foreground">
+                      <TableCell className="text-muted-foreground text-xs font-mono">{idx + 1}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-semibold text-primary text-sm">{d.name}</span>
+                          {d.status && (
+                            <Badge
+                              className={`text-[9px] font-bold px-1.5 w-fit ${
+                                d.status === 'active'
+                                  ? 'bg-green-100 text-green-700 border-green-200'
+                                  : 'bg-amber-50 text-amber-700 border-amber-200'
+                              }`}
+                            >
+                              {d.status === 'active' ? 'Active' : 'Inactive'}
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
                         <span className="flex items-center gap-1">
                           <Mail className="h-3.5 w-3.5 flex-shrink-0" /> {d.email}
                         </span>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
+                      <TableCell className="text-muted-foreground text-sm">
                         <span className="flex items-center gap-1">
                           <Phone className="h-3.5 w-3.5 flex-shrink-0" /> {d.phone || 'N/A'}
                         </span>
@@ -176,13 +362,46 @@ export default function DirectorListPage() {
                       <TableCell className="font-bold text-right">
                         ৳{(d.invested ?? 0).toLocaleString()} BDT
                       </TableCell>
-                      <TableCell className="font-extrabold text-primary text-right">
+                      <TableCell className="text-right">
                         <Badge
                           className="inline-flex items-center gap-1 bg-primary/10 text-primary border-primary/20 px-2.5 py-0.5 rounded-full text-xs font-bold"
                           variant="outline"
                         >
                           <Award className="h-3.5 w-3.5" /> {(d.equity ?? 0).toFixed(2)}%
                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 hover:bg-muted"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44">
+                            {d.userId && (
+                              <DropdownMenuItem asChild className="cursor-pointer text-xs gap-2">
+                                <Link href={`/admin/users/${d.userId}`} className="flex items-center">
+                                  <Eye className="h-3.5 w-3.5 text-primary" /> View Profile
+                                </Link>
+                              </DropdownMenuItem>
+                            )}
+                            {canManage && d.userId && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="cursor-pointer text-xs gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
+                                  onClick={() => handleDelete(d.userId!, d.name)}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" /> Remove Director
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))
@@ -192,6 +411,192 @@ export default function DirectorListPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Add Director Modal */}
+      <Dialog
+        open={modalOpen}
+        onOpenChange={(o) => {
+          if (!o) { setModalOpen(false); resetForm(); } else setModalOpen(true);
+        }}
+      >
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-primary flex items-center gap-2">
+              <PlusCircle className="h-5 w-5" /> Register New Director / Investor
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+            {/* Name */}
+            <div>
+              <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">
+                Full Name *
+              </label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                placeholder="Director's full name"
+                className="border-primary/20"
+              />
+            </div>
+
+            {/* Email & Phone */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">
+                  Email *
+                </label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="email@example.com"
+                  className="border-primary/20"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">
+                  Phone *
+                </label>
+                <Input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                  placeholder="01XXXXXXXXX"
+                  className="border-primary/20"
+                />
+              </div>
+            </div>
+
+            {/* Password (optional) */}
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1">
+                Password{' '}
+                <span className="normal-case font-normal text-muted-foreground/70">
+                  (leave blank to auto-generate)
+                </span>
+              </label>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Min 6 characters"
+                className="border-primary/20"
+              />
+            </div>
+
+            {/* Address Line */}
+            <div>
+              <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">
+                Address Line
+              </label>
+              <Input
+                value={addressLine}
+                onChange={(e) => setAddressLine(e.target.value)}
+                placeholder="House #, Road #, Area"
+                className="border-primary/20"
+              />
+            </div>
+
+            {/* Division / District / Thana */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">
+                  Division
+                </label>
+                <Select
+                  value={division}
+                  onValueChange={(val) => {
+                    setDivision(val || '');
+                    setDistrict('');
+                    setThana('');
+                  }}
+                >
+                  <SelectTrigger className="border-primary/20">
+                    <SelectValue placeholder="Division" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {divisions.map((div) => (
+                      <SelectItem key={div} value={div}>{div}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">
+                  District
+                </label>
+                <Select
+                  value={district}
+                  disabled={!division}
+                  onValueChange={(val) => {
+                    setDistrict(val || '');
+                    setThana('');
+                  }}
+                >
+                  <SelectTrigger className="border-primary/20">
+                    <SelectValue placeholder="District" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableDistricts.map((d) => (
+                      <SelectItem key={d} value={d}>{d}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">
+                  Thana
+                </label>
+                <Select
+                  value={thana}
+                  disabled={!district}
+                  onValueChange={(val) => setThana(val || '')}
+                >
+
+                  <SelectTrigger className="border-primary/20">
+                    <SelectValue placeholder="Thana" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableThanas.map((t) => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700 font-medium">
+              ℹ️ The director will be registered with <strong>Active</strong> status and can log in immediately.
+              You can log investments separately from the <strong>Director Equity Board</strong>.
+            </div>
+
+            <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => { setModalOpen(false); resetForm(); }}
+                className="w-full sm:flex-1 h-10 font-semibold border-primary/20"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="w-full sm:flex-1 h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+              >
+                {submitting ? (
+                  <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Registering...</>
+                ) : (
+                  'Register Director'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

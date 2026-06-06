@@ -6,6 +6,83 @@ import User from '@/models/User';
 import LedgerTransaction from '@/models/LedgerTransaction';
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
+
+export async function registerDirector(data: {
+  name: string;
+  email: string;
+  phone: string;
+  password?: string;
+  addressLine?: string;
+  division?: string;
+  district?: string;
+  thana?: string;
+  notes?: string;
+}) {
+  const session = await auth();
+  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
+    throw new Error('Unauthorized');
+  }
+
+  await connectToDatabase();
+
+  const existingUser = await User.findOne({ email: data.email.toLowerCase().trim() });
+  if (existingUser) {
+    throw new Error('Email already registered.');
+  }
+
+  const securePassword =
+    data.password || crypto.randomBytes(16).toString('hex') + 'A1!';
+  const passwordHash = await bcrypt.hash(securePassword, 12);
+
+  const user = new User({
+    name: data.name,
+    email: data.email.toLowerCase().trim(),
+    phone: data.phone,
+    role: 'director',
+    password: passwordHash,
+    status: 'active', // directors are directly activated by admin
+    addresses: [
+      {
+        street: data.addressLine || '',
+        division: data.division || '',
+        state: data.district || '',
+        city: data.thana || '',
+        country: 'Bangladesh',
+        isDefault: true,
+      },
+    ],
+  });
+  await user.save();
+
+  revalidatePath('/admin/director/list');
+  revalidatePath('/admin/users');
+  return { success: true, userId: user._id.toString() };
+}
+
+export async function deleteDirector(userId: string) {
+  const session = await auth();
+  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
+    throw new Error('Unauthorized');
+  }
+
+  await connectToDatabase();
+
+  const user = await User.findById(userId);
+  if (!user) throw new Error('Director not found');
+  if (user.role === 'super_admin') throw new Error('Cannot delete super_admin');
+
+  // Delete all investments linked to this director
+  await Investment.deleteMany({ directorId: userId });
+
+  // Delete the user
+  await User.findByIdAndDelete(userId);
+
+  revalidatePath('/admin/director/list');
+  revalidatePath('/admin/users');
+  return { success: true };
+}
 
 export async function logInvestment(data: {
   directorId: string;

@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { getDirectorSummary, logInvestment, releaseDividends, getDividendPayouts, approveDividendPayout } from '@/app/actions/director';
-import { getDealers } from '@/app/actions/dealer'; // just to fetch users with role='director'
+import { logInvestment, releaseDividends, approveDividendPayout } from '@/app/actions/director';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,21 +42,34 @@ export default function DirectorPanelPage() {
   const [payoutPercentage, setPayoutPercentage] = useState('70');
 
   const loadData = async () => {
-    await Promise.resolve(); // Defer state updates to avoid synchronous setState warning in useEffect
+    await Promise.resolve();
     try {
       setLoading(true);
-      const [sum, payoutList] = await Promise.all([
-        getDirectorSummary(),
-        getDividendPayouts()
+
+      // Use API routes — never call Server Actions from useEffect
+      const [summaryRes, payoutsRes, usersRes] = await Promise.all([
+        fetch('/api/admin/director'),
+        fetch('/api/admin/director/dividends'),
+        fetch('/api/admin/users?role=director&limit=100'),
       ]);
+
+      if (!summaryRes.ok) {
+        const err = await summaryRes.json();
+        throw new Error(err.message || 'Failed to load director summary');
+      }
+      if (!payoutsRes.ok) {
+        const err = await payoutsRes.json();
+        throw new Error(err.message || 'Failed to load dividend payouts');
+      }
+
+      const sum = await summaryRes.json();
+      const payoutList = await payoutsRes.json();
       setSummary(sum);
       setPayouts(payoutList);
 
-      // Fetch user lists to extract users with role: director
-      const response = await fetch('/api/admin/users'); // Or direct query, let's fetch director list
-      if (response.ok) {
-        const users = await response.json();
-        setDirectors(users.filter((u: any) => u.role === 'director'));
+      if (usersRes.ok) {
+        const usersData = await usersRes.json();
+        setDirectors(usersData.users || []);
       }
     } catch (err: any) {
       toast.error('Failed to load director data: ' + err.message);
