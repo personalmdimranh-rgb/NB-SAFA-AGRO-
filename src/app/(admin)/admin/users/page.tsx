@@ -35,6 +35,9 @@ import {
   ArrowRight,
   Search,
   Store,
+  CheckCircle2,
+  Clock,
+  XCircle,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -59,6 +62,7 @@ interface UserData {
   name: string;
   email: string;
   role: string;
+  status?: string;
   image?: string;
   phone?: string;
   addresses?: any[];
@@ -87,14 +91,17 @@ export default function UsersPage() {
   const currentPage = parseInt(searchParams.get('page') || '1') || 1;
   const searchVal = (searchParams.get('search') || '') as string;
   const roleVal = (searchParams.get('role') || '') as string;
+  const statusVal = (searchParams.get('status') || '') as string;
 
   const [searchInput, setSearchInput] = useState<string>(searchVal);
   const [roleInput, setRoleInput] = useState<string>(roleVal);
+  const [statusInput, setStatusInput] = useState<string>(statusVal);
 
   useEffect(() => {
     setSearchInput(searchVal);
     setRoleInput(roleVal);
-  }, [searchVal, roleVal]);
+    setStatusInput(statusVal);
+  }, [searchVal, roleVal, statusVal]);
 
   const fetchUsers = async () => {
     try {
@@ -103,6 +110,7 @@ export default function UsersPage() {
         page: String(currentPage),
         search: searchVal,
         role: roleVal,
+        status: statusVal,
         limit: '20'
       });
       const response = await fetch(`/api/admin/users?${q.toString()}`);
@@ -120,9 +128,9 @@ export default function UsersPage() {
 
   useEffect(() => {
     fetchUsers();
-  }, [currentPage, searchVal, roleVal]);
+  }, [currentPage, searchVal, roleVal, statusVal]);
 
-  const updateFilters = (newFilters: { page?: number; search?: string; role?: string }) => {
+  const updateFilters = (newFilters: { page?: number; search?: string; role?: string; status?: string }) => {
     const params = new URLSearchParams(searchParams.toString());
     
     if (newFilters.page !== undefined) {
@@ -143,6 +151,14 @@ export default function UsersPage() {
         params.delete('page');
       } else {
         params.delete('role');
+      }
+    }
+    if (newFilters.status !== undefined) {
+      if (newFilters.status) {
+        params.set('status', newFilters.status);
+        params.delete('page');
+      } else {
+        params.delete('status');
       }
     }
 
@@ -183,6 +199,82 @@ export default function UsersPage() {
       }
     } catch (error) {
       toast.error('Error updating user role');
+    }
+  };
+
+  const handleApproveUser = async (userId: string, userName: string) => {
+    const result = await Swal.fire({
+      title: 'Approve Account?',
+      html: `<p>Activate <strong>${userName}</strong>'s account?</p><p class="text-sm text-gray-500 mt-1">They will be able to log in immediately.</p>`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#16a34a',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: '✅ Yes, Approve!',
+      cancelButtonText: 'Cancel',
+      customClass: {
+        popup: 'rounded-3xl',
+        confirmButton: 'rounded-xl font-bold px-6 py-3',
+        cancelButton: 'rounded-xl font-bold px-6 py-3'
+      }
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, status: 'active' }),
+      });
+
+      if (response.ok) {
+        toast.success(`✅ ${userName}'s account approved successfully!`);
+        fetchUsers();
+      } else {
+        const error = await response.json();
+        toast.error(error.message || 'Failed to approve user');
+      }
+    } catch (error) {
+      toast.error('Error approving user');
+    }
+  };
+
+  const handleSuspendUser = async (userId: string, userName: string) => {
+    const result = await Swal.fire({
+      title: 'Suspend Account?',
+      html: `<p>Suspend <strong>${userName}</strong>'s account?</p><p class="text-sm text-gray-500 mt-1">They will not be able to log in until reactivated.</p>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: '🚫 Yes, Suspend!',
+      cancelButtonText: 'Cancel',
+      customClass: {
+        popup: 'rounded-3xl',
+        confirmButton: 'rounded-xl font-bold px-6 py-3',
+        cancelButton: 'rounded-xl font-bold px-6 py-3'
+      }
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, status: 'inactive' }),
+      });
+
+      if (response.ok) {
+        toast.success(`🚫 ${userName}'s account has been suspended.`);
+        fetchUsers();
+      } else {
+        const error = await response.json();
+        toast.error(error.message || 'Failed to suspend user');
+      }
+    } catch (error) {
+      toast.error('Error suspending user');
     }
   };
 
@@ -268,6 +360,18 @@ export default function UsersPage() {
               Assign Admin
             </Button>
           )}
+          {/* Pending approvals quick-filter badge */}
+          <button
+            onClick={() => updateFilters({ status: statusVal === 'inactive' ? '' : 'inactive', page: 1 })}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full border font-bold text-sm transition-all hover:scale-105 active:scale-95 ${
+              statusVal === 'inactive'
+                ? 'bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-200'
+                : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
+            }`}
+          >
+            <Clock className="h-4 w-4" />
+            Pending Approval
+          </button>
           <div className="bg-primary/10 px-5 py-2.5 rounded-full border border-primary/20">
             <span className="text-primary font-bold text-sm">{pagination.total} Total Users</span>
           </div>
@@ -307,7 +411,7 @@ export default function UsersPage() {
               updateFilters({ role: resolvedVal });
             }}
           >
-            <SelectTrigger className="w-full md:w-[180px] border-primary/20 rounded-xl">
+            <SelectTrigger className="w-full md:w-[160px] border-primary/20 rounded-xl">
               <SelectValue placeholder="All Roles" />
             </SelectTrigger>
             <SelectContent>
@@ -318,6 +422,24 @@ export default function UsersPage() {
               <SelectItem value="manager">Manager</SelectItem>
               <SelectItem value="director">Director</SelectItem>
               <SelectItem value="admin">Admin</SelectItem>
+            </SelectContent>
+          </Select>
+          <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">Status:</span>
+          <Select
+            value={statusInput || 'all'}
+            onValueChange={(val) => {
+              const resolvedVal = (val === 'all' ? '' : val) || '';
+              setStatusInput(resolvedVal);
+              updateFilters({ status: resolvedVal });
+            }}
+          >
+            <SelectTrigger className="w-full md:w-[150px] border-primary/20 rounded-xl">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">✅ Active</SelectItem>
+              <SelectItem value="inactive">⏳ Pending / Inactive</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -332,6 +454,7 @@ export default function UsersPage() {
               <TableHead className="font-bold">Email</TableHead>
               <TableHead className="font-bold">Orders</TableHead>
               <TableHead className="font-bold">Role</TableHead>
+              <TableHead className="font-bold">Status</TableHead>
               <TableHead className="font-bold">Joined</TableHead>
               <TableHead className="text-right font-bold">Actions</TableHead>
             </TableRow>
@@ -339,7 +462,7 @@ export default function UsersPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-48 text-center">
+                <TableCell colSpan={8} className="h-48 text-center">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     <p className="text-muted-foreground font-medium">Loading user data...</p>
@@ -348,30 +471,40 @@ export default function UsersPage() {
               </TableRow>
             ) : users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-48 text-center">
+                <TableCell colSpan={8} className="h-48 text-center">
                   <p className="text-muted-foreground">No users found.</p>
                 </TableCell>
               </TableRow>
             ) : (
               users.map((user) => (
-                <TableRow key={user._id} className="hover:bg-muted/30 transition-colors">
+                <TableRow
+                    key={user._id}
+                    className={`hover:bg-muted/30 transition-colors ${
+                      user.status === 'inactive' ? 'bg-amber-50/60' : ''
+                    }`}
+                  >
                   <TableCell>
-                    {user.image && user.image !== '' ? (
-                      <div className="relative h-10 w-10 rounded-full overflow-hidden border">
-                        <img 
-                          src={user.image} 
-                          alt={user.name} 
-                          className="h-full w-full object-cover"
-                          onError={(e) => {
-                            (e.target as any).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`;
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                        <UserIcon className="h-5 w-5" />
-                      </div>
-                    )}
+                    <div className="relative">
+                      {user.image && user.image !== '' ? (
+                        <div className="relative h-10 w-10 rounded-full overflow-hidden border">
+                          <img 
+                            src={user.image} 
+                            alt={user.name} 
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              (e.target as any).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`;
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                          <UserIcon className="h-5 w-5" />
+                        </div>
+                      )}
+                      {user.status === 'inactive' && (
+                        <span className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-amber-500 border-2 border-white" title="Pending Approval" />
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
@@ -408,10 +541,27 @@ export default function UsersPage() {
                       className={`
                         capitalize px-3 py-0.5 rounded-full font-bold text-[10px] tracking-wider
                         ${user.role === 'admin' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+                        ${user.role === 'director' ? 'border-purple-300 text-purple-700 bg-purple-50' : ''}
+                        ${user.role === 'dealer' ? 'border-green-300 text-green-700 bg-green-50' : ''}
+                        ${user.role === 'staff' || user.role === 'manager' ? 'border-slate-300 text-slate-700 bg-slate-50' : ''}
+                        ${user.role === 'farmer' ? 'border-lime-300 text-lime-700 bg-lime-50' : ''}
                       `}
                     >
                       {user.role}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {user.status === 'inactive' ? (
+                      <Badge className="bg-amber-100 text-amber-700 border border-amber-300 rounded-full px-3 py-0.5 font-bold text-[10px] tracking-wider flex items-center gap-1 w-fit">
+                        <Clock className="h-3 w-3" />
+                        Pending
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-green-100 text-green-700 border border-green-300 rounded-full px-3 py-0.5 font-bold text-[10px] tracking-wider flex items-center gap-1 w-fit">
+                        <CheckCircle2 className="h-3 w-3" />
+                        Active
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell className="text-slate-500 text-sm">
                     {new Date(user.createdAt).toLocaleDateString('en-US', {
@@ -427,7 +577,7 @@ export default function UsersPage() {
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuContent align="end" className="w-52">
                         <DropdownMenuGroup>
                           <DropdownMenuLabel className="text-[10px] font-black uppercase text-muted-foreground px-2 py-1.5">User Actions</DropdownMenuLabel>
                           <DropdownMenuItem asChild className="cursor-pointer">
@@ -445,9 +595,31 @@ export default function UsersPage() {
                         </DropdownMenuGroup>
 
                         <DropdownMenuSeparator />
+
+                        {/* Approve / Suspend Section */}
+                        <DropdownMenuGroup>
+                          <DropdownMenuLabel className="text-[10px] font-black uppercase text-muted-foreground px-2 py-1.5">Account Status</DropdownMenuLabel>
+                          {user.status === 'inactive' ? (
+                            <DropdownMenuItem
+                              onClick={() => handleApproveUser(user._id, user.name)}
+                              className="cursor-pointer text-green-700 font-bold bg-green-50 hover:bg-green-100"
+                            >
+                              <CheckCircle2 className="mr-2 h-4 w-4" /> Approve Account
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              onClick={() => handleSuspendUser(user._id, user.name)}
+                              className="cursor-pointer text-amber-700 font-bold bg-amber-50 hover:bg-amber-100"
+                            >
+                              <XCircle className="mr-2 h-4 w-4" /> Suspend Account
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuGroup>
+
+                        <DropdownMenuSeparator />
                         
                         <DropdownMenuGroup>
-                          <DropdownMenuLabel className="text-[10px] font-black uppercase text-muted-foreground px-2 py-1.5">Management</DropdownMenuLabel>
+                          <DropdownMenuLabel className="text-[10px] font-black uppercase text-muted-foreground px-2 py-1.5">Role Management</DropdownMenuLabel>
                           
                           {user.role === 'user' ? (
                             <DropdownMenuItem 
@@ -466,9 +638,6 @@ export default function UsersPage() {
                           )}
 
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive cursor-pointer font-medium">
-                            <ShieldAlert className="mr-2 h-4 w-4" /> Suspend User
-                          </DropdownMenuItem>
                           <DropdownMenuItem 
                             onClick={() => handleDeleteUser(user._id, user.name)}
                             className="text-destructive cursor-pointer font-bold bg-red-50 hover:bg-red-100 mt-1"

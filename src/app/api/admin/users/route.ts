@@ -16,6 +16,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search') || '';
     const role = searchParams.get('role') || '';
+    const status = searchParams.get('status') || '';
     const pageVal = searchParams.get('page');
     const limit = parseInt(searchParams.get('limit') || '20') || 20;
 
@@ -28,6 +29,10 @@ export async function GET(req: NextRequest) {
 
     if (role && role !== 'super_admin') {
       matchStage.role = role;
+    }
+
+    if (status && ['active', 'inactive'].includes(status)) {
+      matchStage.status = status;
     }
 
     if (search) {
@@ -63,6 +68,7 @@ export async function GET(req: NextRequest) {
           name: 1,
           email: 1,
           role: 1,
+          status: 1,
           image: 1,
           createdAt: 1,
           phone: 1,
@@ -162,10 +168,21 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userId, role } = await req.json();
+    const { userId, role, status } = await req.json();
 
-    if (!userId || !['farmer', 'admin'].includes(role)) {
-      return NextResponse.json({ message: 'Invalid data' }, { status: 400 });
+    // Must provide either role or status
+    if (!userId || (!role && !status)) {
+      return NextResponse.json({ message: 'Invalid data: userId and role or status required' }, { status: 400 });
+    }
+
+    // Validate role if provided
+    if (role && !['farmer', 'dealer', 'staff', 'director', 'manager', 'admin', 'user'].includes(role)) {
+      return NextResponse.json({ message: 'Invalid role value' }, { status: 400 });
+    }
+
+    // Validate status if provided
+    if (status && !['active', 'inactive'].includes(status)) {
+      return NextResponse.json({ message: 'Invalid status value. Must be active or inactive.' }, { status: 400 });
     }
 
     await connectToDatabase();
@@ -177,17 +194,19 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 });
     }
 
-    // Prevent changing role of super_admin
+    // Prevent changing role/status of super_admin
     if (userToUpdate.role === 'super_admin') {
-      return NextResponse.json({ message: 'Cannot change role of super_admin' }, { status: 403 });
+      return NextResponse.json({ message: 'Cannot modify a super_admin account' }, { status: 403 });
     }
 
-    userToUpdate.role = role;
+    if (role) userToUpdate.role = role;
+    if (status) userToUpdate.status = status;
     await userToUpdate.save();
 
-    return NextResponse.json({ message: `User role updated to ${role} successfully` });
+    const action = role ? `role updated to ${role}` : `status updated to ${status}`;
+    return NextResponse.json({ message: `User ${action} successfully` });
   } catch (error) {
-    console.error('Update User Role Error:', error);
+    console.error('Update User Error:', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
 }
