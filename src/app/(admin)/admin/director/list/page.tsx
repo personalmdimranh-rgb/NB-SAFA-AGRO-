@@ -108,11 +108,11 @@ export default function DirectorListPage() {
       const data = await res.json();
       setSummary(data);
 
-      // Also fetch director users (for IDs needed for delete)
       const usersRes = await fetch('/api/admin/users?role=director&limit=100');
       if (usersRes.ok) {
         const usersData = await usersRes.json();
-        setDirectorUsers(usersData.users || []);
+        const usersArray = Array.isArray(usersData) ? usersData : (usersData.users || []);
+        setDirectorUsers(usersArray);
       }
     } catch (err: any) {
       toast.error('Failed to load directors: ' + (err.message || 'Unknown error'));
@@ -392,7 +392,16 @@ export default function DirectorListPage() {
                       <TableCell className="text-muted-foreground text-xs font-mono">{idx + 1}</TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-0.5">
-                          <span className="font-semibold text-primary text-sm">{d.name}</span>
+                          {d.userId ? (
+                            <Link
+                              href={`/admin/users/${d.userId}`}
+                              className="font-semibold text-primary text-sm hover:underline hover:text-primary/80"
+                            >
+                              {d.name}
+                            </Link>
+                          ) : (
+                            <span className="font-semibold text-primary text-sm">{d.name}</span>
+                          )}
                           {d.status && (
                             <Badge
                               className={`text-[9px] font-bold px-1.5 w-fit ${
@@ -456,10 +465,14 @@ export default function DirectorListPage() {
                                   <Pencil className="h-3.5 w-3.5" /> Edit
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  className={`cursor-pointer text-xs gap-2 text-destructive focus:text-destructive focus:bg-destructive/10 ${
-                                    !d.userId ? 'opacity-40 pointer-events-none' : ''
-                                  }`}
-                                  onClick={() => d.userId && handleDelete(d.userId, d.name)}
+                                  className="cursor-pointer text-xs gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
+                                  onClick={() => {
+                                    if (d.userId) {
+                                      handleDelete(d.userId, d.name);
+                                    } else {
+                                      toast.error(`Cannot delete director user: User record not found for email ${d.email}`);
+                                    }
+                                  }}
                                 >
                                   <Trash2 className="h-3.5 w-3.5" /> Delete
                                 </DropdownMenuItem>
