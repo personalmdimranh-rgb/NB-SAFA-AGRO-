@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { registerDirector, deleteDirector } from '@/app/actions/director';
+import { registerDirector, deleteDirector, updateDirector } from '@/app/actions/director';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { divisions, bdDivisions, bdLocations } from '@/lib/bd-locations';
 import {
   Users, Coins, TrendingUp, PlusCircle, Loader2, RefreshCw,
-  Mail, Phone, Award, MoreVertical, Trash2, Eye,
+  Mail, Phone, Award, MoreVertical, Trash2, Eye, Pencil,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
@@ -64,6 +64,18 @@ export default function DirectorListPage() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Edit modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingDirector, setEditingDirector] = useState<(typeof mergedDirectors)[0] | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editStatus, setEditStatus] = useState<'active' | 'inactive'>('active');
+  const [editAddressLine, setEditAddressLine] = useState('');
+  const [editDivision, setEditDivision] = useState('');
+  const [editDistrict, setEditDistrict] = useState('');
+  const [editThana, setEditThana] = useState('');
+  const [editSubmitting, setEditSubmitting] = useState(false);
 
   // Form state
   const [name, setName] = useState('');
@@ -123,6 +135,47 @@ export default function DirectorListPage() {
   const openAddModal = () => {
     resetForm();
     setModalOpen(true);
+  };
+
+  const openEditModal = (director: (typeof mergedDirectors)[0]) => {
+    setEditingDirector(director);
+    setEditName(director.name);
+    setEditPhone(director.phone || '');
+    setEditStatus((director.status as 'active' | 'inactive') || 'active');
+    setEditAddressLine('');
+    setEditDivision('');
+    setEditDistrict('');
+    setEditThana('');
+    setEditModalOpen(true);
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingDirector?.userId) return;
+    if (!editName || !editPhone) {
+      toast.error('Name and Phone are required.');
+      return;
+    }
+    try {
+      setEditSubmitting(true);
+      await updateDirector(editingDirector.userId, {
+        name: editName,
+        phone: editPhone,
+        status: editStatus,
+        addressLine: editAddressLine,
+        division: editDivision,
+        district: editDistrict,
+        thana: editThana,
+      });
+      toast.success(`✅ Director "${editName}" updated successfully!`);
+      setEditModalOpen(false);
+      setEditingDirector(null);
+      loadData();
+    } catch (err: any) {
+      toast.error('Update failed: ' + err.message);
+    } finally {
+      setEditSubmitting(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -381,7 +434,7 @@ export default function DirectorListPage() {
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-44">
+                          <DropdownMenuContent align="end" className="w-48">
                             {d.userId && (
                               <DropdownMenuItem asChild className="cursor-pointer text-xs gap-2">
                                 <Link href={`/admin/users/${d.userId}`} className="flex items-center">
@@ -393,10 +446,16 @@ export default function DirectorListPage() {
                               <>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
+                                  className="cursor-pointer text-xs gap-2 text-blue-600 focus:text-blue-700 focus:bg-blue-50"
+                                  onClick={() => openEditModal(d)}
+                                >
+                                  <Pencil className="h-3.5 w-3.5" /> Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
                                   className="cursor-pointer text-xs gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
                                   onClick={() => handleDelete(d.userId!, d.name)}
                                 >
-                                  <Trash2 className="h-3.5 w-3.5" /> Remove Director
+                                  <Trash2 className="h-3.5 w-3.5" /> Delete
                                 </DropdownMenuItem>
                               </>
                             )}
@@ -411,6 +470,173 @@ export default function DirectorListPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit Director Modal */}
+      <Dialog
+        open={editModalOpen}
+        onOpenChange={(o) => {
+          if (!o) { setEditModalOpen(false); setEditingDirector(null); }
+        }}
+      >
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-primary flex items-center gap-2">
+              <Pencil className="h-5 w-5" /> Edit Director
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleUpdate} className="space-y-4 pt-2">
+            {/* Name */}
+            <div>
+              <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">
+                Full Name *
+              </label>
+              <Input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                required
+                placeholder="Director's full name"
+                className="border-primary/20"
+              />
+            </div>
+
+            {/* Phone & Status */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">
+                  Phone *
+                </label>
+                <Input
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  required
+                  placeholder="01XXXXXXXXX"
+                  className="border-primary/20"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">
+                  Status
+                </label>
+                <Select
+                  value={editStatus}
+                  onValueChange={(val) => setEditStatus(val as 'active' | 'inactive')}
+                >
+                  <SelectTrigger className="border-primary/20">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Address Line */}
+            <div>
+              <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">
+                Address Line
+              </label>
+              <Input
+                value={editAddressLine}
+                onChange={(e) => setEditAddressLine(e.target.value)}
+                placeholder="House #, Road #, Area"
+                className="border-primary/20"
+              />
+            </div>
+
+            {/* Division / District / Thana */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">
+                  Division
+                </label>
+                <Select
+                  value={editDivision}
+                  onValueChange={(val) => {
+                    setEditDivision(val || '');
+                    setEditDistrict('');
+                    setEditThana('');
+                  }}
+                >
+                  <SelectTrigger className="border-primary/20">
+                    <SelectValue placeholder="Division" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {divisions.map((div) => (
+                      <SelectItem key={div} value={div}>{div}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">
+                  District
+                </label>
+                <Select
+                  value={editDistrict}
+                  disabled={!editDivision}
+                  onValueChange={(val) => {
+                    setEditDistrict(val || '');
+                    setEditThana('');
+                  }}
+                >
+                  <SelectTrigger className="border-primary/20">
+                    <SelectValue placeholder="District" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(editDivision ? bdDivisions[editDivision] || [] : []).map((d) => (
+                      <SelectItem key={d} value={d}>{d}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">
+                  Thana
+                </label>
+                <Select
+                  value={editThana}
+                  disabled={!editDistrict}
+                  onValueChange={(val) => setEditThana(val || '')}
+                >
+                  <SelectTrigger className="border-primary/20">
+                    <SelectValue placeholder="Thana" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(editDistrict ? bdLocations[editDistrict] || [] : []).map((t) => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => { setEditModalOpen(false); setEditingDirector(null); }}
+                className="w-full sm:flex-1 h-10 font-semibold border-primary/20"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={editSubmitting}
+                className="w-full sm:flex-1 h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+              >
+                {editSubmitting ? (
+                  <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Saving...</>
+                ) : (
+                  'Save Changes'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Add Director Modal */}
       <Dialog

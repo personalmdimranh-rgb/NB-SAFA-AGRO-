@@ -84,6 +84,54 @@ export async function deleteDirector(userId: string) {
   return { success: true };
 }
 
+export async function updateDirector(userId: string, data: {
+  name?: string;
+  phone?: string;
+  status?: 'active' | 'inactive';
+  addressLine?: string;
+  division?: string;
+  district?: string;
+  thana?: string;
+}) {
+  const session = await auth();
+  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
+    throw new Error('Unauthorized');
+  }
+
+  await connectToDatabase();
+
+  const user = await User.findById(userId);
+  if (!user) throw new Error('Director not found');
+  if (user.role === 'super_admin') throw new Error('Cannot edit super_admin');
+
+  if (data.name) user.name = data.name;
+  if (data.phone) user.phone = data.phone;
+  if (data.status) user.status = data.status;
+
+  // Update address if provided
+  if (data.addressLine !== undefined || data.division !== undefined || data.district !== undefined || data.thana !== undefined) {
+    const address = {
+      street: data.addressLine || '',
+      division: data.division || '',
+      state: data.district || '',
+      city: data.thana || '',
+      country: 'Bangladesh',
+      isDefault: true,
+    };
+    if (user.addresses && user.addresses.length > 0) {
+      user.addresses[0] = address;
+    } else {
+      user.addresses = [address];
+    }
+  }
+
+  await user.save();
+
+  revalidatePath('/admin/director/list');
+  revalidatePath('/admin/users');
+  return { success: true };
+}
+
 export async function logInvestment(data: {
   directorId: string;
   investmentAmount: number;
