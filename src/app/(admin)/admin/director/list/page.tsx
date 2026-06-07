@@ -67,7 +67,11 @@ export default function DirectorListPage() {
 
   // Edit modal state
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingDirector, setEditingDirector] = useState<(typeof mergedDirectors)[0] | null>(null);
+  const [editingDirector, setEditingDirector] = useState<{
+    name: string; email: string; phone: string;
+    invested: number; weightedInvested: number; equity: number;
+    userId?: string; status?: string;
+  } | null>(null);
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editStatus, setEditStatus] = useState<'active' | 'inactive'>('active');
@@ -435,14 +439,14 @@ export default function DirectorListPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48">
-                            {d.userId && (
+                            {d.userId ? (
                               <DropdownMenuItem asChild className="cursor-pointer text-xs gap-2">
                                 <Link href={`/admin/users/${d.userId}`} className="flex items-center">
                                   <Eye className="h-3.5 w-3.5 text-primary" /> View Profile
                                 </Link>
                               </DropdownMenuItem>
-                            )}
-                            {canManage && d.userId && (
+                            ) : null}
+                            {canManage && (
                               <>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
@@ -452,8 +456,10 @@ export default function DirectorListPage() {
                                   <Pencil className="h-3.5 w-3.5" /> Edit
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  className="cursor-pointer text-xs gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
-                                  onClick={() => handleDelete(d.userId!, d.name)}
+                                  className={`cursor-pointer text-xs gap-2 text-destructive focus:text-destructive focus:bg-destructive/10 ${
+                                    !d.userId ? 'opacity-40 pointer-events-none' : ''
+                                  }`}
+                                  onClick={() => d.userId && handleDelete(d.userId, d.name)}
                                 >
                                   <Trash2 className="h-3.5 w-3.5" /> Delete
                                 </DropdownMenuItem>
