@@ -50,7 +50,7 @@ export default function DistributorTiers() {
             {
               title: 'Authorized Partner',
               commission: '2.0%',
-              commissionText: 'per 40KG bag sold',
+              commissionText: 'per 50kg bag sold',
               credit: '50,000 BDT',
               perks: [
                 'Standard product priority allocation',
@@ -63,7 +63,7 @@ export default function DistributorTiers() {
             {
               title: 'Executive Distributor',
               commission: '4.0%',
-              commissionText: 'per 40KG bag sold',
+              commissionText: 'per 50kg bag sold',
               credit: '250,000 BDT',
               perks: [
                 'Elevated product allocation priority',
@@ -78,7 +78,7 @@ export default function DistributorTiers() {
             {
               title: 'Elite Agro Broker',
               commission: '6.0%',
-              commissionText: 'per 40KG bag sold',
+              commissionText: 'per 50kg bag sold',
               credit: '1,000,000 BDT',
               perks: [
                 'Top-tier inventory allocation preference',

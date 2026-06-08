@@ -133,3 +133,115 @@ export async function getProductionSummary() {
     totalBatches: batches.length,
   };
 }
+
+export async function deleteProductionBatch(batchId: string) {
+  const session = await auth();
+  if (!session || !session.user) {
+    throw new Error('Unauthorized');
+  }
+
+  const role = (session.user as any).role;
+  if (!['super_admin', 'admin', 'staff'].includes(role)) {
+    throw new Error('Forbidden: Insufficient permissions');
+  }
+
+  await connectToDatabase();
+
+  const batch = await ProductionBatch.findById(batchId);
+  if (!batch) {
+    throw new Error('Production batch not found');
+  }
+
+  await ProductionBatch.findByIdAndDelete(batchId);
+
+  // Delete associated LedgerTransaction if it exists
+  await LedgerTransaction.deleteOne({
+    description: `Raw materials for silage production batch ${batch.batchNumber}`,
+  });
+
+  revalidatePath('/admin/inventory');
+  revalidatePath('/admin/accounts');
+
+  return { success: true };
+}
+
+export async function updateProductionBatch(
+  batchId: string,
+  data: {
+    rawMaterialsUsed: {
+      materialName: string;
+      quantity: number;
+      cost: number;
+    }[];
+    totalProducedQty: number;
+    warehouseLocation?: string;
+    productionDate?: string;
+  }
+) {
+  const session = await auth();
+  if (!session || !session.user) {
+    throw new Error('Unauthorized');
+  }
+
+  const role = (session.user as any).role;
+  if (!['super_admin', 'admin', 'staff'].includes(role)) {
+    throw new Error('Forbidden: Insufficient permissions');
+  }
+
+  await connectToDatabase();
+
+  const dbUser = await User.findOne({ email: session.user?.email });
+  if (!dbUser) throw new Error('Logged-in administrator user record not found in database');
+
+  const batch = await ProductionBatch.findById(batchId);
+  if (!batch) {
+    throw new Error('Production batch not found');
+  }
+
+  const totalCost = data.rawMaterialsUsed.reduce((acc, rm) => acc + rm.cost, 0);
+  const productionCostPerUnit = data.totalProducedQty > 0 ? totalCost / data.totalProducedQty : 0;
+
+  batch.rawMaterialsUsed = data.rawMaterialsUsed;
+  batch.totalProducedQty = data.totalProducedQty;
+  batch.productionCostPerUnit = productionCostPerUnit;
+  if (data.warehouseLocation !== undefined) {
+    batch.warehouseLocation = data.warehouseLocation;
+  }
+  if (data.productionDate) {
+    batch.productionDate = new Date(data.productionDate);
+  }
+
+  await batch.save();
+
+  // Sync LedgerTransaction
+  const desc = `Raw materials for silage production batch ${batch.batchNumber}`;
+  if (totalCost > 0) {
+    const existingTx = await LedgerTransaction.findOne({ description: desc });
+    if (existingTx) {
+      existingTx.amount = totalCost;
+      if (data.productionDate) {
+        existingTx.date = new Date(data.productionDate);
+      }
+      await existingTx.save();
+    } else {
+      const expenseTx = new LedgerTransaction({
+        date: data.productionDate ? new Date(data.productionDate) : new Date(),
+        type: 'expense',
+        source: 'cash',
+        category: 'Raw Materials',
+        amount: totalCost,
+        description: desc,
+        recordedBy: dbUser._id,
+      });
+      await expenseTx.save();
+    }
+  } else {
+    await LedgerTransaction.deleteOne({ description: desc });
+  }
+
+  revalidatePath('/admin/inventory');
+  revalidatePath('/admin/accounts');
+
+  return { success: true, batch: JSON.parse(JSON.stringify(batch)) };
+}
+

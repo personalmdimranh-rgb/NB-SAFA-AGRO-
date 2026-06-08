@@ -25,7 +25,7 @@ export default function RoiCalculator() {
   const dailyIncreasePerCow = milkYield * 0.15; // 15% average increase
   const totalDailyIncrease = herdSize * dailyIncreasePerCow;
   const monthlyRevenueGain = totalDailyIncrease * 30 * 75; // 75 BDT per Liter
-  const recommendedBags = Math.round((herdSize * 15 * 30) / 40); // 15kg/day per cow, 40kg bag
+  const recommendedBags = Math.round((herdSize * 15 * 30) / 40); // 15kg/day per cow, 50kg bag
 
   const orderTargetUrl = session ? "/dashboard/order-new" : "/login?callbackUrl=/dashboard/order-new";
 

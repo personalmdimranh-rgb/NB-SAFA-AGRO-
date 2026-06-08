@@ -29,7 +29,7 @@ export default function DealerPlaceOrder() {
 
   // Form states
   const [items, setItems] = useState<OrderItem[]>([
-    { productName: 'Premium Silage Bag (40kg)', productType: 'bag', quantity: 100, unitPrice: 380 }
+    { productName: 'Premium Silage Bag (50kg)', productType: 'bag', quantity: 100, unitPrice: 380 }
   ]);
   const [paidAmount, setPaidAmount] = useState('0');
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank-transfer' | 'bkash' | 'nagad' | 'cod' | 'due' | 'wallet'>('bank-transfer');
@@ -80,7 +80,7 @@ export default function DealerPlaceOrder() {
   }, [session]);
 
   const handleAddItem = () => {
-    setItems([...items, { productName: 'Premium Silage Bag (40kg)', productType: 'bag', quantity: 50, unitPrice: 380 }]);
+    setItems([...items, { productName: 'Premium Silage Bag (50kg)', productType: 'bag', quantity: 50, unitPrice: 380 }]);
   };
 
   const handleRemoveItem = (index: number) => {
@@ -213,8 +213,8 @@ export default function DealerPlaceOrder() {
         paymentMethod,
         estimatedPaymentDate: paymentMethod === 'due' ? estimatedPaymentDate : undefined,
         paymentNumber: (['bkash', 'nagad'].includes(paymentMethod) && mfsVerificationType === 'number') ? paymentNumber : undefined,
-        transactionNumber: (['bkash', 'nagad'].includes(paymentMethod) && mfsVerificationType === 'trx') 
-          ? transactionNumber 
+        transactionNumber: (['bkash', 'nagad'].includes(paymentMethod) && mfsVerificationType === 'trx')
+          ? transactionNumber
           : (paymentMethod === 'bank-transfer' ? transactionNumber : undefined),
         bankName: paymentMethod === 'bank-transfer' ? bankName : undefined,
         phone,
@@ -232,7 +232,7 @@ export default function DealerPlaceOrder() {
           text: `Your order has been recorded as Invoice ${res.sale?.invoiceNumber}.`,
           icon: 'success'
         });
-        setItems([{ productName: 'Premium Silage Bag (40kg)', productType: 'bag', quantity: 100, unitPrice: 380 }]);
+        setItems([{ productName: 'Premium Silage Bag (50kg)', productType: 'bag', quantity: 100, unitPrice: 380 }]);
         setPaidAmount('0');
         setEstimatedPaymentDate('');
         setPaymentNumber('');
@@ -451,14 +451,14 @@ export default function DealerPlaceOrder() {
             {(paymentMethod === 'bkash' || paymentMethod === 'nagad') && (
               <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/10 space-y-3">
                 <div className="text-xs text-muted-foreground leading-relaxed flex flex-col gap-1.5">
-                  <span className="font-bold text-primary capitalize">{paymentMethod} Guideline:</span> 
+                  <span className="font-bold text-primary capitalize">{paymentMethod} Guideline:</span>
                   <div className="flex items-center bg-white p-2 rounded border w-fit">
                     <span className="flex items-center gap-1.5">
                       Send money to: <strong className="text-zinc-900 font-bold">{contactConfig.bkashNagadNumber}</strong>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
                         className="h-5 w-5 text-primary hover:bg-primary/5 shrink-0 inline-flex"
                         onClick={() => copyToClipboard(contactConfig.bkashNagadNumber, 'number')}
                       >
@@ -527,17 +527,17 @@ export default function DealerPlaceOrder() {
             {paymentMethod === 'bank-transfer' && (
               <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/10 space-y-3">
                 <div className="text-xs text-muted-foreground leading-relaxed flex flex-col gap-1.5">
-                  <span className="font-bold text-primary">Bank details:</span> 
+                  <span className="font-bold text-primary">Bank details:</span>
                   <div className="text-xs text-muted-foreground leading-relaxed space-y-1.5 bg-white p-2.5 rounded border">
                     <div>
                       Bank Name: <strong className="text-zinc-900 font-semibold">{contactConfig.bankDetails.bankName}</strong>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span>Account Name: <strong className="text-zinc-900 font-semibold">{contactConfig.bankDetails.accountName}</strong></span>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
                         className="h-5 w-5 text-primary hover:bg-primary/5 shrink-0 inline-flex align-middle"
                         onClick={() => copyToClipboard(contactConfig.bankDetails.accountName, 'bank_acc_name')}
                       >
@@ -546,10 +546,10 @@ export default function DealerPlaceOrder() {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span>Account: <strong className="text-zinc-900 font-semibold">{contactConfig.bankDetails.accountNo}</strong></span>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
                         className="h-5 w-5 text-primary hover:bg-primary/5 shrink-0 inline-flex align-middle"
                         onClick={() => copyToClipboard(contactConfig.bankDetails.accountNo, 'bank')}
                       >
@@ -558,10 +558,10 @@ export default function DealerPlaceOrder() {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span>Routing Number: <strong className="text-zinc-900 font-semibold">{contactConfig.bankDetails.routingNo}</strong></span>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
                         className="h-5 w-5 text-primary hover:bg-primary/5 shrink-0 inline-flex align-middle"
                         onClick={() => copyToClipboard(contactConfig.bankDetails.routingNo, 'bank_routing')}
                       >

@@ -33,7 +33,7 @@ export default function NewOrderPage() {
   // Form states
   const [buyerType, setBuyerType] = useState<'dealer' | 'farmer'>('dealer');
   const [buyerId, setBuyerId] = useState('');
-  const [items, setItems] = useState<SaleItem[]>([{ productName: 'Premium Silage Bag (40kg)', productType: 'bag', quantity: 1, unitPrice: 380 }]);
+  const [items, setItems] = useState<SaleItem[]>([{ productName: 'Premium Silage Bag (50kg)', productType: 'bag', quantity: 1, unitPrice: 380 }]);
   const [discount, setDiscount] = useState('0');
   const [paidAmount, setPaidAmount] = useState('0');
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank-transfer' | 'bkash' | 'nagad' | 'cod' | 'due' | 'wallet'>('cash');
@@ -69,7 +69,7 @@ export default function NewOrderPage() {
   }, []);
 
   const handleAddItem = () => {
-    setItems([...items, { productName: 'Premium Silage Bag (40kg)', productType: 'bag', quantity: 1, unitPrice: 380 }]);
+    setItems([...items, { productName: 'Premium Silage Bag (50kg)', productType: 'bag', quantity: 1, unitPrice: 380 }]);
   };
 
   const handleRemoveItem = (index: number) => {
@@ -94,8 +94,8 @@ export default function NewOrderPage() {
   const discountVal = parseFloat(discount) || 0;
 
   // Calculate commission if dealer is selected
-  const activeBuyer = buyerType === 'dealer' 
-    ? dealers.find((d) => d._id === buyerId) 
+  const activeBuyer = buyerType === 'dealer'
+    ? dealers.find((d) => d._id === buyerId)
     : farmers.find((f) => f._id === buyerId);
 
   const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -214,8 +214,8 @@ export default function NewOrderPage() {
         paymentMethod,
         estimatedPaymentDate: paymentMethod === 'due' ? estimatedPaymentDate : undefined,
         paymentNumber: (['bkash', 'nagad'].includes(paymentMethod) && mfsVerificationType === 'number') ? paymentNumber : undefined,
-        transactionNumber: (['bkash', 'nagad'].includes(paymentMethod) && mfsVerificationType === 'trx') 
-          ? transactionNumber 
+        transactionNumber: (['bkash', 'nagad'].includes(paymentMethod) && mfsVerificationType === 'trx')
+          ? transactionNumber
           : (paymentMethod === 'bank-transfer' ? transactionNumber : undefined),
         bankName: paymentMethod === 'bank-transfer' ? bankName : undefined,
         distributionDistrict: distributionDistrict || activeBuyer?.address?.district || 'Unknown',
@@ -226,7 +226,7 @@ export default function NewOrderPage() {
         toast.success(`Invoice ${res.sale?.invoiceNumber} posted successfully!`);
         // Reset states
         setBuyerId('');
-        setItems([{ productName: 'Premium Silage Bag (40kg)', productType: 'bag', quantity: 1, unitPrice: 380 }]);
+        setItems([{ productName: 'Premium Silage Bag (50kg)', productType: 'bag', quantity: 1, unitPrice: 380 }]);
         setDiscount('0');
         setPaidAmount('0');
         setDistributionDistrict('');
@@ -280,25 +280,25 @@ export default function NewOrderPage() {
                   <Select value={buyerId} onValueChange={(val) => setBuyerId(val || '')}>
                     <SelectTrigger className="border-border">
                       <SelectValue placeholder={`Select registered ${buyerType}...`}>
-                        {activeBuyer 
-                          ? (buyerType === 'dealer' 
-                              ? `${activeBuyer.userId?.name} (${activeBuyer.shopName})` 
-                              : activeBuyer.name)
+                        {activeBuyer
+                          ? (buyerType === 'dealer'
+                            ? `${activeBuyer.userId?.name} (${activeBuyer.shopName})`
+                            : activeBuyer.name)
                           : undefined}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {buyerType === 'dealer'
                         ? dealers.map((d) => (
-                            <SelectItem key={d._id} value={d._id}>
-                              {d.userId?.name} ({d.shopName}) - Dues: ৳{d.currentDues}
-                            </SelectItem>
-                          ))
+                          <SelectItem key={d._id} value={d._id}>
+                            {d.userId?.name} ({d.shopName}) - Dues: ৳{d.currentDues}
+                          </SelectItem>
+                        ))
                         : farmers.map((f) => (
-                            <SelectItem key={f._id} value={f._id}>
-                              {f.name} - {f.phone} - Dues: ৳{f.currentDues}
-                            </SelectItem>
-                          ))}
+                          <SelectItem key={f._id} value={f._id}>
+                            {f.name} - {f.phone} - Dues: ৳{f.currentDues}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 )}
@@ -410,14 +410,14 @@ export default function NewOrderPage() {
             {(paymentMethod === 'bkash' || paymentMethod === 'nagad') && (
               <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/10 space-y-3">
                 <div className="text-xs text-muted-foreground leading-relaxed flex flex-col gap-1.5">
-                  <span className="font-bold text-primary capitalize">{paymentMethod} Guideline:</span> 
+                  <span className="font-bold text-primary capitalize">{paymentMethod} Guideline:</span>
                   <div className="flex items-center bg-white p-2 rounded border w-fit">
                     <span className="flex items-center gap-1.5">
                       Send money to: <strong className="text-zinc-900 font-bold">{contactConfig.bkashNagadNumber}</strong>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
                         className="h-5 w-5 text-primary hover:bg-primary/5 shrink-0 inline-flex"
                         onClick={() => copyToClipboard(contactConfig.bkashNagadNumber, 'number')}
                       >
@@ -486,17 +486,17 @@ export default function NewOrderPage() {
             {paymentMethod === 'bank-transfer' && (
               <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/10 space-y-3">
                 <div className="text-xs text-muted-foreground leading-relaxed flex flex-col gap-1.5">
-                  <span className="font-bold text-primary">Bank details:</span> 
+                  <span className="font-bold text-primary">Bank details:</span>
                   <div className="text-xs text-muted-foreground leading-relaxed space-y-1.5 bg-white p-2.5 rounded border">
                     <div>
                       Bank Name: <strong className="text-zinc-900 font-semibold">{contactConfig.bankDetails.bankName}</strong>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span>Account Name: <strong className="text-zinc-900 font-semibold">{contactConfig.bankDetails.accountName}</strong></span>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
                         className="h-5 w-5 text-primary hover:bg-primary/5 shrink-0 inline-flex align-middle"
                         onClick={() => copyToClipboard(contactConfig.bankDetails.accountName, 'bank_acc_name')}
                       >
@@ -505,10 +505,10 @@ export default function NewOrderPage() {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span>Account: <strong className="text-zinc-900 font-semibold">{contactConfig.bankDetails.accountNo}</strong></span>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
                         className="h-5 w-5 text-primary hover:bg-primary/5 shrink-0 inline-flex align-middle"
                         onClick={() => copyToClipboard(contactConfig.bankDetails.accountNo, 'bank')}
                       >
@@ -517,10 +517,10 @@ export default function NewOrderPage() {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span>Routing Number: <strong className="text-zinc-900 font-semibold">{contactConfig.bankDetails.routingNo}</strong></span>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
                         className="h-5 w-5 text-primary hover:bg-primary/5 shrink-0 inline-flex align-middle"
                         onClick={() => copyToClipboard(contactConfig.bankDetails.routingNo, 'bank_routing')}
                       >

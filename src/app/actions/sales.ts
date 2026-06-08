@@ -98,6 +98,8 @@ export async function createSale(data: {
     const dealer = await Dealer.findById(data.buyerId);
     if (!dealer) throw new Error('Dealer not found');
 
+    dueAmount = grandTotal - data.paidAmount;
+
     // Calculate commission
     const totalQty = data.items.reduce((acc, item) => acc + item.quantity, 0);
     commissionApplied = totalQty * dealer.commissionRate;
@@ -372,8 +374,29 @@ export async function getSales() {
   }
 
   await connectToDatabase();
-  // Fetch sales, populate dealer / farmer names if we can
+  // Fetch sales
   const sales = await Sale.find().sort({ date: -1 });
+
+  // Auto-repair dueAmount discrepancies for older records
+  for (const sale of sales) {
+    const expectedDue = Math.max(0, sale.grandTotal - sale.paidAmount);
+    if (sale.dueAmount !== expectedDue) {
+      const diffDue = expectedDue - sale.dueAmount;
+      sale.dueAmount = expectedDue;
+      await sale.save();
+
+      if (sale.buyerType === 'dealer') {
+        await Dealer.findByIdAndUpdate(sale.buyerId, {
+          $inc: { currentDues: diffDue }
+        });
+      } else if (sale.buyerType === 'farmer') {
+        await Farmer.findByIdAndUpdate(sale.buyerId, {
+          $inc: { currentDues: diffDue }
+        });
+      }
+    }
+  }
+
   
   // Custom manual population helper to handle multiple collections (Dealer / Farmer)
   const populatedSales = await Promise.all(
