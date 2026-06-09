@@ -6,6 +6,9 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Pagination } from '@/components/ui/pagination';
 import { createTransaction, getLedgerBalances, getTransactions, deleteTransaction, updateTransaction } from '@/app/actions/accounts';
+import { collectDue } from '@/app/actions/sales';
+import { getDealers } from '@/app/actions/dealer';
+import { getFarmers } from '@/app/actions/farmer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,6 +62,12 @@ export default function AccountsPage() {
   const [bankName, setBankName] = useState('');
   const [accountNo, setAccountNo] = useState('');
 
+  // Due collection dropdown lists & selected states
+  const [dealersList, setDealersList] = useState<any[]>([]);
+  const [farmersList, setFarmersList] = useState<any[]>([]);
+  const [buyerType, setBuyerType] = useState<'dealer' | 'farmer'>('dealer');
+  const [buyerId, setBuyerId] = useState('');
+
   // Edit modal states
   const [editOpen, setEditOpen] = useState(false);
   const [editTx, setEditTx] = useState<any>(null);
@@ -75,9 +84,16 @@ export default function AccountsPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [txs, bals] = await Promise.all([getTransactions(), getLedgerBalances()]);
+      const [txs, bals, dealersData, farmersData] = await Promise.all([
+        getTransactions(),
+        getLedgerBalances(),
+        getDealers().catch(() => []),
+        getFarmers().catch(() => []),
+      ]);
       setTransactions(txs);
       setBalances(bals);
+      setDealersList(dealersData);
+      setFarmersList(farmersData);
     } catch (err: any) {
       toast.error('Failed to load accounts data: ' + err.message);
     } finally {
@@ -100,6 +116,11 @@ export default function AccountsPage() {
       return;
     }
 
+    if (category === 'Due Collection' && !buyerId) {
+      toast.error('Please select a dealer or farmer to collect dues from.');
+      return;
+    }
+
     const result = await Swal.fire({
       title: 'Confirm Transaction',
       text: `Are you sure you want to log this ${type} of ${amount} BDT?`,
@@ -114,15 +135,30 @@ export default function AccountsPage() {
 
     try {
       setSubmitting(true);
-      const response = await createTransaction({
-        type,
-        source,
-        category,
-        amount: parseFloat(amount),
-        description,
-        date,
-        bankDetails: source === 'bank' ? { bankName, accountNo } : undefined,
-      });
+      let response;
+
+      if (category === 'Due Collection' && buyerId) {
+        const paymentMethod = source === 'cash' ? 'cash' : 'bank-transfer';
+        response = await collectDue({
+          buyerType,
+          buyerId,
+          amount: parseFloat(amount),
+          paymentMethod,
+          date,
+          description: description || undefined,
+          bankDetails: source === 'bank' ? { bankName, accountNo } : undefined,
+        });
+      } else {
+        response = await createTransaction({
+          type,
+          source,
+          category,
+          amount: parseFloat(amount),
+          description,
+          date,
+          bankDetails: source === 'bank' ? { bankName, accountNo } : undefined,
+        });
+      }
 
       if (response.success) {
         toast.success('Transaction logged successfully!');
@@ -131,6 +167,8 @@ export default function AccountsPage() {
         setDescription('');
         setBankName('');
         setAccountNo('');
+        setBuyerId('');
+        setBuyerType('dealer');
         setAddOpen(false);
         loadData();
       }
@@ -378,6 +416,76 @@ export default function AccountsPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            {type === 'income' && category === 'Due Collection' && (
+              <div className="space-y-2 border p-3 rounded-lg bg-primary/5 border-primary/10">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs font-semibold text-primary mb-1 block">Buyer Type</label>
+                    <Select value={buyerType} onValueChange={(val: any) => { setBuyerType(val); setBuyerId(''); }}>
+                      <SelectTrigger className="h-8 border-primary/20 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dealer">Dealer</SelectItem>
+                        <SelectItem value="farmer">Farmer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-primary mb-1 block">
+                      Select {buyerType === 'dealer' ? 'Dealer' : 'Farmer'}
+                    </label>
+                    <Select value={buyerId} onValueChange={(val: any) => setBuyerId(val)}>
+                      <SelectTrigger className="h-8 border-primary/20 text-xs w-full">
+                        {buyerId ? (
+                          <span data-slot="select-value" className="flex flex-1 text-left truncate text-slate-800">
+                            {buyerType === 'dealer'
+                              ? (() => {
+                                  const selectedDealer = dealersList.find(d => d._id === buyerId);
+                                  return selectedDealer
+                                    ? `${selectedDealer.userId?.name || 'Unknown'} (${selectedDealer.shopName})`
+                                    : 'Select Dealer';
+                                })()
+                              : (() => {
+                                  const selectedFarmer = farmersList.find(f => f._id === buyerId);
+                                  return selectedFarmer ? selectedFarmer.name : 'Select Farmer';
+                                })()
+                            }
+                          </span>
+                        ) : (
+                          <SelectValue placeholder={`Select ${buyerType === 'dealer' ? 'Dealer' : 'Farmer'}`} />
+                        )}
+                      </SelectTrigger>
+                      <SelectContent>
+                        {buyerType === 'dealer' ? (
+                          dealersList.map((d) => (
+                            <SelectItem key={d._id} value={d._id}>
+                              {d.userId?.name || 'Unknown'} ({d.shopName}) {d.currentDues > 0 ? `· ৳${d.currentDues.toLocaleString()}` : ''}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          farmersList.map((f) => (
+                            <SelectItem key={f._id} value={f._id}>
+                              {f.name} {f.currentDues > 0 ? `· ৳${f.currentDues.toLocaleString()}` : ''}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                {buyerId && (
+                  <div className="text-[11px] text-rose-700 font-semibold px-1 mt-1">
+                    Current Outstanding Dues: ৳
+                    {buyerType === 'dealer'
+                      ? (dealersList.find(d => d._id === buyerId)?.currentDues || 0).toLocaleString()
+                      : (farmersList.find(f => f._id === buyerId)?.currentDues || 0).toLocaleString()
+                    }
+                  </div>
+                )}
+              </div>
+            )}
 
             <div>
               <label className="text-xs font-semibold uppercase tracking-wider text-primary block mb-1">

@@ -296,6 +296,11 @@ export async function collectDue(data: {
   amount: number;
   paymentMethod: 'cash' | 'bank-transfer' | 'bkash' | 'nagad';
   date?: string;
+  description?: string;
+  bankDetails?: {
+    bankName?: string;
+    accountNo?: string;
+  };
 }) {
   const session = await auth();
   if (!session || !session.user) {
@@ -312,55 +317,74 @@ export async function collectDue(data: {
   const dbUser = await User.findOne({ email: session.user?.email });
   if (!dbUser) throw new Error('Logged-in user record not found in database');
 
+  let buyerName = '';
+
   if (data.buyerType === 'dealer') {
-    const updatedDealer = await Dealer.findOneAndUpdate(
-      { _id: data.buyerId },
-      [
-        {
-          $set: {
-            currentDues: {
-              $max: [0, { $subtract: ['$currentDues', data.amount] }]
-            }
-          }
-        }
-      ],
-      { new: true }
-    );
-    if (!updatedDealer) throw new Error('Dealer not found');
+    const dealer = await Dealer.findById(data.buyerId).populate('userId', 'name');
+    if (!dealer) throw new Error('Dealer not found');
+    dealer.currentDues = Math.max(0, dealer.currentDues - data.amount);
+    await dealer.save();
+    buyerName = `${(dealer.userId as any)?.name || 'Unknown'} (${dealer.shopName || ''})`;
   } else {
-    const updatedFarmer = await Farmer.findOneAndUpdate(
-      { _id: data.buyerId },
-      [
-        {
-          $set: {
-            currentDues: {
-              $max: [0, { $subtract: ['$currentDues', data.amount] }]
-            }
-          }
-        }
-      ],
-      { new: true }
-    );
-    if (!updatedFarmer) throw new Error('Farmer not found');
+    const farmer = await Farmer.findById(data.buyerId);
+    if (!farmer) throw new Error('Farmer not found');
+    farmer.currentDues = Math.max(0, (farmer.currentDues || 0) - data.amount);
+    await farmer.save();
+    buyerName = farmer.name;
   }
+
+  // Distribute the payment amount across unpaid or partially-paid invoices using FIFO (First In, First Out)
+  let remainingAmount = data.amount;
+  const unpaidSales = await Sale.find({
+    buyerId: data.buyerId,
+    buyerType: data.buyerType,
+    paymentStatus: { $in: ['unpaid', 'partially-paid'] }
+  }).sort({ date: 1 }); // Oldest first
+
+  for (const sale of unpaidSales) {
+    if (remainingAmount <= 0) break;
+
+    const invoiceDue = Math.max(0, sale.grandTotal - sale.paidAmount);
+    if (invoiceDue <= 0) continue;
+
+    const paymentToApply = Math.min(remainingAmount, invoiceDue);
+    sale.paidAmount += paymentToApply;
+    sale.dueAmount = Math.max(0, sale.grandTotal - sale.paidAmount);
+
+    if (sale.paidAmount >= sale.grandTotal) {
+      sale.paymentStatus = 'paid';
+    } else if (sale.paidAmount > 0) {
+      sale.paymentStatus = 'partially-paid';
+    } else {
+      sale.paymentStatus = 'unpaid';
+    }
+
+    await sale.save();
+    remainingAmount -= paymentToApply;
+  }
+
 
   // Create Ledger Transaction
   const ledgerTx = new LedgerTransaction({
     date: data.date ? new Date(data.date) : new Date(),
     type: 'income',
     source: ['cash'].includes(data.paymentMethod) ? 'cash' : 'bank',
+    bankDetails: !['cash'].includes(data.paymentMethod) ? data.bankDetails : undefined,
     category: 'Due Collection',
     amount: data.amount,
-    description: `Due payment from ${data.buyerType} ID: ${data.buyerId}`,
+    description: data.description || `Due collection from ${data.buyerType === 'dealer' ? 'Dealer' : 'Farmer'} ${buyerName}`,
     recordedBy: dbUser._id,
   });
   await ledgerTx.save();
 
   revalidatePath('/admin/sales');
   revalidatePath('/admin/accounts');
+  revalidatePath('/admin/dealers');
+  revalidatePath('/admin/farmers');
 
   return { success: true };
 }
+
 
 export async function getSales() {
   const session = await auth();

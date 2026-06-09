@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Pagination } from '@/components/ui/pagination';
 import { getDealers, approveDealer, registerDealer, deleteDealer, updateDealer } from '@/app/actions/dealer';
+import { collectDue } from '@/app/actions/sales';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +23,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { divisions, bdDivisions, bdLocations } from '@/lib/bd-locations';
-import { Users, UserCheck, PlusCircle, MoreVertical, Edit, Trash2, ArrowRight } from 'lucide-react';
+import { Users, UserCheck, PlusCircle, MoreVertical, Edit, Trash2, ArrowRight, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 
@@ -35,6 +36,67 @@ export default function DealersAdminPage() {
   const [submitting, setSubmitting] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingDealerId, setEditingDealerId] = useState<string | null>(null);
+
+  // Due Collection states
+  const [collectDueOpen, setCollectDueOpen] = useState(false);
+  const [selectedDealerForDue, setSelectedDealerForDue] = useState<any>(null);
+  const [dueAmountToCollect, setDueAmountToCollect] = useState('');
+  const [duePaymentMethod, setDuePaymentMethod] = useState<'cash' | 'bank-transfer' | 'bkash' | 'nagad'>('cash');
+  const [dueCollectDate, setDueCollectDate] = useState(new Date().toISOString().split('T')[0]);
+  const [dueCollectNotes, setDueCollectNotes] = useState('');
+
+  const openCollectDueModal = (dealer: any) => {
+    setSelectedDealerForDue(dealer);
+    setDueAmountToCollect(String(dealer.currentDues || 0));
+    setDuePaymentMethod('cash');
+    setDueCollectDate(new Date().toISOString().split('T')[0]);
+    setDueCollectNotes('');
+    setCollectDueOpen(true);
+  };
+
+  const handleCollectDue = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedDealerForDue) return;
+
+    const amountNum = parseFloat(dueAmountToCollect);
+    if (isNaN(amountNum) || amountNum <= 0) {
+      toast.error('Please enter a valid amount.');
+      return;
+    }
+
+    const u = selectedDealerForDue.userId || {};
+    const result = await Swal.fire({
+      title: 'Confirm Payment',
+      text: `Are you sure you want to collect ৳${amountNum.toLocaleString()} from ${u.name || selectedDealerForDue.shopName}?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: 'var(--color-primary, #10b981)',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, record it!',
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      setSubmitting(true);
+      await collectDue({
+        buyerType: 'dealer',
+        buyerId: selectedDealerForDue._id,
+        amount: amountNum,
+        paymentMethod: duePaymentMethod,
+        date: dueCollectDate,
+        description: dueCollectNotes || undefined,
+      });
+
+      toast.success('Payment recorded successfully and dues adjusted.');
+      setCollectDueOpen(false);
+      loadData();
+    } catch (err: any) {
+      toast.error('Failed to record payment: ' + err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   // Form states
   const [name, setName] = useState('');
@@ -353,6 +415,11 @@ export default function DealersAdminPage() {
                               <DropdownMenuItem className="cursor-pointer text-xs gap-2" onClick={() => openEditModal(d)}>
                                 <Edit className="h-3.5 w-3.5 text-primary" /> Edit Profile
                               </DropdownMenuItem>
+                              {d.currentDues > 0 && (
+                                <DropdownMenuItem className="cursor-pointer text-xs gap-2" onClick={() => openCollectDueModal(d)}>
+                                  <DollarSign className="h-3.5 w-3.5 text-primary" /> Collect Due
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 className="cursor-pointer text-xs gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
@@ -523,6 +590,101 @@ export default function DealersAdminPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Collect Due Dialog */}
+      <Dialog open={collectDueOpen} onOpenChange={setCollectDueOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-primary flex items-center gap-2">
+              <DollarSign className="h-5 w-5" /> Collect Dealer Due
+            </DialogTitle>
+          </DialogHeader>
+          {selectedDealerForDue && (
+            <form onSubmit={handleCollectDue} className="space-y-4 pt-2">
+              <div className="bg-primary/5 p-3 rounded-lg border border-primary/15 space-y-1">
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Dealer Details</p>
+                <p className="text-sm font-bold text-primary">{selectedDealerForDue.userId?.name || 'Unknown'}</p>
+                <p className="text-xs text-zinc-600">{selectedDealerForDue.shopName}</p>
+                <div className="flex justify-between items-center pt-2 mt-2 border-t border-dashed border-primary/20">
+                  <span className="text-xs font-semibold text-zinc-700">Current Outstanding Dues:</span>
+                  <span className="text-sm font-bold text-rose-700">৳{(selectedDealerForDue.currentDues || 0).toLocaleString()}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Payment Date *</label>
+                <Input
+                  type="date"
+                  value={dueCollectDate}
+                  onChange={(e) => setDueCollectDate(e.target.value)}
+                  className="border-primary/20"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Amount to Collect (৳) *</label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    max={selectedDealerForDue.currentDues}
+                    value={dueAmountToCollect}
+                    onChange={(e) => setDueAmountToCollect(e.target.value)}
+                    className="border-primary/20 font-bold font-mono text-rose-700"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Payment Method *</label>
+                  <Select
+                    value={duePaymentMethod}
+                    onValueChange={(val: any) => setDuePaymentMethod(val)}
+                  >
+                    <SelectTrigger className="border-primary/20">
+                      <SelectValue placeholder="Select Method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="bank-transfer">Bank Transfer</SelectItem>
+                      <SelectItem value="bkash">bKash</SelectItem>
+                      <SelectItem value="nagad">Nagad</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-primary uppercase tracking-wide block mb-1">Notes / Description (Optional)</label>
+                <Input
+                  value={dueCollectNotes}
+                  onChange={(e) => setDueCollectNotes(e.target.value)}
+                  placeholder="e.g. Received via Bank Transfer"
+                  className="border-primary/20"
+                />
+              </div>
+
+              <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCollectDueOpen(false)}
+                  className="w-full sm:flex-1 h-10 font-semibold border-primary/20"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full sm:flex-1 h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+                >
+                  {submitting ? 'Recording...' : 'Record Payment'}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
     </div>
