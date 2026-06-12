@@ -12,9 +12,9 @@ export default function PublicFooter() {
     <footer className="relative bg-card text-card-foreground border-t border-border py-10 mt-auto">
       <div className="container mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
         <div className="space-y-3 flex flex-col items-center text-center sm:items-start sm:text-left">
-          <Logo 
-            textClassName="text-sm sm:text-base md:text-xl text-primary font-bold tracking-tight uppercase" 
-            imageClassName="size-7 sm:size-8 md:size-12" 
+          <Logo
+            textClassName="text-sm sm:text-base md:text-xl text-primary font-bold tracking-tight uppercase"
+            imageClassName="size-7 sm:size-8 md:size-12"
           />
           <p className="text-xs text-muted-foreground leading-relaxed">
             Premium high-starch corn silage producer in Bogura, Bangladesh. Formulated for maximum dairy milk yields and healthy livestock weight gain.
@@ -25,9 +25,11 @@ export default function PublicFooter() {
           <h4 className="text-foreground font-bold text-sm">Quick Navigation</h4>
           <div className="flex flex-col items-center sm:items-start space-y-1.5 text-xs text-muted-foreground">
             <Link href="/about" className="hover:text-primary hover:underline">About Us</Link>
+            <Link href="/policy-for-dealer" className="hover:text-primary hover:underline">Dealer Policy & Agreement</Link>
+            <Link href="/policy-for-director" className="hover:text-primary hover:underline">Director Policy & Benefits</Link>
             <Link href="/login" className="hover:text-primary hover:underline">Office Management Login</Link>
             <Link href="/login" className="hover:text-primary hover:underline">Dealer Register Portal</Link>
-            <Link href="/team" className="hover:text-primary hover:underline">Our Team</Link>
+
           </div>
         </div>
 
@@ -38,6 +40,7 @@ export default function PublicFooter() {
             <Link href="/contact" className="hover:text-primary hover:underline">Contact Us</Link>
             <Link href="/terms" className="hover:text-primary hover:underline">Terms & Conditions</Link>
             <Link href="/privacy" className="hover:text-primary hover:underline">Privacy Policy</Link>
+            <Link href="/team" className="hover:text-primary hover:underline">Our Team</Link>
           </div>
         </div>
 
@@ -49,20 +52,20 @@ export default function PublicFooter() {
             <p className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-primary" /> {email}</p>
           </div>
           <div className="flex items-center gap-3 pt-2">
-            <a 
-              href={facebookUrl} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="h-9 w-9 rounded-full border border-border flex items-center justify-center bg-card hover:bg-primary hover:text-white hover:border-primary text-muted-foreground hover:scale-110 transition-all duration-300 shadow-sm" 
+            <a
+              href={facebookUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="h-9 w-9 rounded-full border border-border flex items-center justify-center bg-card hover:bg-primary hover:text-white hover:border-primary text-muted-foreground hover:scale-110 transition-all duration-300 shadow-sm"
               title="Facebook"
             >
               <Facebook className="h-5 w-5" />
             </a>
-            <a 
-              href={whatsappUrl} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="h-9 w-9 rounded-full border border-border flex items-center justify-center bg-card hover:bg-primary hover:text-white hover:border-primary text-muted-foreground hover:scale-110 transition-all duration-300 shadow-sm" 
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="h-9 w-9 rounded-full border border-border flex items-center justify-center bg-card hover:bg-primary hover:text-white hover:border-primary text-muted-foreground hover:scale-110 transition-all duration-300 shadow-sm"
               title="WhatsApp"
             >
               <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">

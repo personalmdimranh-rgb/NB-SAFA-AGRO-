@@ -25,7 +25,8 @@ export function WishlistHydrator({ children }: { children: React.ReactNode }) {
             dispatch(setWishlist(finalIds));
             dispatch(setWishlistHydrated());
           } else {
-            console.error('Failed to fetch wishlist');
+            const errData = await res.json().catch(() => ({}));
+            console.error(`Failed to fetch wishlist: ${res.status} ${res.statusText}`, errData);
             dispatch(setWishlistHydrated());
           }
         } catch (error) {

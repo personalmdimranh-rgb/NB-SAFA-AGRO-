@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Link from 'next/link';
 import { motion, Variants } from 'framer-motion';
 import { Shield, BadgeDollarSign, FileText } from 'lucide-react';
 
@@ -35,6 +36,15 @@ export default function CorporateGovernance() {
           <p className="text-muted-foreground text-sm">
             Secured shareholder access built into the core framework. Directors can monitor overall equity ratios, verify investment dates, track capital deposits, and inspect released dividend transactions.
           </p>
+          <div className="pt-2">
+            <Link
+              href="/policy-for-director"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline group"
+            >
+              পরিচালক নীতিমালা ও সুবিধাসমূহ দেখুন
+              <span className="group-hover:translate-x-1 transition-transform">→</span>
+            </Link>
+          </div>
         </motion.div>
 
         <motion.div

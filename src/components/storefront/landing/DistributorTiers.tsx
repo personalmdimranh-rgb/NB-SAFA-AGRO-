@@ -37,6 +37,15 @@ export default function DistributorTiers() {
           <p className="text-muted-foreground text-sm max-w-xl mx-auto">
             NB Safa Agro operates an exclusive regional dealer network. Register as a dealer and unlock higher commission structures and custom credit limits.
           </p>
+          <div className="pt-2">
+            <Link
+              href="/policy-for-dealer"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline group"
+            >
+              বিস্তারিত ডিলার নিয়োগ নীতিমালা ও চুক্তিপত্র দেখুন
+              <span className="group-hover:translate-x-1 transition-transform">→</span>
+            </Link>
+          </div>
         </motion.div>
 
         <motion.div

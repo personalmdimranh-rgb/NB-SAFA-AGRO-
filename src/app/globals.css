@@ -17,14 +17,16 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground font-sans;
   }
+
   html {
     @apply antialiased;
   }
 
-  button, 
+  button,
   [role="button"],
   a,
   select,
@@ -95,15 +97,28 @@ html.lenis {
 /* Dashboard Mobile Padding Control */
 @media (max-width: 768px) {
   main.dashboard-main {
-    padding-left: 1rem !important; /* px-4 */
-    padding-right: 1rem !important; /* px-4 */
+    padding-left: 1rem !important;
+    /* px-4 */
+    padding-right: 1rem !important;
+    /* px-4 */
   }
 
-  main.dashboard-main > div,
-  main.dashboard-main > form {
+  main.dashboard-main>div,
+  main.dashboard-main>form {
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
 }
 
-
+/* Hide vertical and horizontal scrollbars globally on mobile devices */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+}
