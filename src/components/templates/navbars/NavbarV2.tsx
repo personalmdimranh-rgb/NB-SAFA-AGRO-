@@ -46,7 +46,7 @@ const navItems = [
   { href: '/', label: 'Home' },
   { href: '/shop', label: 'Shop' },
   { href: '/blog', label: 'Blogs' },
-  { href: '/contact', label: 'Contact' },
+  { href: '/about', label: 'About' },
 ];
 
 export default function NavbarV2() {
@@ -190,8 +190,8 @@ export default function NavbarV2() {
                     <Link
                       href={item.href}
                       className={`text-xs font-bold uppercase tracking-widest relative group transition-colors ${(!isHomePage || isScrolled)
-                          ? (pathname === item.href ? 'text-foreground' : 'text-foreground/70 hover:text-primary')
-                          : (pathname === item.href ? 'text-white' : 'text-white/80 hover:text-white')
+                        ? (pathname === item.href ? 'text-foreground' : 'text-foreground/70 hover:text-primary')
+                        : (pathname === item.href ? 'text-white' : 'text-white/80 hover:text-white')
                         }`}
                     >
                       {item.label}
