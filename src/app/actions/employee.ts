@@ -26,7 +26,7 @@ export async function registerEmployee(data: {
   joiningDate?: string;
 }) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
+  if (!session || (!['super_admin', 'admin'].includes((session.user as any).role) && !(session.user as any).isAdmin)) {
     throw new Error('Unauthorized');
   }
 
@@ -63,7 +63,7 @@ export async function registerEmployee(data: {
 export async function logAttendance(records: { employeeId: string; status: 'present' | 'absent' | 'leave' }[], dateStr: string) {
   try {
     const session = await auth();
-    if (!session || !['super_admin', 'admin', 'staff'].includes((session.user as any).role)) {
+    if (!session || (!['super_admin', 'admin', 'staff'].includes((session.user as any).role) && !(session.user as any).isAdmin)) {
       return { error: 'Unauthorized' };
     }
 
@@ -103,7 +103,7 @@ export async function logAttendance(records: { employeeId: string; status: 'pres
 
 export async function logWorkReport(employeeId: string, taskPerformed: string, dateStr?: string) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin', 'staff'].includes((session.user as any).role)) {
+  if (!session || (!['super_admin', 'admin', 'staff'].includes((session.user as any).role) && !(session.user as any).isAdmin)) {
     throw new Error('Unauthorized');
   }
 
@@ -125,7 +125,7 @@ export async function logWorkReport(employeeId: string, taskPerformed: string, d
 export async function processPayroll(employeeId: string, monthYearStr: string) {
   try {
     const session = await auth();
-    if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
+    if (!session || (!['super_admin', 'admin'].includes((session.user as any).role) && !(session.user as any).isAdmin)) {
       return { error: 'Unauthorized' };
     }
 
@@ -204,7 +204,7 @@ export async function processPayroll(employeeId: string, monthYearStr: string) {
 export async function processBulkPayroll(employeeIds: string[], monthYearStr: string) {
   try {
     const session = await auth();
-    if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
+    if (!session || (!['super_admin', 'admin'].includes((session.user as any).role) && !(session.user as any).isAdmin)) {
       return { error: 'Unauthorized' };
     }
 
@@ -410,7 +410,7 @@ export async function updateEmployee(
   }
 ) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
+  if (!session || (!['super_admin', 'admin'].includes((session.user as any).role) && !(session.user as any).isAdmin)) {
     throw new Error('Unauthorized');
   }
 
@@ -447,7 +447,7 @@ export async function updateEmployee(
 
 export async function deleteEmployee(employeeId: string) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
+  if (!session || (!['super_admin', 'admin'].includes((session.user as any).role) && !(session.user as any).isAdmin)) {
     throw new Error('Unauthorized');
   }
 

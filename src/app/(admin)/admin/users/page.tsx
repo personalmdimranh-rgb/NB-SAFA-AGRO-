@@ -23,12 +23,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Pagination } from '@/components/ui/pagination';
-import { 
-  MoreHorizontal, 
-  Loader2, 
-  User as UserIcon, 
+import {
+  MoreHorizontal,
+  Loader2,
+  User as UserIcon,
   Eye,
-  ShieldAlert, 
+  ShieldAlert,
   ShieldCheck,
   UserCog,
   Trash2,
@@ -62,6 +62,7 @@ interface UserData {
   name: string;
   email: string;
   role: string;
+  isAdmin?: boolean;
   status?: string;
   image?: string;
   phone?: string;
@@ -132,7 +133,7 @@ export default function UsersPage() {
 
   const updateFilters = (newFilters: { page?: number; search?: string; role?: string; status?: string }) => {
     const params = new URLSearchParams(searchParams.toString());
-    
+
     if (newFilters.page !== undefined) {
       if (newFilters.page > 1) params.set('page', String(newFilters.page));
       else params.delete('page');
@@ -305,7 +306,7 @@ export default function UsersPage() {
       setIsAssigning(false);
     }
   };
- 
+
   const handleDeleteUser = async (userId: string, userName: string) => {
     const result = await Swal.fire({
       title: 'Delete User?',
@@ -352,7 +353,7 @@ export default function UsersPage() {
         </div>
         <div className="flex items-center gap-3">
           {isSuperAdmin && (
-            <Button 
+            <Button
               onClick={() => setIsAssignAdminOpen(true)}
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full px-6 h-11 shadow-lg shadow-blue-200 border-none transition-all hover:scale-105 active:scale-95"
             >
@@ -363,11 +364,10 @@ export default function UsersPage() {
           {/* Pending approvals quick-filter badge */}
           <button
             onClick={() => updateFilters({ status: statusVal === 'inactive' ? '' : 'inactive', page: 1 })}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full border font-bold text-sm transition-all hover:scale-105 active:scale-95 ${
-              statusVal === 'inactive'
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full border font-bold text-sm transition-all hover:scale-105 active:scale-95 ${statusVal === 'inactive'
                 ? 'bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-200'
                 : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
-            }`}
+              }`}
           >
             <Clock className="h-4 w-4" />
             Pending Approval
@@ -478,18 +478,17 @@ export default function UsersPage() {
             ) : (
               users.map((user) => (
                 <TableRow
-                    key={user._id}
-                    className={`hover:bg-muted/30 transition-colors ${
-                      user.status === 'inactive' ? 'bg-amber-50/60' : ''
+                  key={user._id}
+                  className={`hover:bg-muted/30 transition-colors ${user.status === 'inactive' ? 'bg-amber-50/60' : ''
                     }`}
-                  >
+                >
                   <TableCell>
                     <div className="relative">
                       {user.image && user.image !== '' ? (
                         <div className="relative h-10 w-10 rounded-full overflow-hidden border">
-                          <img 
-                            src={user.image} 
-                            alt={user.name} 
+                          <img
+                            src={user.image}
+                            alt={user.name}
                             className="h-full w-full object-cover"
                             onError={(e) => {
                               (e.target as any).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`;
@@ -536,19 +535,26 @@ export default function UsersPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge 
-                      variant={user.role === 'admin' ? 'default' : 'outline'}
-                      className={`
-                        capitalize px-3 py-0.5 rounded-full font-bold text-[10px] tracking-wider
-                        ${user.role === 'admin' ? 'bg-blue-600 hover:bg-blue-700' : ''}
-                        ${user.role === 'director' ? 'border-purple-300 text-purple-700 bg-purple-50' : ''}
-                        ${user.role === 'dealer' ? 'border-green-300 text-green-700 bg-green-50' : ''}
-                        ${user.role === 'staff' || user.role === 'manager' ? 'border-slate-300 text-slate-700 bg-slate-50' : ''}
-                        ${user.role === 'farmer' ? 'border-lime-300 text-lime-700 bg-lime-50' : ''}
-                      `}
-                    >
-                      {user.role}
-                    </Badge>
+                    <div className="flex flex-col gap-1">
+                      <Badge
+                        variant={user.role === 'admin' ? 'default' : 'outline'}
+                        className={`
+                          capitalize px-3 py-0.5 rounded-full font-bold text-[10px] tracking-wider w-fit
+                          ${user.role === 'admin' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+                          ${user.role === 'director' ? 'border-purple-300 text-purple-700 bg-purple-50' : ''}
+                          ${user.role === 'dealer' ? 'border-green-300 text-green-700 bg-green-50' : ''}
+                          ${user.role === 'staff' || user.role === 'manager' ? 'border-slate-300 text-slate-700 bg-slate-50' : ''}
+                          ${user.role === 'farmer' ? 'border-lime-300 text-lime-700 bg-lime-50' : ''}
+                        `}
+                      >
+                        {user.role}
+                      </Badge>
+                      {user.isAdmin && user.role !== 'admin' && user.role !== 'super_admin' && (
+                        <Badge className="bg-blue-100 text-blue-700 border border-blue-300 rounded-full px-2 py-0.5 font-bold text-[9px] tracking-wider w-fit">
+                          + Admin Access
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     {user.status === 'inactive' ? (
@@ -617,19 +623,19 @@ export default function UsersPage() {
                         </DropdownMenuGroup>
 
                         <DropdownMenuSeparator />
-                        
+
                         <DropdownMenuGroup>
                           <DropdownMenuLabel className="text-[10px] font-black uppercase text-muted-foreground px-2 py-1.5">Role Management</DropdownMenuLabel>
-                          
+
                           {user.role === 'user' ? (
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => handleUpdateRole(user._id, 'admin')}
                               className="cursor-pointer text-blue-600 font-bold"
                             >
                               <ShieldCheck className="mr-2 h-4 w-4" /> Make Admin
                             </DropdownMenuItem>
                           ) : (
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => handleUpdateRole(user._id, 'user')}
                               className="cursor-pointer text-slate-600 font-bold"
                             >
@@ -637,8 +643,8 @@ export default function UsersPage() {
                             </DropdownMenuItem>
                           )}
 
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem 
+
+                          <DropdownMenuItem
                             onClick={() => handleDeleteUser(user._id, user.name)}
                             className="text-destructive cursor-pointer font-bold bg-red-50 hover:bg-red-100 mt-1"
                           >
@@ -672,7 +678,7 @@ export default function UsersPage() {
           <div className="bg-blue-600 p-8 text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-400/20 rounded-full -ml-12 -mb-12 blur-xl" />
-            
+
             <DialogHeader className="relative z-10">
               <div className="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-sm border border-white/30">
                 <ShieldCheck className="h-6 w-6 text-white" />
@@ -702,9 +708,9 @@ export default function UsersPage() {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex gap-3 pt-2">
-              <Button 
+              <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsAssignAdminOpen(false)}
@@ -712,8 +718,8 @@ export default function UsersPage() {
               >
                 CANCEL
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={isAssigning}
                 className="flex-[2] h-14 rounded-2xl font-black bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-200 border-none group"
               >

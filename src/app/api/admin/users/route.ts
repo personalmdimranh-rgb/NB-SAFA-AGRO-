@@ -8,8 +8,9 @@ export async function GET(req: NextRequest) {
   try {
     const session = await auth();
     const userRole = (session?.user as any)?.role;
+    const sessionIsAdmin = (session?.user as any)?.isAdmin === true;
     
-    if (!session || (userRole !== 'admin' && userRole !== 'super_admin' && userRole !== 'director')) {
+    if (!session || (userRole !== 'admin' && userRole !== 'super_admin' && userRole !== 'director' && !sessionIsAdmin)) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
@@ -68,6 +69,7 @@ export async function GET(req: NextRequest) {
           name: 1,
           email: 1,
           role: 1,
+          isAdmin: 1,
           status: 1,
           image: 1,
           createdAt: 1,
@@ -163,16 +165,17 @@ export async function PATCH(req: NextRequest) {
   try {
     const session = await auth();
     const currentUserRole = (session?.user as any)?.role;
+    const sessionIsAdmin = (session?.user as any)?.isAdmin === true;
     
-    if (!session || (currentUserRole !== 'admin' && currentUserRole !== 'super_admin')) {
+    if (!session || (currentUserRole !== 'admin' && currentUserRole !== 'super_admin' && !sessionIsAdmin)) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userId, role, status } = await req.json();
+    const { userId, role, status, isAdmin } = await req.json();
 
-    // Must provide either role or status
-    if (!userId || (!role && !status)) {
-      return NextResponse.json({ message: 'Invalid data: userId and role or status required' }, { status: 400 });
+    // Must provide either role, status or isAdmin
+    if (!userId || (!role && !status && typeof isAdmin !== 'boolean')) {
+      return NextResponse.json({ message: 'Invalid data: userId and role, status or isAdmin required' }, { status: 400 });
     }
 
     // Validate role if provided
@@ -201,9 +204,12 @@ export async function PATCH(req: NextRequest) {
 
     if (role) userToUpdate.role = role;
     if (status) userToUpdate.status = status;
+    if (typeof isAdmin === 'boolean') userToUpdate.isAdmin = isAdmin;
     await userToUpdate.save();
 
-    const action = role ? `role updated to ${role}` : `status updated to ${status}`;
+    const action = role 
+      ? `role updated to ${role}` 
+      : (status ? `status updated to ${status}` : `admin access updated to ${isAdmin}`);
     return NextResponse.json({ message: `User ${action} successfully` });
   } catch (error) {
     console.error('Update User Error:', error);

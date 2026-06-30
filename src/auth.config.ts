@@ -16,6 +16,7 @@ export default {
         (session.user as any).role = token.role ?? 'farmer';
         (session.user as any).phone = token.phone as string;
         (session.user as any).status = (token.status as string) ?? 'active';
+        (session.user as any).isAdmin = !!token.isAdmin;
         if (token.image) {
           session.user.image = token.image as string;
         }
@@ -27,6 +28,7 @@ export default {
         token.id = user.id;
         token.role = (user as any).role ?? 'farmer';
         token.status = (user as any).status ?? 'active';
+        token.isAdmin = (user as any).isAdmin ?? false;
         token.image = user.image || token.picture;
       }
 

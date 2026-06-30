@@ -40,6 +40,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           email: user.email,
           image: user.image,
           role: user.role,
+          isAdmin: user.isAdmin,
           phone: user.phone,
         };
       },
@@ -52,6 +53,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.id = user.id;
         token.role = (user as any).role ?? 'user';
+        token.isAdmin = (user as any).isAdmin ?? false;
         token.image = user.image || token.picture;
       }
 
@@ -65,10 +67,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             // Auto update super_admin role in DB if it's not set
             if (dbUser.email === 'imranshuvo101@gmail.com' && dbUser.role !== 'super_admin') {
               dbUser.role = 'super_admin';
+              dbUser.isAdmin = true;
               await dbUser.save();
             }
             token.id = dbUser._id.toString();
             token.role = dbUser.role ?? 'user';
+            token.isAdmin = dbUser.isAdmin ?? false;
             token.status = dbUser.status ?? 'active';
             token.phone = dbUser.phone;
             token.image = dbUser.image || user.image || token.picture;

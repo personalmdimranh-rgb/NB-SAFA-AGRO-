@@ -69,8 +69,10 @@ interface ShopSidebarProps {
   categories: ShopCategory[];
   selectedCategories: string[];
   toggleCategory: (slug: string) => void;
-  priceRange: number[];
-  setPriceRange: (range: number[]) => void;
+  minPrice: string;
+  setMinPrice: (price: string) => void;
+  maxPrice: string;
+  setMaxPrice: (price: string) => void;
   clearFilters: () => void;
 }
 
@@ -78,8 +80,10 @@ function ShopSidebar({
   categories,
   selectedCategories,
   toggleCategory,
-  priceRange,
-  setPriceRange,
+  minPrice,
+  setMinPrice,
+  maxPrice,
+  setMaxPrice,
   clearFilters,
 }: ShopSidebarProps) {
   return (
@@ -106,19 +110,29 @@ function ShopSidebar({
       </div>
 
       <div>
-        <h3 className="text-sm font-bold uppercase tracking-wider mb-6">Price Range</h3>
-        <Slider
-          value={priceRange}
-          max={50000}
-          step={500}
-          onValueChange={(val) => {
-            if (Array.isArray(val)) setPriceRange([...val]);
-          }}
-          className="mb-4"
-        />
-        <div className="flex items-center justify-between text-sm font-medium">
-          <span>৳{priceRange[0]}</span>
-          <span>৳{priceRange[1]}+</span>
+        <h3 className="text-sm font-bold uppercase tracking-wider mb-4">Price Range</h3>
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <span className="absolute left-2.5 top-2.5 text-xs text-muted-foreground">৳</span>
+            <Input
+              type="number"
+              placeholder="Min"
+              value={minPrice}
+              onChange={(e) => setMinPrice(e.target.value)}
+              className="pl-6 text-sm"
+            />
+          </div>
+          <span className="text-muted-foreground text-xs font-medium">to</span>
+          <div className="relative flex-1">
+            <span className="absolute left-2.5 top-2.5 text-xs text-muted-foreground">৳</span>
+            <Input
+              type="number"
+              placeholder="Max"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              className="pl-6 text-sm"
+            />
+          </div>
         </div>
       </div>
 
@@ -141,7 +155,8 @@ export default function ShopClient({ initialProducts, initialCategories, cardSty
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     searchParams.get('category') ? [searchParams.get('category')!] : []
   );
-  const [priceRange, setPriceRange] = useState([0, 50000]);
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || searchParams.get('q') || '');
   const [showOnlyNew, setShowOnlyNew] = useState(searchParams.get('filter') === 'new');
@@ -200,7 +215,7 @@ export default function ShopClient({ initialProducts, initialCategories, cardSty
     const params = new URLSearchParams(window.location.search);
     params.delete('page');
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [selectedCategories, priceRange, sortBy, searchTerm, showOnlyNew, showOnlySale, showOnlyFeatured, showOnlyTrending, pathname, router]);
+  }, [selectedCategories, minPrice, maxPrice, sortBy, searchTerm, showOnlyNew, showOnlySale, showOnlyFeatured, showOnlyTrending, pathname, router]);
 
   const filteredProducts = products
     .filter(p => {
@@ -209,7 +224,9 @@ export default function ShopClient({ initialProducts, initialCategories, cardSty
       const matchesCategory = selectedCategories.length === 0 ||
         (p.categories ?? []).some((c) => selectedCategories.includes(c.slug || '') || selectedCategories.includes(c._id || ''));
       const price = p.salePrice ?? p.price;
-      const matchesPrice = price >= priceRange[0] && price <= priceRange[1];
+      const min = minPrice !== '' ? Number(minPrice) : 0;
+      const max = maxPrice !== '' ? Number(maxPrice) : Infinity;
+      const matchesPrice = price >= min && price <= max;
       const matchesNewArrival = !showOnlyNew || p.isNewArrival === true;
       const matchesSale = !showOnlySale || (p.salePrice !== undefined && p.salePrice !== null && p.salePrice < p.price);
       const matchesFeatured = !showOnlyFeatured || p.isFeatured === true;
@@ -255,7 +272,8 @@ export default function ShopClient({ initialProducts, initialCategories, cardSty
 
   const clearFilters = () => {
     setSelectedCategories([]);
-    setPriceRange([0, 50000]);
+    setMinPrice('');
+    setMaxPrice('');
     setSearchTerm('');
     setShowOnlyNew(false);
     setShowOnlySale(false);
@@ -274,8 +292,10 @@ export default function ShopClient({ initialProducts, initialCategories, cardSty
             categories={categories}
             selectedCategories={selectedCategories}
             toggleCategory={toggleCategory}
-            priceRange={priceRange}
-            setPriceRange={setPriceRange}
+            minPrice={minPrice}
+            setMinPrice={setMinPrice}
+            maxPrice={maxPrice}
+            setMaxPrice={setMaxPrice}
             clearFilters={clearFilters}
           />
         </aside>
@@ -308,8 +328,10 @@ export default function ShopClient({ initialProducts, initialCategories, cardSty
                     categories={categories}
                     selectedCategories={selectedCategories}
                     toggleCategory={toggleCategory}
-                    priceRange={priceRange}
-                    setPriceRange={setPriceRange}
+                    minPrice={minPrice}
+                    setMinPrice={setMinPrice}
+                    maxPrice={maxPrice}
+                    setMaxPrice={setMaxPrice}
                     clearFilters={clearFilters}
                   />
                 </SheetContent>
@@ -373,9 +395,9 @@ export default function ShopClient({ initialProducts, initialCategories, cardSty
                   Search: {searchTerm} <X className="h-3 w-3 cursor-pointer" onClick={() => setSearchTerm('')} />
                 </Badge>
               )}
-              {(priceRange[0] !== 0 || priceRange[1] !== 50000) && (
+              {(minPrice !== '' || maxPrice !== '') && (
                 <Badge variant="secondary" className="gap-1 rounded-full px-3 py-1">
-                  Price: ৳{priceRange[0]} - ৳{priceRange[1]}
+                  Price: ৳{minPrice || '0'} - ৳{maxPrice || '∞'} <X className="h-3 w-3 cursor-pointer" onClick={() => { setMinPrice(''); setMaxPrice(''); }} />
                 </Badge>
               )}
               {showOnlyNew && (

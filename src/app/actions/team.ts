@@ -19,7 +19,7 @@ export async function createTeamMember(data: {
   order: number;
 }) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
+  if (!session || (!['super_admin', 'admin'].includes((session.user as any).role) && !(session.user as any).isAdmin)) {
     throw new Error('Unauthorized');
   }
 
@@ -62,7 +62,7 @@ export async function updateTeamMember(
   }
 ) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
+  if (!session || (!['super_admin', 'admin'].includes((session.user as any).role) && !(session.user as any).isAdmin)) {
     throw new Error('Unauthorized');
   }
 
@@ -91,7 +91,7 @@ export async function updateTeamMember(
 
 export async function deleteTeamMember(id: string) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
+  if (!session || (!['super_admin', 'admin'].includes((session.user as any).role) && !(session.user as any).isAdmin)) {
     throw new Error('Unauthorized');
   }
 

@@ -6,6 +6,7 @@ export interface IUser extends Document {
   email: string;
   password?: string;
   role: 'super_admin' | 'admin' | 'manager' | 'director' | 'dealer' | 'staff' | 'farmer' | 'user';
+  isAdmin?: boolean;
   status?: 'active' | 'inactive';
   image?: string;
   phone: string;
@@ -51,6 +52,7 @@ const UserSchema: Schema<IUser> = new Schema(
     },
     password: { type: String, select: false },
     role: { type: String, enum: ['super_admin', 'admin', 'manager', 'director', 'dealer', 'staff', 'farmer', 'user'], required: true, default: 'user' },
+    isAdmin: { type: Boolean, default: false },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
     image: { type: String },
     phone: { type: String, required: true },

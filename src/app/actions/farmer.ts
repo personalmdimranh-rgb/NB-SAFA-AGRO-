@@ -16,7 +16,7 @@ export async function createFarmer(data: {
   creditLimit: number;
 }) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin', 'staff'].includes((session.user as any).role)) {
+  if (!session || (!['super_admin', 'admin', 'staff'].includes((session.user as any).role) && !(session.user as any).isAdmin)) {
     throw new Error('Unauthorized');
   }
 
@@ -62,7 +62,7 @@ export async function updateFarmer(
   }
 ) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin', 'staff'].includes((session.user as any).role)) {
+  if (!session || (!['super_admin', 'admin', 'staff'].includes((session.user as any).role) && !(session.user as any).isAdmin)) {
     throw new Error('Unauthorized');
   }
 
@@ -94,7 +94,7 @@ export async function updateFarmer(
 
 export async function getFarmers() {
   const session = await auth();
-  if (!session || !['super_admin', 'admin', 'manager', 'staff'].includes((session.user as any).role)) {
+  if (!session || (!['super_admin', 'admin', 'manager', 'staff'].includes((session.user as any).role) && !(session.user as any).isAdmin)) {
     throw new Error('Unauthorized');
   }
 
@@ -127,7 +127,7 @@ export async function getFarmers() {
 
 export async function deleteFarmer(farmerId: string) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
+  if (!session || (!['super_admin', 'admin'].includes((session.user as any).role) && !(session.user as any).isAdmin)) {
     throw new Error('Unauthorized');
   }
 
@@ -147,7 +147,7 @@ export async function getFarmerDashboardSummary(userId: string) {
 
   const userRole = (session.user as any).role;
   const isSelf = (session.user as any).id === userId;
-  const isAdmin = ['super_admin', 'admin', 'manager', 'staff'].includes(userRole);
+  const isAdmin = ['super_admin', 'admin', 'manager', 'staff'].includes(userRole) || (session.user as any).isAdmin;
   if (!isSelf && !isAdmin) {
     throw new Error('Forbidden: Insufficient permissions');
   }

@@ -23,7 +23,8 @@ export async function logProductionBatch(data: {
   }
 
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin', 'staff'].includes(role)) {
+  const isAdmin = (session.user as any).isAdmin;
+  if (!['super_admin', 'admin', 'staff'].includes(role) && !isAdmin) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 
@@ -92,7 +93,8 @@ export async function getProductionBatches() {
   }
 
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin', 'manager', 'staff'].includes(role)) {
+  const isAdmin = (session.user as any).isAdmin;
+  if (!['super_admin', 'admin', 'manager', 'staff'].includes(role) && !isAdmin) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 
@@ -108,7 +110,8 @@ export async function getProductionSummary() {
   }
 
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin', 'manager', 'staff'].includes(role)) {
+  const isAdmin = (session.user as any).isAdmin;
+  if (!['super_admin', 'admin', 'manager', 'staff'].includes(role) && !isAdmin) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 
@@ -141,7 +144,8 @@ export async function deleteProductionBatch(batchId: string) {
   }
 
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin', 'staff'].includes(role)) {
+  const isAdmin = (session.user as any).isAdmin;
+  if (!['super_admin', 'admin', 'staff'].includes(role) && !isAdmin) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 
@@ -184,7 +188,8 @@ export async function updateProductionBatch(
   }
 
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin', 'staff'].includes(role)) {
+  const isAdmin = (session.user as any).isAdmin;
+  if (!['super_admin', 'admin', 'staff'].includes(role) && !isAdmin) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 

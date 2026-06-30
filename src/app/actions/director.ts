@@ -21,7 +21,7 @@ export async function registerDirector(data: {
   notes?: string;
 }) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
+  if (!session || (!['super_admin', 'admin'].includes((session.user as any).role) && !(session.user as any).isAdmin)) {
     throw new Error('Unauthorized');
   }
 
@@ -63,7 +63,7 @@ export async function registerDirector(data: {
 
 export async function deleteDirector(userId: string) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
+  if (!session || (!['super_admin', 'admin'].includes((session.user as any).role) && !(session.user as any).isAdmin)) {
     throw new Error('Unauthorized');
   }
 
@@ -94,7 +94,7 @@ export async function updateDirector(userId: string, data: {
   thana?: string;
 }) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
+  if (!session || (!['super_admin', 'admin'].includes((session.user as any).role) && !(session.user as any).isAdmin)) {
     throw new Error('Unauthorized');
   }
 
@@ -141,7 +141,7 @@ export async function logInvestment(data: {
   date?: string;
 }) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
+  if (!session || (!['super_admin', 'admin'].includes((session.user as any).role) && !(session.user as any).isAdmin)) {
     throw new Error('Unauthorized');
   }
 
@@ -177,7 +177,7 @@ export async function logInvestment(data: {
 
 export async function releaseDividends(declaredProfit: number, payoutPercentage: number) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
+  if (!session || (!['super_admin', 'admin'].includes((session.user as any).role) && !(session.user as any).isAdmin)) {
     throw new Error('Unauthorized');
   }
 

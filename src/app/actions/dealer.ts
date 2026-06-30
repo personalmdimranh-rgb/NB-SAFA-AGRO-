@@ -76,7 +76,7 @@ export async function registerDealer(data: {
 
 export async function approveDealer(userId: string) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
+  if (!session || (!['super_admin', 'admin'].includes((session.user as any).role) && !(session.user as any).isAdmin)) {
     throw new Error('Unauthorized');
   }
 
@@ -100,7 +100,7 @@ export async function updateDealerSettings(
   }
 ) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
+  if (!session || (!['super_admin', 'admin'].includes((session.user as any).role) && !(session.user as any).isAdmin)) {
     throw new Error('Unauthorized');
   }
 
@@ -140,7 +140,7 @@ export async function updateDealer(
   }
 ) {
   const session = await auth();
-  if (!session || !['super_admin', 'admin'].includes((session.user as any).role)) {
+  if (!session || (!['super_admin', 'admin'].includes((session.user as any).role) && !(session.user as any).isAdmin)) {
     throw new Error('Unauthorized');
   }
 
@@ -196,7 +196,8 @@ export async function getDealers() {
   }
 
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin', 'manager', 'staff'].includes(role)) {
+  const isAdmin = (session.user as any).isAdmin;
+  if (!['super_admin', 'admin', 'manager', 'staff'].includes(role) && !isAdmin) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 
@@ -230,7 +231,7 @@ export async function getDealerProfile(userId: string) {
 
   const userRole = (session.user as any).role;
   const isSelf = (session.user as any).id === userId;
-  const isAdmin = ['super_admin', 'admin', 'manager', 'staff'].includes(userRole);
+  const isAdmin = ['super_admin', 'admin', 'manager', 'staff'].includes(userRole) || (session.user as any).isAdmin;
   if (!isSelf && !isAdmin) {
     throw new Error('Forbidden: Insufficient permissions');
   }

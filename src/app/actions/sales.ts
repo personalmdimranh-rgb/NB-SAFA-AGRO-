@@ -48,9 +48,10 @@ export async function createSale(data: {
 
   const userRole = dbUser.role as string;
   const userId = dbUser._id.toString();
+  const isAdmin = dbUser.isAdmin === true;
 
   // Authorize based on role
-  if (['super_admin', 'admin', 'staff'].includes(userRole)) {
+  if (['super_admin', 'admin', 'staff'].includes(userRole) || isAdmin) {
     // Admins can log any sale
   } else if (userRole === 'dealer') {
     // Dealers can only create a sale for themselves (as a dealer buyer)
@@ -308,7 +309,8 @@ export async function collectDue(data: {
   }
 
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin', 'staff'].includes(role)) {
+  const isAdmin = (session.user as any).isAdmin;
+  if (!['super_admin', 'admin', 'staff'].includes(role) && !isAdmin) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 
@@ -393,7 +395,8 @@ export async function getSales() {
   }
 
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin', 'manager', 'staff'].includes(role)) {
+  const isAdmin = (session.user as any).isAdmin;
+  if (!['super_admin', 'admin', 'manager', 'staff'].includes(role) && !isAdmin) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 
@@ -471,7 +474,8 @@ export async function getSalesByDealer(userId: string) {
   const currentUserId = (session.user as any).id;
 
   // Authorize: Admin roles can fetch any dealer's sales; dealer can only fetch their own sales
-  if (!['super_admin', 'admin', 'manager', 'staff'].includes(userRole)) {
+  const isAdmin = ['super_admin', 'admin', 'manager', 'staff'].includes(userRole) || (session.user as any).isAdmin;
+  if (!isAdmin) {
     if (userRole !== 'dealer' || currentUserId !== userId) {
       throw new Error('Forbidden: Insufficient permissions');
     }
@@ -494,7 +498,8 @@ export async function deleteSale(saleId: string) {
   }
 
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin'].includes(role)) {
+  const isAdmin = (session.user as any).isAdmin;
+  if (!['super_admin', 'admin'].includes(role) && !isAdmin) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 
@@ -512,7 +517,8 @@ export async function togglePaymentStatus(saleId: string) {
     throw new Error('Unauthorized');
   }
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin', 'staff'].includes(role)) {
+  const isAdmin = (session.user as any).isAdmin;
+  if (!['super_admin', 'admin', 'staff'].includes(role) && !isAdmin) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 
@@ -587,7 +593,8 @@ export async function updateSaleStatus(saleId: string, status: string) {
     throw new Error('Unauthorized');
   }
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin', 'staff'].includes(role)) {
+  const isAdmin = (session.user as any).isAdmin;
+  if (!['super_admin', 'admin', 'staff'].includes(role) && !isAdmin) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 

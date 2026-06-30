@@ -24,7 +24,8 @@ export async function createTransaction(data: {
   }
 
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin', 'staff'].includes(role)) {
+  const isAdmin = (session.user as any).isAdmin;
+  if (!['super_admin', 'admin', 'staff'].includes(role) && !isAdmin) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 
@@ -48,7 +49,8 @@ export async function getTransactions() {
   }
 
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin', 'manager', 'staff'].includes(role)) {
+  const isAdmin = (session.user as any).isAdmin;
+  if (!['super_admin', 'admin', 'manager', 'staff'].includes(role) && !isAdmin) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 
@@ -66,7 +68,8 @@ export async function getLedgerBalances() {
   }
 
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin', 'manager', 'staff'].includes(role)) {
+  const isAdmin = (session.user as any).isAdmin;
+  if (!['super_admin', 'admin', 'manager', 'staff'].includes(role) && !isAdmin) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 
@@ -108,7 +111,8 @@ export async function getProfitLossReport() {
   }
 
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin', 'manager', 'staff'].includes(role)) {
+  const isAdmin = (session.user as any).isAdmin;
+  if (!['super_admin', 'admin', 'manager', 'staff'].includes(role) && !isAdmin) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 
@@ -166,7 +170,8 @@ export async function deleteTransaction(id: string) {
   }
 
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin'].includes(role)) {
+  const isAdmin = (session.user as any).isAdmin;
+  if (!['super_admin', 'admin'].includes(role) && !isAdmin) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 
@@ -201,7 +206,8 @@ export async function updateTransaction(
   }
 
   const role = (session.user as any).role;
-  if (!['super_admin', 'admin'].includes(role)) {
+  const isAdmin = (session.user as any).isAdmin;
+  if (!['super_admin', 'admin'].includes(role) && !isAdmin) {
     throw new Error('Forbidden: Insufficient permissions');
   }
 

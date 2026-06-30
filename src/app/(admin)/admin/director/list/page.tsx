@@ -23,6 +23,7 @@ import { divisions, bdDivisions, bdLocations } from '@/lib/bd-locations';
 import {
   Users, Coins, TrendingUp, PlusCircle, Loader2, RefreshCw,
   Mail, Phone, Award, MoreVertical, Trash2, Eye, Pencil,
+  ShieldCheck, User as UserIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
@@ -244,7 +245,13 @@ export default function DirectorListPage() {
     const userRecord = directorUsers.find(
       (u) => u.email.toLowerCase() === d.email.toLowerCase()
     );
-    return { ...d, userId: userRecord?._id, status: userRecord?.status };
+    return { 
+      ...d, 
+      userId: userRecord?._id, 
+      status: userRecord?.status,
+      image: (userRecord as any)?.image,
+      isAdmin: (userRecord as any)?.isAdmin === true
+    };
   }) ?? [];
 
   if (loading) {
@@ -359,6 +366,7 @@ export default function DirectorListPage() {
               <TableHeader>
                 <TableRow className="bg-muted/50">
                   <TableHead className="text-xs font-bold uppercase w-10">#</TableHead>
+                  <TableHead className="text-xs font-bold uppercase w-12">Avatar</TableHead>
                   <TableHead className="text-xs font-bold uppercase">Name</TableHead>
                   <TableHead className="text-xs font-bold uppercase">Email</TableHead>
                   <TableHead className="text-xs font-bold uppercase">Phone</TableHead>
@@ -370,7 +378,7 @@ export default function DirectorListPage() {
               <TableBody>
                 {mergedDirectors.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground py-12">
                       <div className="flex flex-col items-center gap-2">
                         <Users className="h-10 w-10 text-muted-foreground/40" />
                         <p className="font-medium">No directors found in the system.</p>
@@ -391,28 +399,50 @@ export default function DirectorListPage() {
                     <TableRow key={d.email} className="hover:bg-muted/30 transition-colors">
                       <TableCell className="text-muted-foreground text-xs font-mono">{idx + 1}</TableCell>
                       <TableCell>
-                        <div className="flex flex-col gap-0.5">
+                        <div className="relative h-10 w-10">
+                          {d.image ? (
+                            <img
+                              src={d.image}
+                              alt={d.name}
+                              className="h-10 w-10 rounded-full object-cover border border-primary/20"
+                            />
+                          ) : (
+                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                              <UserIcon className="h-5 w-5" />
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1">
                           {d.userId ? (
                             <Link
                               href={`/admin/users/${d.userId}`}
-                              className="font-semibold text-primary text-sm hover:underline hover:text-primary/80"
+                              className="font-semibold text-slate-900 text-sm hover:underline hover:text-primary transition-colors"
                             >
                               {d.name}
                             </Link>
                           ) : (
-                            <span className="font-semibold text-primary text-sm">{d.name}</span>
+                            <span className="font-semibold text-slate-900 text-sm">{d.name}</span>
                           )}
-                          {d.status && (
-                            <Badge
-                              className={`text-[9px] font-bold px-1.5 w-fit ${
-                                d.status === 'active'
-                                  ? 'bg-green-100 text-green-700 border-green-200'
-                                  : 'bg-amber-50 text-amber-700 border-amber-200'
-                              }`}
-                            >
-                              {d.status === 'active' ? 'Active' : 'Inactive'}
-                            </Badge>
-                          )}
+                          <div className="flex flex-wrap gap-1 items-center">
+                            {d.status && (
+                              <Badge
+                                className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full w-fit ${
+                                  d.status === 'active'
+                                    ? 'bg-green-100 text-green-700 border-green-200'
+                                    : 'bg-amber-50 text-amber-700 border-amber-200'
+                                }`}
+                              >
+                                {d.status === 'active' ? 'Active' : 'Inactive'}
+                              </Badge>
+                            )}
+                            {d.isAdmin && (
+                              <Badge className="bg-blue-100 text-blue-700 border border-blue-300 rounded-full px-2 py-0.5 font-bold text-[9px] tracking-wider w-fit">
+                                Admin Access
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
@@ -447,7 +477,7 @@ export default function DirectorListPage() {
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
+                           <DropdownMenuContent align="end" className="w-48">
                             {d.userId ? (
                               <DropdownMenuItem asChild className="cursor-pointer text-xs gap-2">
                                 <Link href={`/admin/users/${d.userId}`} className="flex items-center">
@@ -455,6 +485,50 @@ export default function DirectorListPage() {
                                 </Link>
                               </DropdownMenuItem>
                             ) : null}
+                            {d.userId && canManage && (
+                              <DropdownMenuItem
+                                onClick={async () => {
+                                  const newAdminStatus = !d.isAdmin;
+                                  const actionText = newAdminStatus ? 'Grant' : 'Revoke';
+                                  const result = await Swal.fire({
+                                    title: `${actionText} Admin Access?`,
+                                    text: `Are you sure you want to ${actionText.toLowerCase()} admin access for ${d.name}?`,
+                                    icon: 'question',
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#2563eb',
+                                    cancelButtonColor: '#64748b',
+                                    confirmButtonText: `Yes, ${actionText.toLowerCase()}!`,
+                                    customClass: {
+                                      popup: 'rounded-3xl',
+                                      confirmButton: 'rounded-xl font-bold px-6 py-3',
+                                      cancelButton: 'rounded-xl font-bold px-6 py-3'
+                                    }
+                                  });
+                                  if (!result.isConfirmed) return;
+
+                                  try {
+                                    const response = await fetch('/api/admin/users', {
+                                      method: 'PATCH',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ userId: d.userId, isAdmin: newAdminStatus }),
+                                    });
+                                    if (response.ok) {
+                                      toast.success(`Admin access ${newAdminStatus ? 'granted' : 'revoked'} successfully`);
+                                      loadData();
+                                    } else {
+                                      const error = await response.json();
+                                      toast.error(error.message || 'Failed to update admin access');
+                                    }
+                                  } catch (error) {
+                                    toast.error('Something went wrong');
+                                  }
+                                }}
+                                className="cursor-pointer text-xs gap-2 text-blue-700 font-bold bg-blue-50/50 hover:bg-blue-50"
+                              >
+                                <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
+                                {d.isAdmin ? 'Revoke Admin Access' : 'Grant Admin Access'}
+                              </DropdownMenuItem>
+                            )}
                             {canManage && (
                               <>
                                 <DropdownMenuSeparator />
