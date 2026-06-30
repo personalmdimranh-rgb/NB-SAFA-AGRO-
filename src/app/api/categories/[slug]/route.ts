@@ -15,8 +15,10 @@ export async function GET(
   try {
     const { slug } = await params;
     await connectToDatabase();
-    const query = mongoose.Types.ObjectId.isValid(slug) ? { _id: slug } : { slug };
-    const category = await Category.findOne(query);
+    let category = await Category.findOne({ slug });
+    if (!category && mongoose.Types.ObjectId.isValid(slug)) {
+      category = await Category.findOne({ _id: slug });
+    }
 
     if (!category) {
       return NextResponse.json({ message: 'Category not found' }, { status: 404 });
@@ -60,16 +62,20 @@ export async function PUT(
 
     await connectToDatabase();
 
-    const query = mongoose.Types.ObjectId.isValid(slug) ? { _id: slug } : { slug };
-    const updatedCategory = await Category.findOneAndUpdate(
-      query,
+    let categoryToUpdate = await Category.findOne({ slug });
+    if (!categoryToUpdate && mongoose.Types.ObjectId.isValid(slug)) {
+      categoryToUpdate = await Category.findOne({ _id: slug });
+    }
+
+    if (!categoryToUpdate) {
+      return NextResponse.json({ message: 'Category not found' }, { status: 404 });
+    }
+
+    const updatedCategory = await Category.findByIdAndUpdate(
+      categoryToUpdate._id,
       { $set: updateData },
       { new: true, runValidators: true }
     );
-
-    if (!updatedCategory) {
-      return NextResponse.json({ message: 'Category not found' }, { status: 404 });
-    }
 
     try {
       await revalidateTag('categories', 'max');

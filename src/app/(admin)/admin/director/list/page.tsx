@@ -95,7 +95,7 @@ export default function DirectorListPage() {
   const availableDistricts = division ? bdDivisions[division] || [] : [];
   const availableThanas = district ? bdLocations[district] || [] : [];
 
-  const canManage = ['admin', 'super_admin'].includes(role || '');
+  const canManage = ['admin', 'super_admin'].includes(role || '') || (session?.user as any)?.isAdmin === true;
 
   const loadData = async () => {
     try {

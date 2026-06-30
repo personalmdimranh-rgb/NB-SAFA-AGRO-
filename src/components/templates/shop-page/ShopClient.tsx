@@ -224,8 +224,10 @@ export default function ShopClient({ initialProducts, initialCategories, cardSty
       const matchesCategory = selectedCategories.length === 0 ||
         (p.categories ?? []).some((c) => selectedCategories.includes(c.slug || '') || selectedCategories.includes(c._id || ''));
       const price = p.salePrice ?? p.price;
-      const min = minPrice !== '' ? Number(minPrice) : 0;
-      const max = maxPrice !== '' ? Number(maxPrice) : Infinity;
+      const parsedMin = Number(minPrice);
+      const min = (minPrice !== '' && isFinite(parsedMin)) ? parsedMin : 0;
+      const parsedMax = Number(maxPrice);
+      const max = (maxPrice !== '' && isFinite(parsedMax)) ? parsedMax : Infinity;
       const matchesPrice = price >= min && price <= max;
       const matchesNewArrival = !showOnlyNew || p.isNewArrival === true;
       const matchesSale = !showOnlySale || (p.salePrice !== undefined && p.salePrice !== null && p.salePrice < p.price);
@@ -382,7 +384,7 @@ export default function ShopClient({ initialProducts, initialCategories, cardSty
           </div>
 
           {/* Active Filters Bar */}
-          {(selectedCategories.length > 0 || searchTerm || priceRange[0] > 0 || priceRange[1] < 50000 || showOnlyNew || showOnlySale || showOnlyFeatured || showOnlyTrending) && (
+          {(selectedCategories.length > 0 || searchTerm || minPrice !== '' || maxPrice !== '' || showOnlyNew || showOnlySale || showOnlyFeatured || showOnlyTrending) && (
             <div className="flex flex-wrap gap-2 items-center">
               <span className="text-xs font-bold uppercase text-muted-foreground mr-2">Filtered By:</span>
               {selectedCategories.map(cat => (
