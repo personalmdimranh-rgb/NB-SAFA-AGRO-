@@ -5,7 +5,9 @@ import connectToDatabase from '@/lib/db';
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session || !(['admin', 'super_admin', 'manager', 'staff'].includes((session?.user as any)?.role))) {
+    const role = (session?.user as any)?.role;
+    const isAdmin = (session?.user as any)?.isAdmin === true;
+    if (!session || (!['admin', 'super_admin', 'manager', 'staff'].includes(role) && !isAdmin)) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 

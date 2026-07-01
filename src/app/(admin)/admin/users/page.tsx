@@ -365,8 +365,8 @@ export default function UsersPage() {
           <button
             onClick={() => updateFilters({ status: statusVal === 'inactive' ? '' : 'inactive', page: 1 })}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-full border font-bold text-sm transition-all hover:scale-105 active:scale-95 ${statusVal === 'inactive'
-                ? 'bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-200'
-                : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
+              ? 'bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-200'
+              : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
               }`}
           >
             <Clock className="h-4 w-4" />

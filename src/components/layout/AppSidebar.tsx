@@ -286,7 +286,7 @@ const data = {
 
 import { useSession } from "next-auth/react"
 
-function NavMain({ items, pathname, role }: { items: any; pathname: string; role?: string }) {
+function NavMain({ items, pathname, role, isAdmin }: { items: any; pathname: string; role?: string; isAdmin?: boolean }) {
   const { setOpenMobile, isMobile } = useSidebar()
 
   // Filter items based on role
@@ -294,8 +294,12 @@ function NavMain({ items, pathname, role }: { items: any; pathname: string; role
     ...item,
     items: item.items.filter((subItem: any) => !subItem.superOnly || role === 'super_admin')
   })).filter((item: any) => {
-    if (item.roles && !item.roles.includes(role)) {
-      return false;
+    if (item.roles) {
+      const hasAllowedRole = item.roles.includes(role);
+      const isAuthorizedAdmin = isAdmin && item.roles.includes('admin');
+      if (!hasAllowedRole && !isAuthorizedAdmin) {
+        return false;
+      }
     }
     return item.items.length > 0;
   });
@@ -370,6 +374,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
   const { data: session } = useSession()
   const role = (session?.user as any)?.role
+  const isAdmin = (session?.user as any)?.isAdmin === true
 
   return (
     <Sidebar {...props}>
@@ -377,7 +382,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <Logo textClassName="text-sm md:text-base font-black tracking-wide whitespace-nowrap" />
       </SidebarHeader>
       <SidebarContent className="gap-0">
-        <NavMain items={data.navMain} pathname={pathname} role={role} />
+        <NavMain items={data.navMain} pathname={pathname} role={role} isAdmin={isAdmin} />
       </SidebarContent>
       <SidebarRail />
     </Sidebar>

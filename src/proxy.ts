@@ -18,7 +18,7 @@ export const proxy = auth(async (req) => {
 
   // 1. Redirection for logged-in users on Auth routes (Login/Register)
   if (isAuthRoute && isLoggedIn) {
-    if (role === "admin" || role === "super_admin" || role === "manager" || role === "staff" || isAdmin) {
+    if (role === "admin" || role === "super_admin" || role === "manager" || role === "staff" || (role === "director" && isAdmin) || isAdmin) {
       return NextResponse.redirect(new URL("/admin/dashboard", nextUrl));
     }
     if (role === "director") {
@@ -48,11 +48,12 @@ export const proxy = auth(async (req) => {
     } else {
       // Allow super_admin, admin, manager on other admin routes
       // Allow staff ONLY on their own profile page
+      // Allow directors with isAdmin === true
       // Allow any user with isAdmin === true
       const isAllowedAdminUser = ["admin", "super_admin", "manager"].includes(role || "") || isAdmin || isOwnStaffProfile;
       if (!isAllowedAdminUser) {
         if (role === "director") {
-          return NextResponse.redirect(new URL("/admin/director", nextUrl));
+          return NextResponse.redirect(new URL("/director/dashboard", nextUrl));
         }
         if (role === "dealer") {
           return NextResponse.redirect(new URL("/dealer/dashboard", nextUrl));
